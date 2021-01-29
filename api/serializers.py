@@ -68,7 +68,7 @@ class DisplayUserSeializer(serializers.ModelSerializer):
 
     class Meta:
         model = GUser
-        fields = ['id', 'username', 'email', 'score']
+        fields = ['id', 'username', 'email', 'score', 'balance']
 
 
 class ScoreboardUserSerializer(serializers.ModelSerializer):

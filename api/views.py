@@ -1,7 +1,10 @@
+import datetime
+
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User, Group
 from django.http import Http404
 from django.conf import settings
+from django.utils import timezone
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,6 +12,7 @@ from rest_framework import viewsets, permissions, status, exceptions
 
 from .serializers import UserRegistrationSerializer, UserSerializer, VisitorSerializer, ScoreboardUserSerializer, DisplayUserSeializer
 from .models import GUser, Visitor
+from .utils import forge_auth_token
 
 @api_view(['GET'])
 def api_root(request, format=True):
@@ -29,7 +33,7 @@ def api_root(request, format=True):
         resp_data = { 'name': 'Gioele V3 API', }
     return Response(resp_data)
 
-@api_view(['POST'])
+@api_view(['PUT'])
 def user_registration(request, format=True):
     data = request.data
     serializer = UserRegistrationSerializer(data=data)
@@ -48,9 +52,9 @@ def user_registration(request, format=True):
 
 @api_view(['POST'])
 def user_authentication(request, format=True):
-    invalid_data_exception = exceptions.NotAuthenticated(detail='Dati non validi')
+    authentication_failed_exception = exceptions.NotAuthenticated(detail='Dati non validi')
     if 'username' not in request.data or 'password' not in request.data:
-        raise invalid_data_exception
+        raise authentication_failed_exception
     
     user = authenticate(username=request.data['username'], password=request.data['password'])
     if user is not None:
@@ -59,9 +63,10 @@ def user_authentication(request, format=True):
         except GUser.DoesNotExist:
             guser = GUser(user=user, auth=1, score=0)
         serializer = DisplayUserSeializer(guser)
-        return Response(serializer.data)
+        token = forge_auth_token(user.id, user.get_username())
+        return Response(data=serializer.data, headers={ 'Token': token })
     else:
-        raise invalid_data_exception
+        raise authentication_failed_exception
 
 @api_view(['GET'])
 def get_scoreboard(request, format=True):
@@ -69,6 +74,10 @@ def get_scoreboard(request, format=True):
     queryset = GUser.objects.filter(auth=True).order_by('-score')[:10]
     serializer = ScoreboardUserSerializer(queryset, many=True)
     return Response(serializer.data)
+
+@api_view(['GET'])
+def user_get_me(request, format=True):
+    return UserDetail().get(request, request.user_id, format)
 
 
 class UserDetail(APIView):

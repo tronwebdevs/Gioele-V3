@@ -23,6 +23,7 @@ class GUser(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name='user')
     auth = models.BooleanField(default=False)
     score = models.IntegerField(default=0)
+    balance = models.IntegerField(default=0)
 
     class Meta:
         verbose_name = 'Gioele User'

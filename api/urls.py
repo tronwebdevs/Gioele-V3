@@ -7,6 +7,7 @@ urlpatterns = [
     path('users/', views.get_scoreboard),
     path('users/register', views.user_registration),
     path('users/auth', views.user_authentication),
+    path('users/me', views.user_get_me),
     path('users/<int:pk>', views.UserDetail.as_view()),
 ]
 
