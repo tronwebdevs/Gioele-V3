@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from rest_framework import viewsets, permissions, status, exceptions
 
 from .serializers import UserRegistrationSerializer, UserSerializer, VisitorSerializer, ScoreboardUserSerializer, DisplayUserSeializer
-from .models import GUser, Visitor
+from .models import GUser, Visitor, UserInventory
 from .utils import forge_auth_token
 
 @api_view(['GET'])
@@ -40,9 +40,10 @@ def user_registration(request, format=True):
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # TODO: Code has to be clean up with a custom manager under GUser
     user = User.objects.create_user(username=data['username'], password=data['password'], email=data['email'])
-    guser = GUser(user=user)
-    guser.save()
+    inventory = UserInventory.objects.create(main_gun=None, side_gun=None, skins=None)
+    guser = GUser.objects.create(user=user, inventory=inventory)
 
     # TODO: send confirm email
 

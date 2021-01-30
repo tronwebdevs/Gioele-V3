@@ -1,5 +1,4 @@
-import re
-import datetime
+import re, datetime, random, string
 
 from django.utils import timezone
 from jose import jwt
@@ -69,3 +68,11 @@ def forge_auth_token(userid, username):
         algorithm=JWT_SETTINGS['algorithm']
     )
 
+def generate_short_id(verify_set=None):
+    gen_set = string.ascii_uppercase + string.ascii_lowercase + string.ascii_letters
+    generated = ''.join(random.choice(gen_set) for _ in range(4))
+    if verify_set is not None:
+        res = verify_set.filter(pk=generated)
+        if not res.empty():
+            return generate_short_id(verify_set)
+    return generated

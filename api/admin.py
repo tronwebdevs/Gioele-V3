@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import Visitor, GUser, Game
+from .models import Visitor, GUser, Match, UserInventory, Gun, Skin
 
 
 class APIAdminSite(admin.AdminSite):
@@ -10,16 +11,47 @@ class APIAdminSite(admin.AdminSite):
     index_title = 'Administration'
 
 
-class GameInline(admin.TabularInline):
-    model = Game
+class MatchInline(admin.TabularInline):
+    model = Match
     extra = 0
 
 
-class GUserAdmin(admin.ModelAdmin):
-    fields = ('auth', 'score')
-    inlines = [GameInline]
+class UserInventoryInline(admin.StackedInline):
+    model = UserInventory
+    can_delete = False
 
+
+class GUserInline(admin.StackedInline):
+    model = GUser
+    can_delete = False
+    inlines = (UserInventoryInline,)
+
+
+class UserAdmin(BaseUserAdmin):
+    fieldsets = (
+        (
+            None,
+            {
+                'fields': ('username', 'password', 'email',)
+            }
+        ),
+        # ('Permissions', { 'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'), }),
+        (
+            'Timestamps',
+            {
+                'fields': ('last_login', 'date_joined')
+            }
+        ),
+    )
+    list_display = ('id', 'username', 'email', 'is_staff')
+    list_filter = ('is_staff', 'is_active')
+    search_fields = ('id', 'username', 'email')
+    ordering = ('id',)
+    filter_horizontal = ('groups', 'user_permissions',)
+    inlines = (GUserInline,)
 
 admin_site = APIAdminSite(name='apiadmin')
 admin_site.register(Visitor)
-admin_site.register(GUser, GUserAdmin)
+admin_site.register(Gun)
+admin_site.register(Skin)
+admin_site.register(User, UserAdmin)

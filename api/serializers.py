@@ -1,13 +1,19 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import GUser, Game, Visitor
+from .models import GUser, Match, Visitor, UserInventory
 from .utils import is_valid_word, SCHOOL_EMAIL_ADDRESS
 
 
-class GameSerializer(serializers.ModelSerializer):
+class MatchSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Game
+        model = Match
+        fields = '__all__'
+
+
+class UserInventorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserInventory
         fields = '__all__'
 
 
@@ -51,14 +57,14 @@ class UserRegistrationSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    games = GameSerializer(many=True, read_only=True)
     id = serializers.IntegerField(source='user.id')
     username = serializers.CharField(source='user.username')
     email = serializers.CharField(source='user.email')
+    matches = MatchSerializer(many=True, read_only=True)
 
     class Meta:
         model = GUser
-        fields = ['id', 'username', 'email', 'auth', 'score', 'games']
+        fields = ['id', 'username', 'email', 'auth', 'level', 'inventory', 'matches']
 
 
 class DisplayUserSeializer(serializers.ModelSerializer):
@@ -68,7 +74,7 @@ class DisplayUserSeializer(serializers.ModelSerializer):
 
     class Meta:
         model = GUser
-        fields = ['id', 'username', 'email', 'score', 'balance']
+        fields = ['id', 'username', 'email', 'level', 'balance']
 
 
 class ScoreboardUserSerializer(serializers.ModelSerializer):
