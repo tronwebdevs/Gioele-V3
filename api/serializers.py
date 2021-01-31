@@ -11,12 +11,6 @@ class MatchSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class UserInventorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserInventory
-        fields = '__all__'
-
-
 class UserRegistrationSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=32, required=True)
     email = serializers.EmailField(required=True)
@@ -67,14 +61,26 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'auth', 'level', 'inventory', 'matches']
 
 
-class DisplayUserSeializer(serializers.ModelSerializer):
+class UserInventorySerializer(serializers.ModelSerializer):
+    id = serializers.CharField(source='get_displayable_id', read_only=True)
+    main_guns = serializers.ListField(source='get_main_guns_dict', read_only=True)
+    side_guns = serializers.ListField(source='get_side_guns_dict', read_only=True)
+    skins = serializers.ListField(source='get_skins_dict', read_only=True)
+
+    class Meta:
+        model = UserInventory
+        fields = '__all__'
+
+
+class DisplayUserSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='user.id')
     username = serializers.CharField(source='user.username')
     email = serializers.CharField(source='user.email')
+    inventory = UserInventorySerializer(read_only=True)
 
     class Meta:
         model = GUser
-        fields = ['id', 'username', 'email', 'level', 'balance']
+        fields = ['id', 'username', 'email', 'level', 'balance', 'inventory']
 
 
 class ScoreboardUserSerializer(serializers.ModelSerializer):

@@ -50,8 +50,13 @@ class UserAdmin(BaseUserAdmin):
     filter_horizontal = ('groups', 'user_permissions',)
     inlines = (GUserInline,)
 
+
+class ItemAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'price',)
+    search_fields = ('username',)
+
 admin_site = APIAdminSite(name='apiadmin')
 admin_site.register(Visitor)
-admin_site.register(Gun)
-admin_site.register(Skin)
+admin_site.register(Gun, ItemAdmin)
+admin_site.register(Skin, ItemAdmin)
 admin_site.register(User, UserAdmin)

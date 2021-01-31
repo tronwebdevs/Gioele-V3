@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import viewsets, permissions, status, exceptions
 
-from .serializers import UserRegistrationSerializer, UserSerializer, VisitorSerializer, ScoreboardUserSerializer, DisplayUserSeializer
+from .serializers import UserRegistrationSerializer, UserSerializer, VisitorSerializer, ScoreboardUserSerializer, DisplayUserSerializer
 from .models import GUser, Visitor, UserInventory
 from .utils import forge_auth_token
 
@@ -39,17 +39,13 @@ def user_registration(request, format=True):
     serializer = UserRegistrationSerializer(data=data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    # TODO: Code has to be clean up with a custom manager under GUser
-    user = User.objects.create_user(username=data['username'], password=data['password'], email=data['email'])
-    inventory = UserInventory.objects.create(main_gun=None, side_gun=None, skins=None)
-    guser = GUser.objects.create(user=user, inventory=inventory)
+        
+    guser = GUser.objects.create_user(username=data['username'], password=data['password'], email=data['email'])
 
     # TODO: send confirm email
 
-    # reponse_user = UserSerializer(guser)
-    # return Response(reponse_user.data, status=status.HTTP_200_OK)
-    return Response(status=status.HTTP_204_NO_CONTENT)
+    user_serializer = DisplayUserSerializer(guser)
+    return Response(user_serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 def user_authentication(request, format=True):
@@ -63,7 +59,7 @@ def user_authentication(request, format=True):
             guser = GUser.objects.get(pk=user.id)
         except GUser.DoesNotExist:
             guser = GUser(user=user, auth=1, score=0)
-        serializer = DisplayUserSeializer(guser)
+        serializer = DisplayUserSerializer(guser)
         token = forge_auth_token(user.id, user.get_username())
         return Response(data=serializer.data, headers={ 'Token': token })
     else:
@@ -93,7 +89,7 @@ class UserDetail(APIView):
 
     def get(self, request, pk, format=None):
         user = self.get_object(pk)
-        serializer = DisplayUserSeializer(user)
+        serializer = DisplayUserSerializer(user)
         return Response(serializer.data)
 
     def put(self, request, pk, format=None):
