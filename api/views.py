@@ -10,8 +10,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import viewsets, permissions, status, exceptions
 
-from .serializers import UserRegistrationSerializer, UserSerializer, VisitorSerializer, ScoreboardUserSerializer, DisplayUserSerializer
-from .models import GUser, Visitor, UserInventory
+from .serializers import UserRegistrationSerializer, UserSerializer, VisitLogSerializer, ScoreboardUserSerializer, DisplayUserSerializer
+from .models import GUser, VisitLog, UserInventory, Gun, Skin
 from .utils import forge_auth_token
 
 @api_view(['GET'])
@@ -96,4 +96,34 @@ class UserDetail(APIView):
         return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
 
     def delete(self, request, pk, format=None):
+        return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
+
+@api_view(['GET'])
+def shop_list_items(reqeust, format=None):
+    def to_display(item):
+        return {
+            'id': item.get_displayable_id(),
+            'name': item.name,
+            'price': item.price,
+        }
+    
+    data = dict()
+    guns = Gun.objects.all()
+    main_guns = filter(lambda g: g.type == 0, guns)
+    data['main_guns'] = list(map(to_display, main_guns))
+    side_guns = filter(lambda g: g.type == 1, guns)
+    data['side_guns'] = list(map(to_display, side_guns))
+    data['skins'] = list(map(to_display, Skin.objects.all()))
+    return Response(data=data)
+
+
+class ShopItemDetail(APIView):
+    """
+    Buy an item in the shop
+    """
+    def get(self, request, pk, format=None):
+        # hashed_pk = hashlib.md5(pk.encoded()).
+        return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
+    
+    def post(self, request, pk, format=None):
         return Response(status=status.HTTP_501_NOT_IMPLEMENTED)

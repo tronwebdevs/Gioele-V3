@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import Visitor, GUser, Match, UserInventory, Gun, Skin
+from .models import GUser, VisitLog, LoginLog, MatchLog, UserInventory, Gun, Skin
 
 
 class APIAdminSite(admin.AdminSite):
@@ -12,7 +12,7 @@ class APIAdminSite(admin.AdminSite):
 
 
 class MatchInline(admin.TabularInline):
-    model = Match
+    model = MatchLog
     extra = 0
 
 
@@ -56,7 +56,8 @@ class ItemAdmin(admin.ModelAdmin):
     search_fields = ('username',)
 
 admin_site = APIAdminSite(name='apiadmin')
-admin_site.register(Visitor)
+admin_site.register(VisitLog)
+admin_site.register(LoginLog)
 admin_site.register(Gun, ItemAdmin)
 admin_site.register(Skin, ItemAdmin)
 admin_site.register(User, UserAdmin)
