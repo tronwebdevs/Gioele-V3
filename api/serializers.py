@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import GUser, MatchLog, VisitLog, UserInventory
+from .models import GUser, MatchLog, VisitLog, UserInventory, Gun, Skin
 from .utils import is_valid_word, SCHOOL_EMAIL_ADDRESS
 
 
@@ -96,3 +96,17 @@ class VisitLogSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class GunSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(source='get_displayable_id')
+
+    class Meta:
+        model = Gun
+        fields = '__all__'
+
+
+class SkinSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(source='get_displayable_id')
+
+    class Meta:
+        model = Skin
+        fields = '__all__'

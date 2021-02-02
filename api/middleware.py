@@ -15,7 +15,7 @@ class AuthTokenMiddleware:
         # Check if request is for API and isn't to authenticate
         if request.path.startswith('/api/') and request.path != '/api/users/auth' and (request.path != '/api/users/register' and request.method != 'PUT'):
             # Bad generated json but it's the only way in which this works
-            auth_exception = HttpResponseForbidden('{"message":"Token richiesto"}')
+            auth_exception = HttpResponseForbidden('{"detail":"Token richiesto"}')
             auth_exception['Content-Type'] = 'application/json'
             # Check if request has token in headers
             if 'Authorization' not in request.headers or type(request.headers['Authorization']) is not str:

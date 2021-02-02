@@ -1,4 +1,5 @@
 import datetime
+import hashlib
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User, Group
@@ -10,9 +11,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import viewsets, permissions, status, exceptions
 
-from .serializers import UserRegistrationSerializer, UserSerializer, VisitLogSerializer, ScoreboardUserSerializer, DisplayUserSerializer
+from .serializers import UserRegistrationSerializer, UserSerializer, VisitLogSerializer, ScoreboardUserSerializer, DisplayUserSerializer, GunSerializer, SkinSerializer
 from .models import GUser, VisitLog, UserInventory, Gun, Skin
 from .utils import forge_auth_token
+from .exceptions import AlreadyExist, NotEnoughtCoins
 
 @api_view(['GET'])
 def api_root(request, format=True):
@@ -121,9 +123,47 @@ class ShopItemDetail(APIView):
     """
     Buy an item in the shop
     """
+    def _get_item(self, Item, hashed_id):
+        item = None
+        for i in Item.objects.all():
+            if hashlib.md5(i.id.encode()).hexdigest() == hashed_id:
+                item = i
+        if item is None:
+            raise exceptions.NotFound('Oggetto non trovato')
+        return item
+
+    def _get_item_serializer(self, path, pk):
+        item_type = path.split('/')[-2]
+        serializer = None
+        if item_type == 'guns':
+            serializer = GunSerializer(self._get_item(Gun, pk))
+        elif item_type == 'skins':
+            serializer = SkinSerializer(self._get_item(Skin, pk))
+        else:
+            raise exceptions.NotFound("Item type doesn't exists")
+        return serializer
+
     def get(self, request, pk, format=None):
-        # hashed_pk = hashlib.md5(pk.encoded()).
-        return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
+        serializer = self._get_item_serializer(request.path, pk)
+        return Response(serializer.data)
     
     def post(self, request, pk, format=None):
-        return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
+        serializer = self._get_item_serializer(request.path, pk)
+        user = GUser.objects.get(pk=request.user_id)
+        item_type = request.path.split('/')[-2]
+        try:
+            if item_type == 'guns':
+                user.buy_gun(pk)
+            else:
+                user.buy_skin(pk)
+        except AlreadyExist:
+            excp = exceptions.APIException('Possiedi già questo oggetto')
+            excp.status_code = status.HTTP_409_CONFLICT
+            raise excp
+        except NotEnoughtCoins:
+            excp = exceptions.APIException('Non hai abbastanza coin')
+            excp.status_code = status.HTTP_402_PAYMENT_REQUIRED
+            raise excp
+        duser = DisplayUserSerializer(user)
+        data = {'user': duser.data, 'item': serializer.data}
+        return Response(data=data)
