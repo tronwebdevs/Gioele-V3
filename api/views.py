@@ -161,7 +161,7 @@ class ShopItemDetail(APIView):
             excp.status_code = status.HTTP_409_CONFLICT
             raise excp
         except NotEnoughtCoins:
-            excp = exceptions.APIException('Non hai abbastanza coin')
+            excp = exceptions.APIException('Non hai abbastanza gbucks')
             excp.status_code = status.HTTP_402_PAYMENT_REQUIRED
             raise excp
         duser = DisplayUserSerializer(user)

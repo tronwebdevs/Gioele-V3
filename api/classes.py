@@ -34,15 +34,15 @@ the format `item_1_id:level_item_1|item_2_id:level_item_2|...|item_N_id:level_it
 The string must be less than 256 characters long.
 """
 class Parser:
-    _ITEM_SEPARATOR = '|'
-    _DICT_SEPARATOR = ':'
+    ITEM_SEPARATOR = '|'
+    DICT_SEPARATOR = ':'
 
     def to_dict_list(self, val, key_name='id', value_name='level'):
         result = []
         if val is None:
             return result
-        for item in val.split(self._ITEM_SEPARATOR):
-            t = item.split(self._DICT_SEPARATOR)
+        for item in val.split(self.ITEM_SEPARATOR):
+            t = item.split(self.DICT_SEPARATOR)
             if len(t) != 2:
                 raise ParseException('Input value: "' + val + '"')
             item_id, level = t
@@ -60,15 +60,15 @@ class Parser:
         temp = list()
         for item in val:
             key1, key2 = item
-            temp.append(str(item[key1]) + self._DICT_SEPARATOR + str(item[key2]))
-        return self._ITEM_SEPARATOR.join(temp)
+            temp.append(str(item[key1]) + self.DICT_SEPARATOR + str(item[key2]))
+        return self.ITEM_SEPARATOR.join(temp)
 
     def to_str_list(self, val):
         if val is None:
             return list()
-        return val.split(self._ITEM_SEPARATOR)
+        return val.split(self.ITEM_SEPARATOR)
 
     def from_str_list(self, val):
         if val == '' or val is None:
             return None
-        return self._ITEM_SEPARATOR.join(val)
+        return self.ITEM_SEPARATOR.join(val)

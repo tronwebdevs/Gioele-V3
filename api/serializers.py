@@ -1,13 +1,13 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import GUser, MatchLog, VisitLog, UserInventory, Gun, Skin
+from .models import GUser, GameLog, VisitLog, UserInventory, Gun, Skin
 from .utils import is_valid_word, SCHOOL_EMAIL_ADDRESS
 
 
-class MatchSerializer(serializers.ModelSerializer):
+class GameSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MatchLog
+        model = GameLog
         fields = '__all__'
 
 
@@ -54,7 +54,7 @@ class UserSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='user.id')
     username = serializers.CharField(source='user.username')
     email = serializers.CharField(source='user.email')
-    matches = MatchSerializer(many=True, read_only=True)
+    matches = GameSerializer(many=True, read_only=True)
 
     class Meta:
         model = GUser

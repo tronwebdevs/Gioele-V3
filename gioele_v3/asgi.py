@@ -14,12 +14,13 @@ from channels.auth import AuthMiddleware
 from channels.routing import ProtocolTypeRouter, URLRouter
 
 import api.routing
+from api.middleware import WebSocketAuthMiddleware
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gioele_v3.settings')
 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),
-    "websocket": AuthMiddleware(
+    "websocket": WebSocketAuthMiddleware(
         URLRouter(
             api.routing.websocket_urlpatterns,
         )

@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import GUser, VisitLog, LoginLog, MatchLog, UserInventory, Gun, Skin
+from .models import GUser, VisitLog, LoginLog, GameLog, UserInventory, Gun, Skin
 
 
 class APIAdminSite(admin.AdminSite):
@@ -11,8 +11,8 @@ class APIAdminSite(admin.AdminSite):
     index_title = 'Administration'
 
 
-class MatchInline(admin.TabularInline):
-    model = MatchLog
+class GameInline(admin.TabularInline):
+    model = GameLog
     extra = 0
 
 

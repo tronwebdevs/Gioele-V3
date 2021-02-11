@@ -26,6 +26,7 @@ class Gun(models.Model):
     )
     price = models.FloatField()
     name = models.CharField(max_length=128)
+    description = models.CharField(max_length=256, default='')
     cooldown = models.IntegerField()
     damage = models.IntegerField()
     max_level = models.IntegerField()
@@ -39,6 +40,7 @@ class Gun(models.Model):
 
 class Skin(models.Model):
     id = models.CharField(primary_key=True, max_length=4, editable=False, default=generate_short_id)
+    description = models.CharField(max_length=256, default='')
     name = models.CharField(max_length=128)
     price = models.FloatField()
 
@@ -148,6 +150,7 @@ class GUser(models.Model):
     auth = models.BooleanField(default=False, verbose_name='Email authentication completed')
     level = models.FloatField(default=0)
     balance = models.FloatField(default=0)
+    skin = models.CharField(max_length=4, default='')
     inventory = models.OneToOneField(UserInventory, on_delete=models.CASCADE, related_name='inventory')
 
     objects = GUserManager()
@@ -158,9 +161,6 @@ class GUser(models.Model):
     def log_login(self, visit_id):
         visit_log = VisitLog.objects.get(pk=visit_id)
         LoginLog.objects.create(user=self, visit=visit_log)
-
-    def log_game(self, visit_id):
-        pass
 
     def _get_item_from_shop(self, Item, hashed_item_id):
         db_item = None
@@ -240,16 +240,16 @@ class LoginLog(models.Model):
         return str(self.id)
 
 
-class MatchLog(models.Model):
+class GameLog(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     user = models.ForeignKey(GUser, on_delete=models.CASCADE)
     visit = models.ForeignKey(VisitLog, on_delete=models.CASCADE)
     time_start = models.DateTimeField()
     time_end = models.DateTimeField()
     exp_gained = models.IntegerField()
-    coins_earned = models.IntegerField()
-    shooted_primary = models.IntegerField()
-    shooted_secondary = models.IntegerField()
+    gbucks_earned = models.IntegerField()
+    shooted_main = models.IntegerField()
+    shooted_side = models.IntegerField()
     killed = models.CharField(max_length=128)
     powerups = models.CharField(max_length=128)
     skin = models.CharField(max_length=4)
