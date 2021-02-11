@@ -1,0 +1,19 @@
+html {
+  min-height: 100%;
+  margin: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+body {
+  min-height: 100%;
+  margin: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  background-color: lightgrey;
+}
+
+#gameCanvas {
+  border: 3px solid black;
+  background-color: white;
+  margin: 10px 0 0 10px;
+}
