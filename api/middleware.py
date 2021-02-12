@@ -2,6 +2,7 @@ import json
 from http.cookies import SimpleCookie
 
 from django.http import HttpResponseForbidden
+from django.contrib.auth.models import AnonymousUser
 from channels.db import database_sync_to_async
 from jose import jwt
 
@@ -90,6 +91,14 @@ class WebSocketAuthMiddleware:
         headers = dict()
         for c in cookies:
             headers[c] = cookies[c].value
-        data = authenticator(headers=headers, key='token')
-        scope["user"] = await get_user(data['id'])
+        try:
+            data = authenticator(headers=headers, key='token')
+            scope["user"] = await get_user(data['id'])
+        except:
+            # DEBUG
+            print('Unrecognized token in cookies')
+            print(headers)
+            print(cookies)
+            # /DEBUG
+            scope["user"] = AnonymousUser()
         return await self.app(scope, receive, send)

@@ -66,7 +66,7 @@ class UserInventory(models.Model):
     def _get_guns(self, g_type):
         field = self.main_guns if g_type == 'main' else self.side_guns
         result = []
-        for gun in pstr_parser.to_dict_list(field, 'id', 'level'):
+        for gun in pstr_parser.string_to_dicts(field, 'id', 'level'):
             db_gun = Gun.objects.get(pk=gun['id'])
             hashed_id = hashlib.md5(gun['id'].encode()).hexdigest()
             result.append(
@@ -80,15 +80,15 @@ class UserInventory(models.Model):
 
     def _add_gun(self, gun_id, g_type):
         field = self.main_guns if g_type == 'main' else self.side_guns
-        guns = pstr_parser.to_dict_list(field, 'id', 'level')
+        guns = pstr_parser.string_to_dicts(field, 'id', 'level')
         guns.append({
             'id': gun_id,
             'level': 1
         })
         if g_type == 'main':
-            self.main_guns = pstr_parser.from_dict_list(guns)
+            self.main_guns = pstr_parser.dicts_to_string(guns)
         else:
-            self.side_guns = pstr_parser.from_dict_list(guns)
+            self.side_guns = pstr_parser.dicts_to_string(guns)
 
     def get_main_guns(self):
         return self._get_guns('main')
@@ -112,7 +112,7 @@ class UserInventory(models.Model):
         if self.skins is None:
             return list()
         skins_obj = []
-        for skin in pstr_parser.to_str_list(self.skins):
+        for skin in pstr_parser.string_to_list(self.skins):
             db_skin = Skin.objects.get(pk=skin)
             hashed_id = hashlib.md5(skin.encode()).hexdigest()
             skins_obj.append({
@@ -125,9 +125,9 @@ class UserInventory(models.Model):
         return self.get_skins()
 
     def add_skin(self, skin_id):
-        skins = pstr_parser.to_str_list(self.skins)
+        skins = pstr_parser.string_to_list(self.skins)
         skins.append(skin_id)
-        self.skins = pstr_parser.from_str_list(skins)
+        self.skins = pstr_parser.list_to_string(skins)
 
     def get_displayable_id(self):
         return hashlib.md5(str(self.id).encode()).hexdigest()
@@ -138,9 +138,14 @@ class UserInventory(models.Model):
 
 class GUserManager(models.Manager):
     def create_user(self, username, email, password, **extra_fields):
+        # Create user (auth)
         user = User.objects.create_user(username=username, password=password, email=email)
+        # Create empty user inventory
         inventory = UserInventory.objects.create(main_guns=None, side_guns=None, skins=None)
         guser = GUser(user=user, inventory=inventory)
+        # Get the first skin (default) as user's first skin
+        guser.skin = Skin.objects.all()[0]
+        # Store user on database
         guser.save()
         return guser
 
@@ -182,8 +187,8 @@ class GUser(models.Model):
         return db_item
 
     def buy_gun(self, hashed_gun_id):
-        all_guns = pstr_parser.to_dict_list(self.inventory.main_guns, 'id', 'name') 
-        all_guns += pstr_parser.to_dict_list(self.inventory.side_guns, 'id', 'name')
+        all_guns = pstr_parser.string_to_dicts(self.inventory.main_guns, 'id', 'name') 
+        all_guns += pstr_parser.string_to_dicts(self.inventory.side_guns, 'id', 'name')
         for gun in all_guns:
             if hashlib.md5(gun['id'].encode()).hexdigest() == hashed_gun_id:
                 raise AlreadyExist()
@@ -198,7 +203,7 @@ class GUser(models.Model):
         self.inventory.save()
 
     def buy_skin(self, hashed_skin_id):
-        for s in pstr_parser.to_str_list(self.inventory.skins):
+        for s in pstr_parser.string_to_list(self.inventory.skins):
             if hashlib.md5(s.encode()).hexdigest() == hashed_skin_id:
                 raise AlreadyExist()
         skin = self._get_item_from_shop(Skin, hashed_skin_id)
@@ -224,7 +229,7 @@ class VisitLog(models.Model):
     has_touchscreen = models.BooleanField(default=False)
     has_ad_blocker = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField()
+    updated_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return str(self.id)

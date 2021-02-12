@@ -69,8 +69,8 @@ class GUserModelTest(TestCase):
         hid2 = hashlib.md5(guns[1].id.encode()).hexdigest()
         user.buy_gun(hid2)
 
-        user_main_guns = pstr_parser.to_dict_list(user.inventory.main_guns, 'id', 'name')
-        user_side_guns = pstr_parser.to_dict_list(user.inventory.side_guns, 'id', 'name')
+        user_main_guns = pstr_parser.string_to_dicts(user.inventory.main_guns, 'id', 'name')
+        user_side_guns = pstr_parser.string_to_dicts(user.inventory.side_guns, 'id', 'name')
         self.assertEqual(user_main_guns[0]['id'], Gun.objects.filter(type=Gun.MAIN_GUN)[0].id)
         self.assertEqual(user_side_guns[0]['id'], Gun.objects.filter(type=Gun.SIDE_GUN)[0].id)
 
@@ -80,7 +80,7 @@ class GUserModelTest(TestCase):
 
         hid = hashlib.md5(skins[0].id.encode()).hexdigest()
         user.buy_skin(hid)
-        user_skins = pstr_parser.to_str_list(user.inventory.skins)
+        user_skins = pstr_parser.string_to_list(user.inventory.skins)
         self.assertEqual(len(user_skins), 1)
 
     def test_user_buys_gun_already_exists(self):

@@ -29,15 +29,15 @@ class UserSkin(UserItem):
 
 
 """
-Parser definition: all items owned by the player are sotred in the database in
-the format `item_1_id:level_item_1|item_2_id:level_item_2|...|item_N_id:level_item_N`.
-The string must be less than 256 characters long.
+Parser definition:
+dict: `item_1_id:level_item_1|item_2_id:level_item_2|...|item_N_id:level_item_N`
+list: `item_1_id|item_2_id|...|item_N_id`
 """
 class Parser:
     ITEM_SEPARATOR = '|'
     DICT_SEPARATOR = ':'
 
-    def to_dict_list(self, val, key_name='id', value_name='level'):
+    def string_to_dicts(self, val, key_name='id', value_name='level'):
         result = []
         if val is None:
             return result
@@ -56,19 +56,25 @@ class Parser:
             })
         return result
 
-    def from_dict_list(self, val):
+    def dicts_to_string(self, val):
         temp = list()
         for item in val:
             key1, key2 = item
             temp.append(str(item[key1]) + self.DICT_SEPARATOR + str(item[key2]))
         return self.ITEM_SEPARATOR.join(temp)
 
-    def to_str_list(self, val):
-        if val is None:
+    def dict_to_string(self, val):
+        temp = list()
+        for key in val:
+            temp.append(str(key) + self.DICT_SEPARATOR + str(val[key]))
+        return self.ITEM_SEPARATOR.join(temp)
+
+    def string_to_list(self, val):
+        if val == '' or val is None:
             return list()
         return val.split(self.ITEM_SEPARATOR)
 
-    def from_str_list(self, val):
-        if val == '' or val is None:
+    def list_to_string(self, val):
+        if len(val) == 0 or val is None:
             return None
         return self.ITEM_SEPARATOR.join(val)
