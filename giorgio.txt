@@ -1,0 +1,37 @@
+  /$$$$$$  /$$                               /$$          
+ /$$__  $$|__/                              |__/          
+| $$  \__/ /$$  /$$$$$$   /$$$$$$   /$$$$$$  /$$  /$$$$$$ 
+| $$ /$$$$| $$ /$$__  $$ /$$__  $$ /$$__  $$| $$ /$$__  $$
+| $$|_  $$| $$| $$  \ $$| $$  \__/| $$  \ $$| $$| $$  \ $$
+| $$  \ $$| $$| $$  | $$| $$      | $$  | $$| $$| $$  | $$
+|  $$$$$$/| $$|  $$$$$$/| $$      |  $$$$$$$| $$|  $$$$$$/
+ \______/ |__/ \______/ |__/       \____  $$|__/ \______/ 
+                                   /$$  \ $$              
+                                  |  $$$$$$/              
+                                   \______/               
+"My name is Giovanni Giorgio, but you can call me: Giorgio." -Daft Punk
+
+Giovanni is a server-side garbage collector and game engine for Gioele-V3.
+All comunications are achieved through websocket (RFC6455).
+The anti-cheat part of Giorgio is formerly known as Giovanni.
+
++-----------------------------------+    +--------------------------------------------------------------------+
+|           Sent by CLIENT          |    |                          Actions of SERVER                         |
++-----------------------------------+    +--------------------------------------------------------------------+
+| Generate enemies (fixed interval) | -> | Generate enemies for the next x seconds.                           |
+| Enemy hit player                  | -> | If directly, remove the enemy from the stack, check if player died |
+|                                   |    | (trigger end game) or just remove xp (or shield) from player. If   |
+|                                   |    | with bullet, just check for player death or remove xp (or sheild). |
+| Player hit Enemy(ies)             | -> | Check if enemy has been killed (and remove it from stack) or just  |
+|                                   |    | remove xp from enemy and update counter of hit bullets.            |
+| Enemy hit mother (each max Y)     | -> | Subtract 1 from mother lifes (and check if she has died) and       |
+|                                   |    | remove enemy from stack.                                           |
+| Player gain powerup               | -> | Add powerup to player's list and start timer (which at end remove) |
+|                                   |    | the powerup from every stack).                                     |
+| Player acquire shield             | -> | Add N to player shield.                                            |
+| Player use ability                | -> | Perform the ability effects.                                       |
++-----------------------------------+    +--------------------------------------------------------------------+
+
+For every event sent by client the server responds with the updated stats (player or enemy).
+Generation of enemies is done by server on request by client at fixed interval (anti-dos). The generation 
+algorithm is "u guru digidàl v2".
