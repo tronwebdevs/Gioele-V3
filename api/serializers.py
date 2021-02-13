@@ -66,6 +66,7 @@ class UserInventorySerializer(serializers.ModelSerializer):
     main_guns = serializers.ListField(source='get_main_guns_dict', read_only=True)
     side_guns = serializers.ListField(source='get_side_guns_dict', read_only=True)
     skins = serializers.ListField(source='get_skins_dict', read_only=True)
+    abilities = serializers.ListField(source='get_abilities_dict', read_only=True)
 
     class Meta:
         model = UserInventory
