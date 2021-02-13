@@ -34,6 +34,11 @@ function update() {
     for (k = 0; k < enemies.length; k++) {
       if (mainGunBullets[i].collide(enemies[k])) {
         enemies.splice(k,1);
+        gameSocket.send(JSON.stringify({
+            a: 10,
+            t: 0,
+            i: ''
+        }));
       }
     }
   }
@@ -42,6 +47,11 @@ function update() {
     for (k = 0; k < enemies.length; k++) {
       if (sideGunBullets[i].collide(enemies[k])) {
         enemies.splice(k,1);
+        gameSocket.send(JSON.stringify({
+            a: 10,
+            t: 1,
+            i: ''
+        }));
       }
     }
   }
@@ -51,6 +61,7 @@ function update() {
 
 
 function startGame() {
+    gameSocket.send(JSON.stringify({a:0}));
   gameArea.start();
   player = new Player(test);
   player.equip.mainGun.check();
