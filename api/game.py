@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from .models import Gun, Skin, GUser, GameLog, VisitLog
 from .classes import Parser
+from .exceptions import GameException
 
 MAX_PLAYER_HP = 100
 MAX_MSHIP_LIFES = 3
@@ -123,37 +124,103 @@ class Giorgio:
     game_id = uuid4()
     start_time = timezone.now()
     enemies = dict()
+    powerups = dict()
     killed = EnemyManager()
     mship_lifes = MAX_MSHIP_LIFES
 
-    def __init__(self, user_id, abilities, main_gun_id, side_gun_id, skin_id):
-        self.player = Player(user_id, abilities, main_gun_id, side_gun_id, skin_id)
+    def __init__(self, user, visit_id, abilities, main_gun_id, side_gun_id, skin_id):
+        self.user = user
+        self.visit_id = visit_id
+        self.player = Player(user.user.id, abilities, main_gun_id, side_gun_id, skin_id)
 
-    def enemy_hit(self, gun_type, enemy_id):
-        
-        # TODO: enemy hit system (if enemy is killed or if it just lost xp)
+    """
+    Check if enemy has been killed (and remove it from stack) or just
+    remove xp from enemy and update counter of hit bullets.
+    Return updated enemy (hp).
+    """
+    def player_hit_enemy(self, gun_type, enemy):
 
-        # Return the enemy that has been killed or none if enemy is still alive
-        return None
+        # TODO: handle multiple enemy hit at once
 
-    def acquired_powerup(self, powerup):
-        self.player.active_powerups.add(powerup)
+        # Increment hit bullets' counter
+        self.player.bullet_hit(gun_type)
+        # Calculate enemy's remained hp
+        temp = enemy.hp - self.player.get_damage(gun_type)
+        if temp < 0:
+            # enemy is dead
+            self.killed.add(enemy.type)
+            # Remove enemy from stack
+            del self.enemies[enemy.id]
+            enemy.hp = 0
+        else:
+            # enemy has lost hp
+            self.enemies[enemy.id].hp = temp
+        return enemy
 
-        # TODO: ingame logic like incrementing speed, applying shield, etc.
+    """
+    If directly, remove the enemy from the stack, check if player died (trigger end game)
+    or just remove xp (or shield) from player. If with bullet, just check for player
+    death or remove xp (or sheild).
+    """
+    def enemy_hit_player(self, enemy, directly):
+        # TODO: implement the method
+        raise GameException('Not implemented yet')
 
-    def save(self, visit_id):
+    """
+    Subtract 1 from mother lifes (and check if she has died) and remove enemy from stack.
+    Return remained mship's lifes.
+    """
+    def enemy_hit_mship(self, enemy):
+        # Remove enemy from stack
+        del self.enemies[enemy.id]
+        lifes = self.mship_lifes - 1
+        if lifes < 0:
+            # Mother ship is dead, game ends
+            self.end_game()
+            raise GameException('Game ended', 0)
+        else:
+            # Mother ship lost a life
+            self.mship_lifes = lifes
+        return lifes
+
+    """
+    Add powerup to player's list and start sched (which at end remove the powerup from
+    every stack).
+    """
+    def player_gain_powerup(self, powerup):
+        #self.player.active_powerups.add(powerup,id)
+        # TODO: implement the method
+        raise GameException('Not implemented yet')
+
+    """
+    Perform the ability effects.
+    """
+    def player_use_ability(self, ability):
+        # TODO: implement the method
+        raise GameException('Not implemented yet')
+
+    def pause_game(self):
+        # TODO: implement the method
+        # game paused, stop all scheds
+        raise GameException('Not implemented yet')
+
+    def end_game(self):
+        # TODO: implement the method
+        raise GameException('Not implemented yet')
+
+    def save(self):
         game_log = GameLog(
-            id=self.id,
+            id=self.game_id,
+            user=self.user,
             time_start=self.start_time,
             time_end=timezone.now(),
-            shooted_main=self.shooted_main,
-            shooted_side=self.shooted_side,
-            exp_gained=self.exp,
-            gbucks_earned=self.gbucks
+            shooted_main=self.player.main_hit,
+            shooted_side=self.player.side_hit,
+            exp_gained=self.player.exp,
+            gbucks_earned=self.player.gbucks
         )
-        game_log.user = GUser.objects.get(pk=self.player.user_id)
         game_log.skin = game_log.user.skin
-        game_log.visit = VisitLog.objects.get(pk=visit_id)
+        game_log.visit = VisitLog.objects.get(pk=self.visit_id)
         # for enemy in self.killed:
         #     game_log.killed = 
         # game_log.killed = game_log.killed[:-1]

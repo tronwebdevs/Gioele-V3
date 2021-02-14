@@ -26,7 +26,7 @@ The anti-cheat part of Giorgio is formerly known as Giovanni.
 |                                   |    | remove xp from enemy and update counter of hit bullets.            |
 | Enemy hit mother (each max Y)     | -> | Subtract 1 from mother lifes (and check if she has died) and       |
 |                                   |    | remove enemy from stack.                                           |
-| Player gain powerup               | -> | Add powerup to player's list and start timer (which at end remove) |
+| Player gain powerup               | -> | Add powerup to player's list and start timer (which at end remove  |
 |                                   |    | the powerup from every stack).                                     |
 | Player acquire shield             | -> | Add N to player shield.                                            |
 | Player use ability                | -> | Perform the ability effects.                                       |

@@ -4,6 +4,7 @@ import uuid
 from channels.generic.websocket import WebsocketConsumer
 from django.contrib.auth.models import AnonymousUser
 
+from .exceptions import GameException
 from .game import Giorgio
 
 ACTION_GAME_START = 0
@@ -30,13 +31,13 @@ class GameConsumer(WebsocketConsumer):
             self.disconnect(1008)
             return
         print(self.scope['user'].user.username + ' connected')
-        self.scope['game'] = None
+        self.scope['giorgio'] = None
         self.accept()
 
     def disconnect(self, close_code):
         if type(self.scope['user']) is not AnonymousUser:
-            if self.scope['game'] is not None:
-                self.scope['game'].save(uuid.UUID(self.scope['visit_id']))
+            if self.scope['giorgio'] is not None:
+                self.scope['giorgio'].end_game()
             print(self.scope['user'].user.username + ' disconnected')
 
     def validate_data(self, text_data):
@@ -54,24 +55,27 @@ class GameConsumer(WebsocketConsumer):
     def send_dict(self, val):
         self.send(text_data=json.dumps(val))
 
-    def send_error(self, message, code=-1):
+    def send_error(self, exception):
+        code = -1
+        if 'code' in vars(exception):
+            code = exception.code
         self.send_dict({
             'code': code,
-            'message': message
+            'message': str(exception)
         })
 
     def get_entity(self, action, eid):
-        exception = Exception('Entity not found')
-        game = self.scope['game']
+        exception = GameException('Entity not found', ERROR_ENTITY_NOT_FOUND)
+        giorgio = self.scope['giorgio']
         if action < 7:
             # Entity is an enemy
-            entity = game.enemies.get(eid)
+            entity = giorgio.enemies.get(eid)
         elif action == 7:
             # Entity is a powerup
-            entity = game.player.active_powerups.get(eid)
+            entity = giorgio.player.active_powerups.get(eid)
         elif action == 8:
             # Entity is an ability
-            entity = None #game.player.abilites.get(eid)
+            entity = None #giorgio.player.abilites.get(eid)
         else:
             raise exception
         
@@ -79,93 +83,61 @@ class GameConsumer(WebsocketConsumer):
             raise exception
         return entity
 
-    def receive(self, text_data):
-        try:
-            data, action, obj_id = self.validate_data(text_data)
-        except Exception as e:
-            self.send_error(str(e))
-            return
-        game = self.scope['game']
-        user = self.scope['user']
-        
+    def execute(self, action, data, giorgio, user, entity_id):
         if action == ACTION_GAME_START:
-            if game is None:
-                self.send_error('Game already started', ERROR_GAME_ALREADY_STARTED)
-                return
+            if giorgio is None:
+                raise GameException('Game already started', ERROR_GAME_ALREADY_STARTED)
             try:
-                self.scope['game'] = Giorgio(
-                    user.user.id,
-                    user.inventory.abilites,
-                    user.main_gun,
-                    user.side_gun,
-                    user.skin
+                self.scope['giorgio'] = Giorgio(
+                    user=user,
+                    visit_id=uuid.UUID(self.scope['visit_id']),
+                    abilities=user.inventory.abilites,
+                    main_gun_id=user.main_gun,
+                    side_gun_id=user.side_gun,
+                    skin_id=user.skin
                 )
                 print('Game started')
             except Exception as e:
-                self.send_error(str(e))
-        elif game is not None:
-            player = game.player
-            
+                raise GameException(str(e))
+        elif giorgio is not None:
             if action > 2:
-                # Check if given enemy's id is valid and get enemy object from stack
-                try:
-                    enemy = game.get_enemy(obj_id)
-                except Exception as e:
-                    self.send_error(str(e), ERROR_ENTITY_NOT_FOUND)
-                    return
+                # Check if given entity's id is valid and get entity object from stack
+                entity = self.get_entity(action, entity_id)
             # Switch between actions
             if action == ACTION_GAME_PAUSE:
-                # TODO: game paused, stop all scheds
-                pass
+                giorgio.pause_game()
             elif action == ACTION_GAME_STOP:
-                # TODO: game stopped, store on db
-                self.send_error('Game ended', 0)
+                giorgio.end_game()
+                self.send_dict({ 'message': 'Game ended' })
             elif action == ACTION_ENEMY_HIT_PLAYER_DIR:
-                # TODO: remove the enemy from the stack, check if player died (trigger end game) or just remove xp (or shield) from player
-                pass
+                player = giorgio.enemy_hit_player(entity, True)
+                self.send_dict(vars(player))
             elif action == ACTION_ENEMY_HIT_PLAYER_IND:
-                # TODO: check for player death or remove xp (or sheild)
-                pass
+                giorgio.enemy_hit_player(entity, False)
+                self.send_dict(vars(player))
             elif action == ACTION_ENEMY_HIT_MSHIP:
-                # Remove enemy from stack
-                del game.enemies[obj_id]
-                temp = game.mship_lifes - 1
-                if temp < 0:
-                    # Mother ship is dead, game ends
-                    # TODO: game end
-                    self.send_error('Game ended', 0)
-                else:
-                    # Mother ship lost a life
-                    game.mship_lifes = temp
-                    self.send_dict({ 'lifes': game.mship_lifes })
+                mship_lifes = giorgio.enemy_hit_mship(entity)
+                self.send_dict({ 'lifes': mship_lifes })
             elif action == ACTION_PLAYER_HIT_ENEMY:
                 # Check if given gun's type is valid
                 gun_type = data.get('t')
-                if type(gun_type) is not int or gun_type < 0 or gun_type > 1 or (gun_type == 1 and player.side_gun is None):
-                    self.send_error('Invalid data (t)')
-                    return
-                # Increment hit bullets' counter
-                player.bullet_hit()
-                # Calculate enemy's remained hp
-                temp = enemy.hp - player.get_damage(gun_type)
-                if temp < 0:
-                    # enemy is dead
-                    game.killed.add(enemy.type)
-                    # Remove enemy from stack
-                    del game.enemies[obj_id]
-                    enemy.hp = 0
-                else:
-                    # enemy has lost hp
-                    game.enemies[obj_id].hp = temp
-                # Return updated enemy
-                self.send_dict(enemy)
+                if type(gun_type) is not int or gun_type < 0 or gun_type > 1 or (gun_type == 1 and giorgio.player.side_gun is None):
+                    raise GameException('Invalid data (t)')
+                entity = giorgio.player_hit_enemy(gun_type, entity)
+                self.send_dict(vars(entity))
             elif action == ACTION_PLAYER_GAIN_POWERUP:
-                # TODO: Add powerup to player's list and start timer (which at end remove) the powerup from every stack)
-                pass
+                giorgio.player_gain_powerup(entity)
             elif action == ACTION_PLAYER_USE_ABILITY:
-                # TODO: Perform the ability effects
-                pass
+                giorgio.player_use_ability(entity)
             else:
-                self.send_error('Invalid action')
+                raise GameException('Invalid action', ERROR_INVALID_ACTION)
         else:
-            self.send_error('Game hasn\'t started', ERROR_GAME_NOT_STARTED)
+            raise GameException("Game hasn't started", ERROR_GAME_NOT_STARTED)
+
+    def receive(self, text_data):
+        try:
+            data, action, entity_id = self.validate_data(text_data)
+            self.execute(action, data, self.scope['giorgio'], self.scope['user'], entity_id)
+        except Exception as e:
+            self.send_error(e)
+            return

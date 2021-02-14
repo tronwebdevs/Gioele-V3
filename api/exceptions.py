@@ -16,3 +16,10 @@ class AlreadyExist(Exception):
     def  __init__(self, message="Value already exists"):
         self.message = message
         super().__init__(self.message)
+
+
+class GameException(Exception):
+    def __init__(self, message, code=-1):
+        self.message = message
+        self.code = code
+        super().__init__(self.message)
