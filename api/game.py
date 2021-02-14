@@ -9,6 +9,8 @@ from .exceptions import GameException
 
 MAX_PLAYER_HP = 100
 MAX_MSHIP_LIFES = 3
+PLAYER_SHIELD_INCREMENT = 10
+MAX_PLAYER_SHIELD = 100
 
 parser = Parser()
 
@@ -20,21 +22,32 @@ class Entity:
 
 
 class PowerUp(Entity):
-    TYPES = ['pu_type_0', 'pu_type_1', 'pu_type_2', 'pu_type_3']
+    TYPES = {
+        'shield': 0, 
+        'fuel': 1,
+        'ammo': 2,
+    }
 
     def __init__(self, id, type):
         super().__init__(id, type)
 
 
 class Ability(Entity):
-    TYPES = ['a_type_0', 'a_type_1', 'a_type_2', 'a_type_3']
+    TYPES = {
+        'wave': 0,
+        'hp_regen': 1,
+    }
 
     def __init__(self, id, type):
         super().__init__(id, type)
 
 
 class Enemy(Entity):
-    TYPES = ['enemy_type_0', 'enemy_type_1', 'enemy_type_2', 'enemy_type_3']
+    TYPES = {
+        'ship': 0,
+        'kamikaze': 1,
+        'interceptor': 2,
+    }
     RARITIES = {
         'base': 0,
         'rare': 1,
@@ -89,7 +102,7 @@ class Player:
     expired_powerups = PowerUpManager()
     active_powerups = PowerUpManager()
     used_abilities = AbilityManager()
-    shield_active = False
+    shield = 0
     hp = MAX_PLAYER_HP
     exp = 0
     gbucks = 0
@@ -112,12 +125,39 @@ class Player:
         else:
             self.side_hit += 1
 
+    def attacked(self, damage):
+        if damage > self.shield:
+            damage -= self.shield
+            self.shield = 0
+        else:
+            self.shield -= damage
+            damage = 0
+        temp = self.hp - damage
+        if temp < 0:
+            raise GameException('Player killed')
+        self.hp = temp
+
+    def reload_shield(self):
+        if self.shield < MAX_PLAYER_SHIELD:
+            temp = self.shield + PLAYER_SHIELD_INCREMENT
+            if temp > MAX_PLAYER_SHIELD:
+                self.shield = MAX_PLAYER_SHIELD
+            else:
+                self.shield = temp
+
     """
     Get hp damage from a specified gun type.
     Remember to check first if side_gun is not null.
     """
     def get_damage(self, gun_type):
         return self.main_gun.damage if gun_type == 0 else self.side_gun.damage
+
+    def get_displayable(self):
+        return {
+            'shield': self.shield,
+            'hp': self.hp,
+            'powerups': self.active_powerups
+        }
 
 
 class Giorgio:
@@ -163,8 +203,10 @@ class Giorgio:
     death or remove xp (or sheild).
     """
     def enemy_hit_player(self, enemy, directly):
-        # TODO: implement the method
-        raise GameException('Not implemented yet')
+        if directly:
+            # If enemy has collide with player (kamikaze) remove enemy from the stack
+            del self.enemies[enemy.id]
+        self.player.attacked(enemy.damage)
 
     """
     Subtract 1 from mother lifes (and check if she has died) and remove enemy from stack.
@@ -188,9 +230,17 @@ class Giorgio:
     every stack).
     """
     def player_gain_powerup(self, powerup):
-        #self.player.active_powerups.add(powerup,id)
-        # TODO: implement the method
-        raise GameException('Not implemented yet')
+        ptype = powerup.type
+        if ptype == PowerUp.TYPES['shield']:
+            self.player.reload_shield()
+        elif ptype == PowerUp.TYPES['fuel']:
+            raise GameException('Not implemented yet')
+        elif ptype == PowerUp.TYPES['ammo']:
+            raise GameException('Not implemented yet')
+        else:
+            raise GameException('Unknown powerup')
+        self.player.active_powerups.add(ptype)
+        
 
     """
     Perform the ability effects.

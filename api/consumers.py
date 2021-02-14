@@ -72,7 +72,7 @@ class GameConsumer(WebsocketConsumer):
             entity = giorgio.enemies.get(eid)
         elif action == 7:
             # Entity is a powerup
-            entity = giorgio.player.active_powerups.get(eid)
+            entity = giorgio.powerups.get(eid)
         elif action == 8:
             # Entity is an ability
             entity = None #giorgio.player.abilites.get(eid)
@@ -111,10 +111,10 @@ class GameConsumer(WebsocketConsumer):
                 self.send_dict({ 'message': 'Game ended' })
             elif action == ACTION_ENEMY_HIT_PLAYER_DIR:
                 player = giorgio.enemy_hit_player(entity, True)
-                self.send_dict(vars(player))
+                self.send_dict(player.get_displayable())
             elif action == ACTION_ENEMY_HIT_PLAYER_IND:
                 giorgio.enemy_hit_player(entity, False)
-                self.send_dict(vars(player))
+                self.send_dict(player.get_displayable())
             elif action == ACTION_ENEMY_HIT_MSHIP:
                 mship_lifes = giorgio.enemy_hit_mship(entity)
                 self.send_dict({ 'lifes': mship_lifes })
