@@ -93,12 +93,13 @@ class WebSocketAuthMiddleware:
             headers[c] = cookies[c].value
         try:
             data = authenticator(headers=headers, key='token')
-            scope["user"] = await get_user(data['id'])
+            scope['user'] = await get_user(data['id'])
         except:
             # DEBUG
             print('Unrecognized token in cookies')
             print(headers)
             print(cookies)
             # /DEBUG
-            scope["user"] = AnonymousUser()
+            scope['user'] = AnonymousUser()
+        scope['visit_id'] = cookies.get('visit_id')
         return await self.app(scope, receive, send)

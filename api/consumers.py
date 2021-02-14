@@ -36,7 +36,7 @@ class GameConsumer(WebsocketConsumer):
     def disconnect(self, close_code):
         if type(self.scope['user']) is not AnonymousUser:
             if self.scope['game'] is not None:
-                self.scope['game'].save(uuid.UUID('5c9539b514a9442ab5e14ae6ec50ccdb'))
+                self.scope['game'].save(uuid.UUID(self.scope['visit_id']))
             print(self.scope['user'].user.username + ' disconnected')
 
     def validate_data(self, text_data):
