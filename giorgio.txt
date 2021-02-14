@@ -35,3 +35,27 @@ The anti-cheat part of Giorgio is formerly known as Giovanni.
 For every event sent by client the server responds with the updated stats (player or enemy).
 Generation of enemies is done by server on request by client at fixed interval (anti-dos). The generation 
 algorithm is "u guru digidàl v2".
+The payload of client request is different for every request and follows the format:
+'a': action type, possible values:
+    - 0: game start
+    - 1: game pause
+    - 2: game stop
+    - 3: enemy hit player directly*
+    - 4: enemy hit player indirectly*
+    - 5: enemy hit mother ship*
+    - 6: player hit enemy*
+        - 't': gun type (0/1)
+    - 7: player acquaire powerup
+        - 'i': powerup id (int)
+    - 8: player use ability
+        - 'i': ability id (str)
+
+* = has 'i' which is enemy id (int)
+e.g.
+json
++---------------+
+| {             |
+|     "i": 123, | -> Giorgio
+|     "t": 0    |
+| }             |
++---------------+
