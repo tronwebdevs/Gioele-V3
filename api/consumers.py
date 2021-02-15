@@ -1,5 +1,7 @@
 import json
 import uuid
+import sched
+from multiprocessing import Process
 
 from channels.generic.websocket import WebsocketConsumer
 from django.contrib.auth.models import AnonymousUser
@@ -22,16 +24,36 @@ ERROR_GAME_NOT_STARTED = 2
 ERROR_GAME_ALREADY_STARTED = 3
 ERROR_ENTITY_NOT_FOUND = 4
 
+DELAY_BETWEEN_ENEMIES_GENERATIONS = 2
+
+def run_giogio_generator(scheduler, giorgio, socket):
+    # print(vars(giorgio))
+    giorgio.generate_entities(socket)
+    if giorgio.running == True:
+        scheduler.enter(
+            DELAY_BETWEEN_ENEMIES_GENERATIONS, 1,
+            run_giogio_generator,
+            argument=(scheduler, giorgio, socket,)
+        )
+
 
 class GameConsumer(WebsocketConsumer):
 
     def connect(self):
-        if type(self.scope['user']) is AnonymousUser:
+        user = self.scope['user']
+        if type(user) is AnonymousUser:
             print('Unauthenticated user')
             self.disconnect(1008)
             return
-        print(self.scope['user'].user.username + ' connected')
-        self.scope['giorgio'] = None
+        print(user.user.username + ' connected, starting giorgio')
+        self.scope['giorgio'] = Giorgio(
+            user=user,
+            visit_id=uuid.UUID('19488172-d2fe-4025-a273-08803c4664ad'),
+            abilities=user.inventory.abilities,
+            main_gun_id=user.main_gun,
+            side_gun_id=user.side_gun,
+            skin_id=user.skin
+        )
         self.accept()
 
     def disconnect(self, close_code):
@@ -84,55 +106,60 @@ class GameConsumer(WebsocketConsumer):
         return entity
 
     def execute(self, action, data, giorgio, user, entity_id):
+        response = None
         if action == ACTION_GAME_START:
-            if giorgio is None:
+            if giorgio.running == True:
                 raise GameException('Game already started', ERROR_GAME_ALREADY_STARTED)
             try:
-                self.scope['giorgio'] = Giorgio(
-                    user=user,
-                    visit_id=uuid.UUID(self.scope['visit_id']),
-                    abilities=user.inventory.abilites,
-                    main_gun_id=user.main_gun,
-                    side_gun_id=user.side_gun,
-                    skin_id=user.skin
+                self.scope['giorgio'].start_game()
+                self.scope['generator'] = sched.scheduler()
+                self.scope['generator'].enter(
+                    DELAY_BETWEEN_ENEMIES_GENERATIONS,
+                    1,
+                    run_giogio_generator,
+                    argument=(self.scope['generator'], self.scope['giorgio'], self)
                 )
+                Process(target=self.scope['generator'].run)
+                response = { 'm': 'ok' }
                 print('Game started')
             except Exception as e:
                 raise GameException(str(e))
-        elif giorgio is not None:
+        elif giorgio is not None and giorgio.running == True:
             if action > 2:
                 # Check if given entity's id is valid and get entity object from stack
                 entity = self.get_entity(action, entity_id)
             # Switch between actions
             if action == ACTION_GAME_PAUSE:
                 giorgio.pause_game()
+                response = { 'm': 'ok' }
             elif action == ACTION_GAME_STOP:
                 giorgio.end_game()
-                self.send_dict({ 'message': 'Game ended' })
+                response = { 'm': 'ok' }
             elif action == ACTION_ENEMY_HIT_PLAYER_DIR:
                 player = giorgio.enemy_hit_player(entity, True)
-                self.send_dict(player.get_displayable())
             elif action == ACTION_ENEMY_HIT_PLAYER_IND:
-                giorgio.enemy_hit_player(entity, False)
-                self.send_dict(player.get_displayable())
+                player = giorgio.enemy_hit_player(entity, False)
             elif action == ACTION_ENEMY_HIT_MSHIP:
                 mship_lifes = giorgio.enemy_hit_mship(entity)
-                self.send_dict({ 'lifes': mship_lifes })
+                response = { 'lifes': mship_lifes }
             elif action == ACTION_PLAYER_HIT_ENEMY:
                 # Check if given gun's type is valid
                 gun_type = data.get('t')
                 if type(gun_type) is not int or gun_type < 0 or gun_type > 1 or (gun_type == 1 and giorgio.player.side_gun is None):
                     raise GameException('Invalid data (t)')
                 entity = giorgio.player_hit_enemy(gun_type, entity)
-                self.send_dict(vars(entity))
+                response = vars(entity)
             elif action == ACTION_PLAYER_GAIN_POWERUP:
-                giorgio.player_gain_powerup(entity)
+                player = giorgio.player_gain_powerup(entity)
             elif action == ACTION_PLAYER_USE_ABILITY:
-                giorgio.player_use_ability(entity)
+                player = giorgio.player_use_ability(entity)
             else:
                 raise GameException('Invalid action', ERROR_INVALID_ACTION)
         else:
             raise GameException("Game hasn't started", ERROR_GAME_NOT_STARTED)
+        if response is None:
+            response = player.get_displayable()
+        self.send_dict(response)
 
     def receive(self, text_data):
         try:

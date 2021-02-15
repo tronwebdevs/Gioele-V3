@@ -1,16 +1,20 @@
+import random
 import sched
 from uuid import uuid4
 
 from django.utils import timezone
 
-from .models import Gun, Skin, GUser, GameLog, VisitLog
 from .classes import Parser
 from .exceptions import GameException
+from .models import GameLog, Gun, GUser, Skin, VisitLog
 
 MAX_PLAYER_HP = 100
 MAX_MSHIP_LIFES = 3
 PLAYER_SHIELD_INCREMENT = 10
+PLAYER_SPEED_INCREMENT = 0.5
+PLAYER_DAMAGE_INCREMENT = 0.5
 MAX_PLAYER_SHIELD = 100
+POWERUPS_LAST_TIME = 10 # in seconds
 
 parser = Parser()
 
@@ -64,12 +68,13 @@ class Enemy(Entity):
         self.is_boss = is_boss
 
     def __str__(self):
-        return f'{self.id}({self.type}): {self.xp} [{self.rarity}]'
+        return f'{self.id}({self.type}): {self.hp} [{self.rarity}]'
 
 
 class Manager:
     def __init__(self, types):
-        self.data = { types[i]: 0 for i in range(len(types)) }
+        items = list(types.values())
+        self.data = { items[i]: 0 for i in range(len(items)) }
 
     def get(self, _id):
         return self.data.get(_id)
@@ -100,14 +105,17 @@ class AbilityManager(Manager):
 
 class Player:
     expired_powerups = PowerUpManager()
-    active_powerups = PowerUpManager()
+    active_powerups = dict()
     used_abilities = AbilityManager()
+    killed = EnemyManager()
     shield = 0
     hp = MAX_PLAYER_HP
     exp = 0
     gbucks = 0
     main_hit = 0
     side_hit = 0
+    damage_modifier = 1
+    speed_modifier = 1
 
     def __init__(self, user_id, abilities, main_gun_id, side_gun_id, skin_id):
         self.user_id = user_id
@@ -144,34 +152,77 @@ class Player:
                 self.shield = MAX_PLAYER_SHIELD
             else:
                 self.shield = temp
+    
+    def reset_speed(self):
+        self.speed_modifier = 1
+
+    def speed_up(self):
+        self.reset_speed()
+        self.speed_modifier += PLAYER_SPEED_INCREMENT
+
+    def reset_damage(self):
+        self.damage_modifier = 1
+        
+    def damage_up(self):
+        self.reset_damage()
+        self.damage_modifier += PLAYER_SPEED_INCREMENT
 
     """
     Get hp damage from a specified gun type.
     Remember to check first if side_gun is not null.
     """
     def get_damage(self, gun_type):
-        return self.main_gun.damage if gun_type == 0 else self.side_gun.damage
+        gun_damage = self.main_gun.damage if gun_type == 0 else self.side_gun.damage
+        return gun_damage * self.damage_modifier
 
     def get_displayable(self):
         return {
             'shield': self.shield,
             'hp': self.hp,
-            'powerups': self.active_powerups
+            'powerups': self.active_powerups,
+            'speed': self.speed_modifier,
+            'damage_modifier': self.damage_modifier
         }
 
 
 class Giorgio:
     game_id = uuid4()
-    start_time = timezone.now()
+    running = False
     enemies = dict()
     powerups = dict()
-    killed = EnemyManager()
     mship_lifes = MAX_MSHIP_LIFES
+    powerups_sched = sched.scheduler()
 
     def __init__(self, user, visit_id, abilities, main_gun_id, side_gun_id, skin_id):
         self.user = user
         self.visit_id = visit_id
         self.player = Player(user.user.id, abilities, main_gun_id, side_gun_id, skin_id)
+
+    def start_game(self):
+        self.start_time = timezone.now()
+        # Mark game as running
+        self.running = True
+
+    def powerup_expired(self, powerup=None):
+        del self.player.active_powerups[powerup.id]
+        self.player.expired_powerups.add(powerup.type)
+
+    """
+    'u guru digidàl v2'
+    Generates enemies, bosses and powerups.
+    """
+    def generate_entities(self, socket):
+        last_id = -1
+        enemies_list = list(self.enemies)
+        if len(enemies_list) > 0:
+            last_id = list(self.enemies)[-1]
+        enemy_id = last_id + 1
+        enemy_type = random.choice(list(Enemy.TYPES.values()))
+        # FIXME: temporary entities limit
+        if len(enemies_list) < 30:
+            self.enemies[enemy_id] = Enemy(enemy_id, enemy_type, 10, 10)
+        response = list(map(lambda e: vars(e), self.enemies.values()))
+        socket.send_dict(response)
 
     """
     Check if enemy has been killed (and remove it from stack) or just
@@ -188,7 +239,7 @@ class Giorgio:
         temp = enemy.hp - self.player.get_damage(gun_type)
         if temp < 0:
             # enemy is dead
-            self.killed.add(enemy.type)
+            self.player.killed.add(enemy.type)
             # Remove enemy from stack
             del self.enemies[enemy.id]
             enemy.hp = 0
@@ -207,6 +258,7 @@ class Giorgio:
             # If enemy has collide with player (kamikaze) remove enemy from the stack
             del self.enemies[enemy.id]
         self.player.attacked(enemy.damage)
+        return self.player
 
     """
     Subtract 1 from mother lifes (and check if she has died) and remove enemy from stack.
@@ -234,13 +286,23 @@ class Giorgio:
         if ptype == PowerUp.TYPES['shield']:
             self.player.reload_shield()
         elif ptype == PowerUp.TYPES['fuel']:
-            raise GameException('Not implemented yet')
+            self.player.speed_up()
         elif ptype == PowerUp.TYPES['ammo']:
-            raise GameException('Not implemented yet')
+            self.player.damage_up()
         else:
             raise GameException('Unknown powerup')
-        self.player.active_powerups.add(ptype)
-        
+
+        if ptype != PowerUp.TYPES['shield']:
+            # Add scheduled event to remove powerup
+            self.powerups_sched.enter(POWERUPS_LAST_TIME, 1, self.powerup_expired, argument=(powerup,))
+            # Add powerup to player's active powerups list
+            self.player.active_powerups[powerup.id] = powerup
+            # Run scheduler
+            self.powerups_sched.run()
+        else:
+            # Add increment shield counter
+            self.player.expired_powerups.add(ptype)
+        return self.player
 
     """
     Perform the ability effects.
@@ -248,32 +310,39 @@ class Giorgio:
     def player_use_ability(self, ability):
         # TODO: implement the method
         raise GameException('Not implemented yet')
+        # return self.player
 
     def pause_game(self):
+        self.running = False
         # TODO: implement the method
+        # for event in self.powerups_sched.queue:
+        #     self.powerups_sched.cancel(event)
         # game paused, stop all scheds
         raise GameException('Not implemented yet')
 
     def end_game(self):
+        self.running = False
         # TODO: implement the method
         raise GameException('Not implemented yet')
 
-    def save(self):
+    def save(self, shooted_main, shooted_side):
         game_log = GameLog(
             id=self.game_id,
             user=self.user,
             time_start=self.start_time,
             time_end=timezone.now(),
-            shooted_main=self.player.main_hit,
-            shooted_side=self.player.side_hit,
             exp_gained=self.player.exp,
-            gbucks_earned=self.player.gbucks
+            gbucks_earned=self.player.gbucks,
+            shooted_main=shooted_main,
+            shooted_main_hit=self.player.main_hit,
+            shooted_side=shooted_side,
+            shooted_side_hit=self.player.side_hit,
+            main_gun=self.player.main_gun.id,
+            side_gun=self.player.side_gun.id
         )
-        game_log.skin = game_log.user.skin
         game_log.visit = VisitLog.objects.get(pk=self.visit_id)
-        # for enemy in self.killed:
-        #     game_log.killed = 
-        # game_log.killed = game_log.killed[:-1]
-        game_log.killed = ''
-        game_log.powerups = str(self.player.expired_powerups)
+        game_log.killed = parser.dict_to_string(self.player.killed)
+        game_log.powerups = parser.dict_to_string(self.player.expired_powerups)
+        game_log.abilities = parser.dict_to_string(self.player.used_abilities)
+        game_log.skin = game_log.user.skin
         game_log.save()
