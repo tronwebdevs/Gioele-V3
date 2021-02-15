@@ -211,7 +211,7 @@ class Giorgio:
     'u guru digidàl v2'
     Generates enemies, bosses and powerups.
     """
-    def generate_entities(self, socket):
+    def generate_entities(self):
         last_id = -1
         enemies_list = list(self.enemies)
         if len(enemies_list) > 0:
@@ -221,8 +221,7 @@ class Giorgio:
         # FIXME: temporary entities limit
         if len(enemies_list) < 30:
             self.enemies[enemy_id] = Enemy(enemy_id, enemy_type, 10, 10)
-        response = list(map(lambda e: vars(e), self.enemies.values()))
-        socket.send_dict(response)
+        self.powerups[0] = PowerUp(0, PowerUp.TYPES['fuel'])
 
     """
     Check if enemy has been killed (and remove it from stack) or just
