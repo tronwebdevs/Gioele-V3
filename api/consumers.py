@@ -193,7 +193,7 @@ class GameConsumer(WebsocketConsumer):
                 'player': player.get_displayable()
             }
         # DEBUG
-        print('[%s/%s][INFO][WebSocket] Sending response (action:%s)' % (threading.get_ident(), 'executor'))
+        print('[%s/%s][INFO][WebSocket] Sending response (action:%i)' % (threading.get_ident(), 'executor', action))
         # /DEBUG
         self.send_dict(response)
 
