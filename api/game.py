@@ -1,5 +1,4 @@
 import random
-import sched
 from uuid import uuid4
 
 from django.utils import timezone
@@ -15,6 +14,7 @@ PLAYER_SPEED_INCREMENT = 0.5
 PLAYER_DAMAGE_INCREMENT = 0.5
 MAX_PLAYER_SHIELD = 100
 POWERUPS_LAST_TIME = 10 # in seconds
+CLIENT_CANVAS_WIDTH = 800
 
 parser = Parser()
 
@@ -23,6 +23,7 @@ class Entity:
     def __init__(self, id, type):
         self.id = id
         self.type = type
+        self.x = round(random.random() * (CLIENT_CANVAS_WIDTH - 50))
 
 
 class PowerUp(Entity):
@@ -179,7 +180,7 @@ class Player:
         return {
             'shield': self.shield,
             'hp': self.hp,
-            'powerups': self.active_powerups,
+            'powerups': list(map(vars, self.active_powerups.values())),
             'speed': self.speed_modifier,
             'damage_modifier': self.damage_modifier
         }
@@ -191,7 +192,6 @@ class Giorgio:
     enemies = dict()
     powerups = dict()
     mship_lifes = MAX_MSHIP_LIFES
-    powerups_sched = sched.scheduler()
 
     def __init__(self, user, visit_id, abilities, main_gun_id, side_gun_id, skin_id):
         self.user = user
@@ -277,8 +277,7 @@ class Giorgio:
         return lifes
 
     """
-    Add powerup to player's list and start sched (which at end remove the powerup from
-    every stack).
+    Add powerup to player's list.
     """
     def player_gain_powerup(self, powerup):
         ptype = powerup.type
@@ -292,12 +291,8 @@ class Giorgio:
             raise GameException('Unknown powerup')
 
         if ptype != PowerUp.TYPES['shield']:
-            # Add scheduled event to remove powerup
-            self.powerups_sched.enter(POWERUPS_LAST_TIME, 1, self.powerup_expired, argument=(powerup,))
             # Add powerup to player's active powerups list
             self.player.active_powerups[powerup.id] = powerup
-            # Run scheduler
-            self.powerups_sched.run()
         else:
             # Add increment shield counter
             self.player.expired_powerups.add(ptype)
@@ -314,9 +309,6 @@ class Giorgio:
     def pause_game(self):
         self.running = False
         # TODO: implement the method
-        # for event in self.powerups_sched.queue:
-        #     self.powerups_sched.cancel(event)
-        # game paused, stop all scheds
         raise GameException('Not implemented yet')
 
     def end_game(self):
