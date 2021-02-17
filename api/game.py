@@ -192,6 +192,7 @@ class Giorgio:
     enemies = dict()
     powerups = dict()
     mship_lifes = MAX_MSHIP_LIFES
+    _generation = 0
 
     def __init__(self, user, visit_id, abilities, main_gun_id, side_gun_id, skin_id):
         self.user = user
@@ -210,18 +211,31 @@ class Giorgio:
     """
     'u guru digidàl v2'
     Generates enemies, bosses and powerups.
+    Return generated entities.
     """
     def generate_entities(self):
+        self._generation += 1
         last_id = -1
         enemies_list = list(self.enemies)
         if len(enemies_list) > 0:
             last_id = list(self.enemies)[-1]
         enemy_id = last_id + 1
         enemy_type = random.choice(list(Enemy.TYPES.values()))
+        new_enemies = []
         # FIXME: temporary entities limit
         if len(enemies_list) < 30:
-            self.enemies[enemy_id] = Enemy(enemy_id, enemy_type, 10, 10)
-        self.powerups[0] = PowerUp(0, PowerUp.TYPES['fuel'])
+            new_enemies.append(Enemy(enemy_id, enemy_type, 10, 10))
+        for enemy in new_enemies:
+            self.enemies[enemy.id] = enemy
+
+        new_powerups = []
+        if len(list(self.powerups)) == 0:
+            new_powerups.append(PowerUp(0, PowerUp.TYPES['fuel']))
+
+        for powerup in new_powerups:
+            self.powerups[powerup.id] = powerup
+
+        return new_enemies, new_powerups
 
     """
     Check if enemy has been killed (and remove it from stack) or just

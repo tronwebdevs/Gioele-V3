@@ -211,20 +211,18 @@ class GameConsumer(WebsocketConsumer):
             # DEBUG
             print('[%s/%s][INFO][Giorgio] Generating entities' % (threading.get_ident(), 'run_generation'))
             # /DEBUG
-            # Run algorithm witch generates entities
-            giorgio.generate_entities()
-
-            # Transform dicts into json-friendly lists
-            enemies = list(map(vars, giorgio.enemies.values()))
-            powerups = list(map(vars, giorgio.powerups.values()))
-            # Send to client updated entity lists
+            # Run algorithm witch generates entities and get result
+            new_enemies, new_powerups = giorgio.generate_entities()
+            new_enemies = list(map(vars, new_enemies))
+            new_powerups = list(map(vars, new_powerups))
             # DEBUG
             print('[%s/%s][INFO][WebSocket] Sending updated entities' % (threading.get_ident(), 'run_generation'))
             # /DEBUG
+            # Send to client generated entity lists
             self.send_dict({
                 'r': 3,
-                'enemies': enemies,
-                'powerups': powerups
+                'enemies': new_enemies,
+                'powerups': new_powerups
             })
 
     def expire_powerup(self, event):
