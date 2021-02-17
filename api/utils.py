@@ -1,4 +1,8 @@
-import re, datetime, random, string
+import datetime
+import random
+import re
+import string
+import threading
 
 from django.utils import timezone
 from jose import jwt
@@ -76,3 +80,6 @@ def generate_short_id(verify_set=None):
         if not res.empty():
             return generate_short_id(verify_set)
     return generated
+
+def log(func, who, message, ltype='INFO'):
+    print('[%s/%s][%s][%s] %s' % (threading.get_ident(), func, ltype, who, message))

@@ -7,6 +7,7 @@ from .classes import Parser
 from .exceptions import GameException
 from .models import GameLog, Gun, GUser, Skin, VisitLog
 
+DELAY_BETWEEN_ENEMIES_GENERATIONS = 5 # in seconds
 MAX_PLAYER_HP = 100
 MAX_MSHIP_LIFES = 3
 PLAYER_SHIELD_INCREMENT = 10
@@ -14,7 +15,7 @@ PLAYER_SPEED_INCREMENT = 0.5
 PLAYER_DAMAGE_INCREMENT = 0.5
 MAX_PLAYER_SHIELD = 100
 POWERUPS_LAST_TIME = 10 # in seconds
-CLIENT_CANVAS_WIDTH = 800
+CLIENT_CANVAS_WIDTH = 800 # in pixels
 
 parser = Parser()
 

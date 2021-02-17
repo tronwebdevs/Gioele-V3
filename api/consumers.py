@@ -1,7 +1,7 @@
 import json
+import threading
 import time
 import uuid
-import threading
 from random import random
 
 from asgiref.sync import async_to_sync
@@ -9,8 +9,9 @@ from channels.generic.websocket import WebsocketConsumer
 from channels.layers import get_channel_layer
 from django.contrib.auth.models import AnonymousUser
 
-from .exceptions import GameException
-from .game import Giorgio, PowerUp, POWERUPS_LAST_TIME
+from .exceptions import GameDataException, GameException
+from .game import POWERUPS_LAST_TIME, DELAY_BETWEEN_ENEMIES_GENERATIONS, Giorgio, PowerUp
+from .utils import log as DEBUG
 
 ACTION_GAME_START = 0
 ACTION_GAME_PAUSE = 1
@@ -22,33 +23,26 @@ ACTION_PLAYER_HIT_ENEMY = 6
 ACTION_PLAYER_GAIN_POWERUP = 7
 ACTION_PLAYER_USE_ABILITY = 8
 
-ERROR_INVALID_ACTION = 1
-ERROR_GAME_NOT_STARTED = 2
-ERROR_GAME_ALREADY_STARTED = 3
-ERROR_ENTITY_NOT_FOUND = 4
-
-DELAY_BETWEEN_ENEMIES_GENERATIONS = 5
-
-def run_generator(giorgio, channel_name):
+def generation_worker(giorgio, channel_name):
     channel_layer = get_channel_layer()
+    DEBUG('run_generator', 'Giorgio', 'Sending request to generate entities')
     async_to_sync(channel_layer.group_send)(channel_name, {
         'type': 'run_generation'
     })
-    # DEBUG
-    print('[%s/%s][INFO][Giorgio] Sent request to generate entities' % (threading.get_ident(), 'run_generator'))
-    # /DEBUG
     if giorgio.running:
-        threading.Timer(DELAY_BETWEEN_ENEMIES_GENERATIONS, run_generator, (giorgio,channel_name,)).start()
+        threading.Timer(
+            DELAY_BETWEEN_ENEMIES_GENERATIONS,
+            generation_worker,
+            (giorgio,channel_name,)
+        ).start()
 
-def run_powerup_expirer(channel_name, powerup_id):
+def powerup_expire_worker(channel_name, powerup_id):
     channel_layer = get_channel_layer()
+    DEBUG('run_generator', 'Giorgio', ('Sending request to expire powerup #%i' % powerup_id))
     async_to_sync(channel_layer.group_send)(channel_name, {
         'type': 'expire_powerup',
         'powerup_id': powerup_id
     })
-    # DEBUG
-    print('[%s/%s][INFO][Giorgio] Sent request to expire powerup %i' % (threading.get_ident(), 'run_generator', powerup_id))
-    # /DEBUG
 
 
 class GameConsumer(WebsocketConsumer):
@@ -56,14 +50,10 @@ class GameConsumer(WebsocketConsumer):
     def connect(self):
         user = self.scope['user']
         if type(user) is AnonymousUser:
-            # DEBUG
-            print('[%s/%s][WARNING][WebSocket] Unauthenticated user' % (threading.get_ident(), 'connect'))
-            # /DEBUG
+            DEBUG('connect', 'WebSocket', 'Unauthenticated user', ltype='WARGING')
             self.close()
             return
-        # DEBUG
-        print('[%s/%s][INFO][WebSocket] %s connected, starting giorgio' % (threading.get_ident(), 'connect', user.user.username))
-        # /DEBUG
+        DEBUG('connect', 'WebSocket', ('%s connected, starting giorgio' % user.user.username))
         self.scope['giorgio'] = Giorgio(
             user=user,
             visit_id=uuid.UUID('19488172-d2fe-4025-a273-08803c4664ad'),
@@ -72,16 +62,12 @@ class GameConsumer(WebsocketConsumer):
             side_gun_id=user.side_gun,
             skin_id=user.skin
         )
-        self.gen_channel_name = 'gen_%i_%i' % (user.user.id, round(random() * 1000))
-        self.pu_channel_name = 'pu_%i_%i' % (user.user.id, round(random() * 1000))
+        self.delayed_channel_name = 'giorgio_%i_%i' % (user.user.id, round(random() * 1000))
         async_to_sync(self.channel_layer.group_add)(
-            self.gen_channel_name,
+            self.delayed_channel_name,
             self.channel_name
         )
-        async_to_sync(self.channel_layer.group_add)(
-            self.pu_channel_name,
-            self.channel_name
-        )
+        DEBUG('connect', 'WebSocket', 'Channel for delayed comunications created')
         self.accept()
 
     def disconnect(self, close_code):
@@ -91,20 +77,18 @@ class GameConsumer(WebsocketConsumer):
             if giorgio is not None and giorgio.running == True:
                 giorgio.running = False
                 # giorgio.end_game()
-            # DEBUG
-            print('[%s/%s][INFO][WebSocket] %s disconnected' % (threading.get_ident(), 'disconnect', user.user.username))
-            # /DEBUG
+            DEBUG('disconnect', 'WebSocket', ('%s disconnected' % user.user.username))
 
     def validate_data(self, text_data):
         data = json.loads(text_data)
         action = data.get('a')
         if type(action) is not int or action < 0 or action > 8:
-            raise Exception('Invalid data (a)')
+            raise GameDataException('a')
         _id = None
         if action > 2:
             _id = data.get('i')
             if type(_id) is not int:
-                raise Exception('Invalid data (i)')
+                raise GameDataException('i')
         return data, action, _id
 
     def send_dict(self, val):
@@ -120,36 +104,32 @@ class GameConsumer(WebsocketConsumer):
         })
 
     def get_entity(self, action, eid):
-        exception = GameException('Entity not found', ERROR_ENTITY_NOT_FOUND)
         giorgio = self.scope['giorgio']
+        dataset = None
         if action < 7:
             # Entity is an enemy
-            entity = giorgio.enemies.get(eid)
+            dataset = giorgio.enemies
         elif action == 7:
             # Entity is a powerup
-            entity = giorgio.powerups.get(eid)
+            dataset = giorgio.powerups
         elif action == 8:
             # Entity is an ability
-            entity = None #giorgio.player.abilites.get(eid)
-        else:
-            raise exception
+            dataset = giorgio.player.abilites
         
-        if entity is None:
-            raise exception
-        return entity
+        if dataset is None:
+            raise GameException('Entity not found', GameException.ENTITY_NOT_FOUND)
+        return dataset.get(eid)
 
     def execute(self, action, data, giorgio, user, entity_id):
         response = None
         if action == ACTION_GAME_START:
             if giorgio.running == True:
-                raise GameException('Game already started', ERROR_GAME_ALREADY_STARTED)
+                raise GameException('Game already started', GameException.GAME_ALREADY_STARTED)
             try:
                 self.scope['giorgio'].start_game()
-                run_generator(self.scope['giorgio'], self.gen_channel_name)
+                generation_worker(self.scope['giorgio'], self.delayed_channel_name)
                 response = { 'r': 0, 'm': 'ok' }
-                # DEBUG
-                print('[%s/%s][INFO][Giorgio] Game started' % (threading.get_ident(), 'executor'))
-                # /DEBUG
+                DEBUG('execute', 'Giorgio', 'Game started')
             except Exception as e:
                 raise GameException(str(e))
         elif giorgio is not None and giorgio.running == True:
@@ -173,28 +153,32 @@ class GameConsumer(WebsocketConsumer):
             elif action == ACTION_PLAYER_HIT_ENEMY:
                 # Check if given gun's type is valid
                 gun_type = data.get('t')
-                if type(gun_type) is not int or gun_type < 0 or gun_type > 1 or (gun_type == 1 and giorgio.player.side_gun is None):
-                    raise GameException('Invalid data (t)')
+                if type(gun_type) is not int \
+                    or gun_type < 0 or gun_type > 1 \
+                    or (gun_type == 1 and giorgio.player.side_gun is None):
+                    raise GameDataException('t')
                 entity = giorgio.player_hit_enemy(gun_type, entity)
                 response = vars(entity)
             elif action == ACTION_PLAYER_GAIN_POWERUP:
                 player = giorgio.player_gain_powerup(entity)
                 if entity.type != PowerUp.TYPES['shield']:
-                    threading.Timer(POWERUPS_LAST_TIME, run_powerup_expirer, args=(self.pu_channel_name, entity.id)).start()
+                    threading.Timer(
+                        POWERUPS_LAST_TIME,
+                        powerup_expire_worker,
+                        (self.delayed_channel_name, entity.id,)
+                    ).start()
             elif action == ACTION_PLAYER_USE_ABILITY:
                 player = giorgio.player_use_ability(entity)
             else:
-                raise GameException('Invalid action', ERROR_INVALID_ACTION)
+                raise GameException('Invalid action', GameException.INVALID_ACTION)
         else:
-            raise GameException("Game hasn't started", ERROR_GAME_NOT_STARTED)
+            raise GameException("Game hasn't started", GameException.GAME_NOT_STARTED)
         if response is None:
             response = {
                 'r': 1,
                 'player': player.get_displayable()
             }
-        # DEBUG
-        print('[%s/%s][INFO][WebSocket] Sending response (action:%i)' % (threading.get_ident(), 'executor', action))
-        # /DEBUG
+        DEBUG('execute', 'WebSocket', ('Sending response (action: %i)' % action))
         self.send_dict(response)
 
     def receive(self, text_data):
@@ -208,39 +192,35 @@ class GameConsumer(WebsocketConsumer):
     def run_generation(self, event):
         giorgio = self.scope['giorgio']
         if giorgio.running:
-            # DEBUG
-            print('[%s/%s][INFO][Giorgio] Generating entities' % (threading.get_ident(), 'run_generation'))
-            # /DEBUG
+            DEBUG('run_generation', 'Giorgio', 'Generating entities')
             # Run algorithm witch generates entities and get result
             new_enemies, new_powerups = giorgio.generate_entities()
             new_enemies = list(map(vars, new_enemies))
             new_powerups = list(map(vars, new_powerups))
-            # DEBUG
-            print('[%s/%s][INFO][WebSocket] Sending updated entities' % (threading.get_ident(), 'run_generation'))
-            # /DEBUG
+            DEBUG('run_generation', 'WebSocket', 'Sending generated entities')
             # Send to client generated entity lists
             self.send_dict({
                 'r': 3,
                 'enemies': new_enemies,
                 'powerups': new_powerups
             })
+        else:
+            DEBUG('run_generation', 'WebSocket', 'Generation prevented as the game is stopped')
 
     def expire_powerup(self, event):
         giorgio = self.scope['giorgio']
         if giorgio.running:
             powerup_id = event['powerup_id']
-            # DEBUG
-            print('[%s/%s][INFO][Giorgio] Expiring powerup #%i' % (threading.get_ident(), 'run_generation', powerup_id))
-            # /DEBUG
+            DEBUG('expire_powerup', 'Giorgio', ('Expiring powerup #%i' % powerup_id))
             player = giorgio.player
             powerup = player.active_powerups.get(powerup_id)
             if powerup is not None:
                 del player.active_powerups[powerup.id]
                 player.expired_powerups.add(powerup.type)
-            # DEBUG
-            print('[%s/%s][INFO][WebSocket] Sending updated powerups' % (threading.get_ident(), 'expire_powerup'))
-            # /DEBUG
+            DEBUG('expire_powerup', 'WebSocket', 'Sending expired powerups')
             self.send_dict({
                 'r': 1,
                 'player': player.get_displayable()
             })
+        else:
+            DEBUG('run_generation', 'WebSocket', 'Expiration prevented as the game is stopped')
