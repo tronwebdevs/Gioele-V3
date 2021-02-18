@@ -5,7 +5,7 @@ function update() {
   }
 
   gameArea.clear();
-  gameArea.updateBG();
+  gameArea.update();
 
   player.changePos();
   player.update();
@@ -74,7 +74,6 @@ function pauseGame() {
 
 
 //CONTROLS
-/*
 function moveLeft(){
   clearInterval(accInterval);
   player.speedX = -speed;
@@ -99,20 +98,6 @@ function stopPlayer() {
   player.speedX = 0;
   clearInterval(accInterval);
 }
-*/
-function moveLeft(){
-  player.isMoving = true;
-  player.direction = -1;
-}
-function moveRight(){
-  player.isMoving = true;
-  player.direction = 1;
-}
-function stopPlayer() {
-  player.isMoving = false;
-  player.direction = 0;
-}
-
 function shootMainGun() {
   player.equip.mainGun.shoot();
 }

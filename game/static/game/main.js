@@ -5,9 +5,6 @@ let background = new Image();
 background.src = 'static/game/images/background.png';
 let enemyskin = new Image();
 enemyskin.src = 'static/game/images/enemy.png';
-let speed = 1;
-let accInterval;
-let maxSpeed = 8;
 let mainGunBullets = [];
 let sideGunBullets = [];
 let enemies = [];
@@ -32,6 +29,11 @@ gameSocket.onmessage = function (e) {
 gameSocket.onclose = function (e) {
     console.error('Chat socket closed unexpectedly');
 };
+
+
+/*
+                  ODIO I DEPRECATI
+
 
 document.body.addEventListener('keydown', function (event) {
     if (event.keyCode == 37 && !event.repeat) {
@@ -71,3 +73,29 @@ document.body.addEventListener('keydown', function (event) {
         shootSideGun();
     }
 });
+*/
+
+document.body.onkeydown = function (e){
+  if (e.keyCode === 37){
+    e.preventDefault();
+    moveLeft();
+  }
+  if (e.keyCode === 39){
+    e.preventDefault();
+    moveRight();
+  }
+  if (e.keyCode === 81){
+    event.preventDefault();
+    shootMainGun();
+  }
+  if (e.keyCode === 87){
+    event.preventDefault();
+    shootSideGun();
+  }
+}
+document.body.onkeyup = function (e){
+  if (e.keyCode === 37 || e.keyCode === 39){
+    e.preventDefault();
+    stopPlayer();
+  }
+}

@@ -1,8 +1,6 @@
 let gameArea = {
   canvas: document.getElementById("gameCanvas"),
-  isPaused : false,
-  bgcounter : 0,
-  bgy : 0,
+  bgy : 0, //background Y
 
   start : function(){
     this.context = this.canvas.getContext("2d");
@@ -11,24 +9,14 @@ let gameArea = {
     //richiama la funzione update
     this.interval = setInterval(update, Math.round(1000/FPS));
   },
-  pause : function(){
-    this.isPaused ^= true;
-  },
-  stop : function(){
-    //TO DO
-  },
   clear : function(){
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
   },
-  update : function(){
+  updateBG : function(){
     this.context.drawImage(background, 0, this.bgy);
-    this.context.drawImage(background, 0, - 1200 + this.bgy);
-    this.bgcounter++;
-    if (this.bgcounter == 2) {
-      this.bgcounter = 0;
-      this.bgy++;
-    }
-    if (this.bgy == 1200){
+    this.context.drawImage(background, 0, - 1199 + this.bgy);
+    this.bgy++;
+    if (this.bgy >= 1200){
       this.bgy = 0;
     }
   }
@@ -36,11 +24,14 @@ let gameArea = {
 
 class Player {
   constructor(equip){
-    this.width = 30,
-    this.height = 30,
+    this.width = 60,
+    this.height = 60,
     this.x = 400;
-    this.y = 500;
-    this.speedX = 0;
+    this.y = 550;
+    this.isMoving = false;
+    this.direction = 0; // -1 left | +1 right
+    this.acc = 0; // in pixel*FPS, aumenta di 1 ad ogni frame se il player si muove altrimenti culaton
+    this.maxSpeed = 5;
     this.equip = equip;
   }
   update() {
@@ -48,17 +39,15 @@ class Player {
     ctx.drawImage(skin, this.x, this.y)
   }
   changePos() {
-    if (this.x <= 0){
-      this.x = 1;
-      this.speedX = 0;
-      return;
+    if (this.isMoving){
+      if (this.acc/FPS < this.maxSpeed){
+
+      }
+
+
+    } else {
+
     }
-    if (this.x >= gameArea.canvas.width-this.width) {
-      this.x = gameArea.canvas.width-this.width-1;
-      this.speedX = 0;
-      return;
-    }
-    this.x += this.speedX;
   }
 }
 
