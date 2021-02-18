@@ -1,4 +1,5 @@
 import random
+import math
 from uuid import uuid4
 
 from django.utils import timezone
@@ -21,6 +22,7 @@ class Giorgio:
         self.enemies = dict()
         self.powerups = dict()
         self.mship_lifes = MAX_MSHIP_LIFES
+        self._last_entity_id = 0
         self._generation = 0
 
     def start_game(self):
@@ -40,26 +42,33 @@ class Giorgio:
     Return generated entities.
     """
     def generate_entities(self):
+        # Increment generations counter
         self._generation += 1
-        last_id = -1
-        enemies_list = list(self.enemies)
-        if len(enemies_list) > 0:
-            last_id = list(self.enemies)[-1]
-        EnemyType = random.choice(list(ENEMY_TYPES.values()))[1]
         new_enemies = []
-        # FIXME: temporary entities limit
-        if len(enemies_list) < 30:
-            new_enemies.append(EnemyType(last_id + 1))
+        # Create new enemies based on number of generations
+        # Generated enemy increments by 1 every 5 generations
+        for i in range(math.floor(self._generation / 5) + 1):
+            self._last_entity_id += 1
+            # Pick a random enemy from list
+            EnemyType = random.choice(list(ENEMY_TYPES.values()))[1]
+            # Push created enemy to temp stack
+            new_enemies.append(EnemyType(self._last_entity_id))
+        # Push new evemy to the stack
         for enemy in new_enemies:
             self.enemies[enemy.id] = enemy
 
         new_powerups = []
-        if len(list(self.powerups)) == 0:
-            new_powerups.append(POWERUP_TYPES['fuel'][1](0))
-
+        # Generate 1 powerup every 5 generations
+        if self._generation % 5 == 0:
+            self._last_entity_id += 1
+            # Pick a random powerup from list
+            PowerUpType = random.choice(list(POWERUP_TYPES.values()))[1]
+            # Push created powerup to temp stack
+            new_powerups.append(PowerUpType(self._last_entity_id))
+        # Push new powerups to the stack
         for powerup in new_powerups:
             self.powerups[powerup.id] = powerup
-
+        # Return generated entities
         return new_enemies, new_powerups
 
     """

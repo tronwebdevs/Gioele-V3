@@ -72,7 +72,7 @@ class BaseShipEnemy(Enemy):
         super().__init__(
             id=id,
             type=self.TYPE,
-            hp=20,
+            hp=5,
             damage=10,
             rarity=rarity,
             is_boss=False
