@@ -19,12 +19,6 @@ function update() {
     sideGunBullets[i].update();
   }
 
-  if (Math.random() < spawnRate){
-    enemies.push(new Enemy(
-      Math.floor(Math.random() * (gameArea.canvas.width - 50)) + 50,
-      15));
-  }
-
   for (i = 0; i < enemies.length; i++) {
     enemies[i].move();
     enemies[i].update();
@@ -33,12 +27,13 @@ function update() {
   for (i = 0; i < mainGunBullets.length; i++) {
     for (k = 0; k < enemies.length; k++) {
       if (mainGunBullets[i].collide(enemies[k])) {
-        enemies.splice(k,1);
+        console.log('Killed #' + enemies[k].id)
         gameSocket.send(JSON.stringify({
-            a: 10,
-            t: 0,
-            i: ''
+            a: 6, // Action type
+            t: 0, // gun type (0:main, 1:side)
+            i: enemies[k].id // enemy id
         }));
+        enemies.splice(k,1);
       }
     }
   }
@@ -46,12 +41,13 @@ function update() {
   for (i = 0; i < sideGunBullets.length; i++) {
     for (k = 0; k < enemies.length; k++) {
       if (sideGunBullets[i].collide(enemies[k])) {
-        enemies.splice(k,1);
+        console.log('Killed #' + enemies[k].id)
         gameSocket.send(JSON.stringify({
-            a: 10,
-            t: 1,
-            i: ''
+            a: 6, // Action type
+            t: 1, // gun type (0:main, 1:side)
+            i: enemies[k].id // enemy id
         }));
+        enemies.splice(k,1);
       }
     }
   }
