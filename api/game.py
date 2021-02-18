@@ -1,7 +1,7 @@
 from random import random
 
 from .classes import Parser
-from .exceptions import GameException
+from .exceptions import GameCheatDetectedException, GameException
 from .models import Gun, GUser, Skin
 
 DELAY_BETWEEN_ENEMIES_GENERATIONS = 5 # in seconds
@@ -190,20 +190,19 @@ class AbilityManager(Manager):
 
 
 class Player:
-    expired_powerups = PowerUpManager()
-    active_powerups = dict()
-    used_abilities = AbilityManager()
-    killed = EnemyManager()
-    shield = 0
-    hp = MAX_PLAYER_HP
-    exp = 0
-    gbucks = 0
-    main_hit = 0
-    side_hit = 0
-    damage_modifier = PLAYER_BASE_MODIFIER
-    speed_modifier = PLAYER_BASE_MODIFIER
-
     def __init__(self, user_id, abilities, main_gun_id, side_gun_id, skin_id):
+        self.expired_powerups = PowerUpManager()
+        self.active_powerups = dict()
+        self.used_abilities = AbilityManager()
+        self.killed = EnemyManager()
+        self.shield = 0
+        self.hp = MAX_PLAYER_HP
+        self.exp = 0
+        self.gbucks = 0
+        self.main_hit = 0
+        self.side_hit = 0
+        self.damage_modifier = PLAYER_BASE_MODIFIER
+        self.speed_modifier = PLAYER_BASE_MODIFIER
         self.user_id = user_id
         self.abilities = []
         self.main_gun = Gun.objects.get(pk=main_gun_id)

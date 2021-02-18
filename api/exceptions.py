@@ -25,6 +25,7 @@ class GameException(Exception):
     GAME_ALREADY_STARTED = 3
     ENTITY_NOT_FOUND = 4
     INVALID_DATA = 5
+    CHEAT_DETECTED = 6
 
     def __init__(self, message, code=GENERIC):
         self.message = message
@@ -35,3 +36,8 @@ class GameDataException(GameException):
     def __init__(self, param):
         self.param = param
         super().__init__('Invalid data (%s)' % param, GameException.INVALID_DATA)
+
+
+class GameCheatDetectedException(GameException):
+    def __init__(self, message):
+        super().__init__('[Giovanni] ' + message, GameException.CHEAT_DETECTED)
