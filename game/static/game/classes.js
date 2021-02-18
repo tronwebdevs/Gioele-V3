@@ -28,10 +28,12 @@ class Player {
     this.height = 60,
     this.x = 400;
     this.y = 550;
+
     this.isMoving = false;
     this.direction = 0; // -1 left | +1 right
     this.acc = 0; // in pixel*FPS, aumenta di 1 ad ogni frame se il player si muove altrimenti culaton
     this.maxSpeed = 5;
+
     this.equip = equip;
   }
   update() {
@@ -39,15 +41,24 @@ class Player {
     ctx.drawImage(skin, this.x, this.y)
   }
   changePos() {
-    if (this.isMoving){
-      if (this.acc/FPS < this.maxSpeed){
-
-      }
-
-
+    if (this.direction * this.acc > 0){
+      this.acc += this.direction * 5;
     } else {
-
+      this.acc += this.direction * 10;
     }
+
+    if (!this.isMoving){
+      if (this.acc > 0){
+        this.acc -= 2.5;
+      } else {
+        this.acc += 2.5;
+      }
+      if (this.acc >= -2.0 && this.acc <= 2.0){
+        this.acc = 0;
+      }
+    }
+
+    this.x += Math.round((this.acc/FPS)*10) / 10;
   }
 }
 
@@ -85,7 +96,8 @@ class Bullet {
 }
 
 class Enemy {
-  constructor(x, radius){
+  constructor(id, x, radius){
+    this.id = id;
     this.x = x;
     this.y = 0;
     this.radius = radius;
