@@ -10,7 +10,7 @@ from channels.layers import get_channel_layer
 from django.contrib.auth.models import AnonymousUser
 
 from .exceptions import GameDataException, GameException
-from .game import POWERUPS_LAST_TIME, DELAY_BETWEEN_ENEMIES_GENERATIONS, PowerUp
+from .game import POWERUPS_LAST_TIME, DELAY_BETWEEN_ENEMIES_GENERATIONS, POWERUP_TYPES
 from .giorgio import Giorgio
 from .utils import log as DEBUG
 
@@ -162,7 +162,7 @@ class GameConsumer(WebsocketConsumer):
                 response = vars(entity)
             elif action == ACTION_PLAYER_GAIN_POWERUP:
                 player = giorgio.player_gain_powerup(entity)
-                if entity.type != PowerUp.TYPES['shield']:
+                if entity.type != POWERUP_TYPES['shield'][0]:
                     threading.Timer(
                         POWERUPS_LAST_TIME,
                         powerup_expire_worker,

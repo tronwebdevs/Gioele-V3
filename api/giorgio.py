@@ -118,22 +118,15 @@ class Giorgio:
     Add powerup to player's list.
     """
     def player_gain_powerup(self, powerup):
+        powerup.activate(self.player)
         ptype = powerup.type
-        # if ptype == PowerUp.TYPES['shield']:
-        #     self.player.reload_shield()
-        # elif ptype == PowerUp.TYPES['fuel']:
-        #     self.player.speed_up()
-        # elif ptype == PowerUp.TYPES['ammo']:
-        #     self.player.damage_up()
-        # else:
-        #     raise GameException('Unknown powerup')
 
-        # if ptype != PowerUp.TYPES['shield']:
-        #     # Add powerup to player's active powerups list
-        #     self.player.active_powerups[powerup.id] = powerup
-        # else:
-        #     # Add increment shield counter
-        #     self.player.expired_powerups.add(ptype)
+        if ptype != POWERUP_TYPES['shield'][0]:
+            # Add powerup to player's active powerups list
+            self.player.active_powerups[powerup.id] = powerup
+        else:
+            # Add increment shield counter
+            self.player.expired_powerups.add(ptype)
         return self.player
 
     """
