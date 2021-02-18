@@ -10,7 +10,8 @@ from channels.layers import get_channel_layer
 from django.contrib.auth.models import AnonymousUser
 
 from .exceptions import GameDataException, GameException
-from .game import POWERUPS_LAST_TIME, DELAY_BETWEEN_ENEMIES_GENERATIONS, Giorgio, PowerUp
+from .game import POWERUPS_LAST_TIME, DELAY_BETWEEN_ENEMIES_GENERATIONS, PowerUp
+from .giorgio import Giorgio
 from .utils import log as DEBUG
 
 ACTION_GAME_START = 0
@@ -53,7 +54,6 @@ class GameConsumer(WebsocketConsumer):
             DEBUG('connect', 'WebSocket', 'Unauthenticated user', ltype='WARGING')
             self.close()
             return
-        DEBUG('connect', 'WebSocket', ('%s connected, starting giorgio' % user.user.username))
         self.scope['giorgio'] = Giorgio(
             user=user,
             visit_id=uuid.UUID('19488172-d2fe-4025-a273-08803c4664ad'),
@@ -62,6 +62,7 @@ class GameConsumer(WebsocketConsumer):
             side_gun_id=user.side_gun,
             skin_id=user.skin
         )
+        DEBUG('connect', 'WebSocket', ('%s connected, giorgio started (%s)' % (user.user.username, self.scope["giorgio"].game_id)))
         self.delayed_channel_name = 'giorgio_%i_%i' % (user.user.id, round(random() * 1000))
         async_to_sync(self.channel_layer.group_add)(
             self.delayed_channel_name,
