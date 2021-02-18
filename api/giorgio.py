@@ -12,17 +12,16 @@ parser = Parser()
 
 
 class Giorgio:
-    game_id = uuid4()
-    running = False
-    enemies = dict()
-    powerups = dict()
-    mship_lifes = MAX_MSHIP_LIFES
-    _generation = 0
-
     def __init__(self, user, visit_id, abilities, main_gun_id, side_gun_id, skin_id):
         self.user = user
         self.visit_id = visit_id
         self.player = Player(user.user.id, abilities, main_gun_id, side_gun_id, skin_id)
+        self.game_id = uuid4()
+        self.running = False
+        self.enemies = dict()
+        self.powerups = dict()
+        self.mship_lifes = MAX_MSHIP_LIFES
+        self._generation = 0
 
     def start_game(self):
         self.start_time = timezone.now()
