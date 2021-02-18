@@ -29,7 +29,9 @@ class Giorgio:
         self.running = True
 
     def powerup_expired(self, powerup=None):
+        # Remove powerup from player's active powerups list
         del self.player.active_powerups[powerup.id]
+        # Increment player's expired powerups list
         self.player.expired_powerups.add(powerup.type)
 
     """
@@ -82,6 +84,7 @@ class Giorgio:
         else:
             # enemy has lost hp
             self.enemies[enemy.id].hp = temp
+        # Return updated enemy
         return enemy
 
     """
@@ -93,7 +96,9 @@ class Giorgio:
         if directly:
             # If enemy has collide with player (kamikaze) remove enemy from the stack
             del self.enemies[enemy.id]
+        # Compute attack
         self.player.attacked(enemy.damage)
+        # Return updated player
         return self.player
 
     """
@@ -111,12 +116,14 @@ class Giorgio:
         else:
             # Mother ship lost a life
             self.mship_lifes = lifes
+        # Return updated mship's lifes
         return lifes
 
     """
-    Add powerup to player's list.
+    Activate powerup and add it to the player's list.
     """
     def player_gain_powerup(self, powerup):
+        # Activate powerup
         powerup.activate(self.player)
         ptype = powerup.type
 
@@ -124,17 +131,21 @@ class Giorgio:
             # Add powerup to player's active powerups list
             self.player.active_powerups[powerup.id] = powerup
         else:
-            # Add increment shield counter
+            # Increment player's shield counter
             self.player.expired_powerups.add(ptype)
+        # Return updated player
         return self.player
 
     """
-    Perform the ability effects.
+    Perform the ability effects and add it to the player's list.
     """
     def player_use_ability(self, ability):
-        # TODO: implement the method
-        raise GameException('Not implemented yet')
-        # return self.player
+        # Perform ability
+        ability.run(self)
+        # Add player's ability counter
+        self.player.used_abilities.add(ability.id)
+        # Return updated player
+        return self.player
 
     def pause_game(self):
         self.running = False
