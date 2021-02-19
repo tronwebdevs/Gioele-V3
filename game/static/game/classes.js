@@ -41,24 +41,35 @@ class Player {
     ctx.drawImage(skin, this.x, this.y)
   }
   changePos() {
+    //accelerazione
     if (this.direction * this.acc > 0){
       this.acc += this.direction * 5;
     } else {
       this.acc += this.direction * 10;
     }
 
+    //decelerazione
     if (!this.isMoving){
       if (this.acc > 0){
-        this.acc -= 2.5;
+        this.acc -= 5;
       } else {
-        this.acc += 2.5;
+        this.acc += 5;
       }
-      if (this.acc >= -2.0 && this.acc <= 2.0){
+      if (this.acc >= -5 && this.acc <= 5){
         this.acc = 0;
       }
     }
 
+    //spostamento
     this.x += Math.round((this.acc/FPS)*10) / 10;
+    if (this.x < 0){
+      this.x = 0;
+      this.acc = 0;
+    }
+    if (this.x > gameArea.canvas.width - this.width){
+      this.x = gameArea.canvas.width - this.width;
+      this.acc = 0;
+    }
   }
 }
 
