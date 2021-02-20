@@ -9,7 +9,7 @@
                                    /$$  \ $$              
                                   |  $$$$$$/              
                                    \______/               
-"My name is Giovanni Giorgio, but you can call me: Giorgio." -Daft Punk
+"My name is Giovanni Giorgio, but everybody calls me: Giorgio." -Daft Punk
 
 Giorgio is a server-side garbage collector and game engine for Gioele-V3.
 All comunications are achieved through websocket (RFC6455).
