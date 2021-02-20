@@ -77,6 +77,8 @@ On the other hand, the payload of server responses follows the format:
     - 3: generated enemies and powerups
         - 'enemies': generated enemies (array)
         - 'powerups': generated powerups (array)
+    - 4: enemy object
+        - 'enemy': enemy object (other)
 Furthermore, server error responses have format:
 - 'code': error code (int)
 - 'message': message describing the exception happend (str)
@@ -131,9 +133,7 @@ ENEMIES
 +-----------------+-----+-------+-------+-------+-------+
 | 78 <= g <= 107  |  6  |   30% |   40% |   30% |   150 |
 +-----------------+-----+-------+-------+-------+-------+
-| 108 <= g <= 142 |  7  |   20% |   40% |   40% |   175 |
-+-----------------+-----+-------+-------+-------+-------+
-| .. <= g <= ..   | ... |   20% |   40% |   40% |   ... |
+| g <= 108        | 7.. |   20% |   40% |   40% |   175 |
 +-----------------+-----+-------+-------+-------+-------+
 
 POWERUPS
@@ -146,13 +146,11 @@ POWERUPS
 +-----------------+-----+-------+-------+-------+    D: probability to spawn damage powerup
 | 8 <= g <= 17    |  2  |   33% |   33% |    0% |    
 +-----------------+-----+-------+-------+-------+    Note: missing percentage refers to the possibility
-| 18 <= g <= 32   |  3  |   25% |   25% |   25% |          that the powerup shall not spawn
-+-----------------+-----+-------+-------+-------+
-| .. <= g <= ..   | ... |   25% |   25% |   25% |
+| g >= 18         | 3.. |   25% |   25% |   25% |          that the powerup shall not spawn
 +-----------------+-----+-------+-------+-------+
 
 
 
 The End.
 
-Copyright 2020 TronWeb
+Copyright 2021 TronWeb
