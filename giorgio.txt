@@ -142,8 +142,8 @@ POWERUPS
 +-----------------+-----+-------+-------+-------+    Legend:
 | 1 <= g <= 2     |  0  |    0% |    0% |    0% |    g, k: see above
 +-----------------+-----+-------+-------+-------+    S: probability to spawn speed powerup
-| 3 <= g <= 7     |  1  |   50% |    0% |    0% |    K: probability to spawn shield powerup
-+-----------------+-----+-------+-------+-------+    I: probability to spawn damage powerup
+| 3 <= g <= 7     |  1  |   50% |    0% |    0% |    H: probability to spawn shield powerup
++-----------------+-----+-------+-------+-------+    D: probability to spawn damage powerup
 | 8 <= g <= 17    |  2  |   33% |   33% |    0% |    
 +-----------------+-----+-------+-------+-------+    Note: missing percentage refers to the possibility
 | 18 <= g <= 32   |  3  |   25% |   25% |   25% |          that the powerup shall not spawn
