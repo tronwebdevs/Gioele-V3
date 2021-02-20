@@ -79,6 +79,34 @@ class BaseShipEnemy(Enemy):
         )
 
 
+class KamikazeShipEnemy(Enemy):
+    TYPE = 1
+
+    def __init__(self, id, rarity=Enemy.RARITIES['base']):
+        super().__init__(
+            id=id,
+            type=self.TYPE,
+            hp=20,
+            damage=5,
+            rarity=rarity,
+            is_boss=False
+        )
+
+
+class InterceptorShipEnemy(Enemy):
+    TYPE = 2
+
+    def __init__(self, id, rarity=Enemy.RARITIES['base']):
+        super().__init__(
+            id=id,
+            type=self.TYPE,
+            hp=40,
+            damage=40,
+            rarity=rarity,
+            is_boss=False
+        )
+
+
 class ShieldPowerUp(PowerUp):
     TYPE = 0
 
@@ -140,8 +168,8 @@ class HpRegenAbility(Ability):
 
 ENEMY_TYPES  = {
     'ship': (BaseShipEnemy.TYPE, BaseShipEnemy),
-    # 'kamikaze': (1, None),
-    # 'interceptor': (2, None),
+    'kamikaze': (KamikazeShipEnemy.TYPE, KamikazeShipEnemy),
+    'interceptor': (InterceptorShipEnemy.TYPE, InterceptorShipEnemy),
 }
 
 POWERUP_TYPES = {

@@ -119,7 +119,10 @@ class GameConsumer(WebsocketConsumer):
         
         if dataset is None:
             raise GameException('Entity not found', GameException.ENTITY_NOT_FOUND)
-        return dataset.get(eid)
+        entity = dataset.get(eid)
+        if entity is None:
+            raise GameException('Entity not found', GameException.ENTITY_NOT_FOUND)
+        return entity
 
     def execute(self, action, data, giorgio, user, entity_id):
         response = None
@@ -153,11 +156,11 @@ class GameConsumer(WebsocketConsumer):
                 response = { 'r': 2, 'lifes': mship_lifes }
             elif action == ACTION_PLAYER_HIT_ENEMY:
                 # Check if given gun's type is valid
-                gun_type = data.get('t')
+                gun_type = data.get('g')
                 if type(gun_type) is not int \
                     or gun_type < 0 or gun_type > 1 \
                     or (gun_type == 1 and giorgio.player.side_gun is None):
-                    raise GameDataException('t')
+                    raise GameDataException('g')
                 entity = giorgio.player_hit_enemy(gun_type, entity)
                 response = vars(entity)
             elif action == ACTION_PLAYER_GAIN_POWERUP:

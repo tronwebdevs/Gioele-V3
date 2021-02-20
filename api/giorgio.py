@@ -24,6 +24,7 @@ class Giorgio:
         self.mship_lifes = MAX_MSHIP_LIFES
         self._last_entity_id = 0
         self._generation = 0
+        self._round = 0
 
     def start_game(self):
         self.start_time = timezone.now()
@@ -36,6 +37,18 @@ class Giorgio:
         # Increment player's expired powerups list
         self.player.expired_powerups.add(powerup.type)
 
+    def _generate_from_perc(self, ch1, ch2):
+        EnemyType = None
+        rnd = random.random()
+        # print('DEBUG: ', self._generation, self._round, ch1, ch2, ' rand: ', rnd)
+        if rnd <= ch1:
+            EnemyType = ENEMY_TYPES['ship']
+        elif rnd <= ch2:
+            EnemyType = ENEMY_TYPES['kamikaze']
+        else:
+            EnemyType = ENEMY_TYPES['interceptor']
+        return EnemyType[1](self._last_entity_id)
+
     """
     'u guru digidàl v2'
     Generates enemies, bosses and powerups.
@@ -45,18 +58,38 @@ class Giorgio:
         # Increment generations counter
         self._generation += 1
         new_enemies = []
-        # Create new enemies based on number of generations
-        # Generated enemy increments by 1 every 5 generations
-        for i in range(math.floor(self._generation / 5) + 1):
-            self._last_entity_id += 1
-            # Pick a random enemy from list
-            EnemyType = random.choice(list(ENEMY_TYPES.values()))[1]
-            # Push created enemy to temp stack
-            new_enemies.append(EnemyType(self._last_entity_id))
+        k = self._round
+        g = self._generation
+        # g + 3 - 10k > 0
+        if g > 2 and (k == 0 or (g + 3 - (10 * k)) > 0):
+            self._round += 1
+        # Pb(k) = (100 - 10 - 10k)%
+        ch1 = 100 - 10 * (k + 1)
+        if k == 0: # k = 0
+            for i in range(5):
+                self._last_entity_id += 1
+                new_enemies.append(ENEMY_TYPES['ship'][1](self._last_entity_id))
+        elif k <= 5: # 1 <= k <= 5
+            # Pk(k) = (15 + 5k)%
+            ch2 = ch1 + 5 * (k + 3)
+            # Pi(k) = (5(k - 1))%
+            for i in range(5):
+                self._last_entity_id += 1
+                new_enemies.append(self._generate_from_perc(ch1 / 100, ch2 / 100))
+        else: # K >= 6
+            if k > 6: # k != 6
+                # Pb(k) = 20%
+                ch1 = 20
+            # Pk(k) = 40%
+            ch2 = ch1 + 40
+            for i in range(5):
+                self._last_entity_id += 1
+                new_enemies.append(self._generate_from_perc(ch1 / 100, ch2 / 100))
         # Push new evemy to the stack
         for enemy in new_enemies:
             self.enemies[enemy.id] = enemy
 
+        # TODO: implement algorithm's powerups generation
         new_powerups = []
         # Generate 1 powerup every 5 generations
         if self._generation % 5 == 0:
@@ -68,6 +101,7 @@ class Giorgio:
         # Push new powerups to the stack
         for powerup in new_powerups:
             self.powerups[powerup.id] = powerup
+
         # Return generated entities
         return new_enemies, new_powerups
 
