@@ -54,12 +54,24 @@ class Enemy(Entity):
         'leggendary': 4,
     }
 
-    def __init__(self, id, type, hp, damage, rarity=RARITIES['base'], is_boss=False):
+    def __init__(self, id, type, hp, exp_reward, gbucks_reward, \
+                 damage, rarity=RARITIES['base'], is_boss=False):
         super().__init__(id, type)
         self.hp = hp
         self.damage = damage
         self.rarity = rarity
         self.is_boss = is_boss
+        self.exp_reward = exp_reward
+        self.gbucks_reward = gbucks_reward
+
+    def get_displayable(self):
+        return {
+            'id': self.id,
+            'type': self.type,
+            'hp': self.hp,
+            'damage': self.damage,
+            'rarity': self.rarity
+        }
 
     def __str__(self):
         return f'{self.id}({self.type}): {self.hp} [{self.rarity}]'
@@ -73,6 +85,8 @@ class BaseShipEnemy(Enemy):
             id=id,
             type=self.TYPE,
             hp=5,
+            exp_reward=1,
+            gbucks_reward=1,
             damage=10,
             rarity=rarity,
             is_boss=False
@@ -87,6 +101,8 @@ class KamikazeShipEnemy(Enemy):
             id=id,
             type=self.TYPE,
             hp=20,
+            exp_reward=2,
+            gbucks_reward=2,
             damage=5,
             rarity=rarity,
             is_boss=False
@@ -101,6 +117,8 @@ class InterceptorShipEnemy(Enemy):
             id=id,
             type=self.TYPE,
             hp=40,
+            exp_reward=10,
+            gbucks_reward=10,
             damage=40,
             rarity=rarity,
             is_boss=False

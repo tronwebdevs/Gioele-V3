@@ -24,6 +24,12 @@ ACTION_PLAYER_HIT_ENEMY = 6
 ACTION_PLAYER_GAIN_POWERUP = 7
 ACTION_PLAYER_USE_ABILITY = 8
 
+RESPONSE_GAME_RELATED = 0
+RESPONSE_PLAYER_OBJECT = 1
+RESPONSE_MSHIP_LIFES = 2
+RESPONSE_GENERATED_ENTITIES = 3
+RESPONSE_ENEMY_OBJECT = 4
+
 def generation_worker(giorgio, channel_name):
     channel_layer = get_channel_layer()
     DEBUG('run_generator', 'Giorgio', 'Sending request to generate entities')
@@ -117,12 +123,9 @@ class GameConsumer(WebsocketConsumer):
             # Entity is an ability
             dataset = giorgio.player.abilites
         
-        if dataset is None:
+        if dataset is None or dataset.get(eid) is None:
             raise GameException('Entity not found', GameException.ENTITY_NOT_FOUND)
-        entity = dataset.get(eid)
-        if entity is None:
-            raise GameException('Entity not found', GameException.ENTITY_NOT_FOUND)
-        return entity
+        return dataset[eid]
 
     def execute(self, action, data, giorgio, user, entity_id):
         response = None
@@ -132,7 +135,7 @@ class GameConsumer(WebsocketConsumer):
             try:
                 self.scope['giorgio'].start_game()
                 generation_worker(self.scope['giorgio'], self.delayed_channel_name)
-                response = { 'r': 0, 'm': 'ok' }
+                response = { 'r': RESPONSE_GAME_RELATED, 'm': 'ok' }
                 DEBUG('execute', 'Giorgio', 'Game started')
             except Exception as e:
                 raise GameException(str(e))
@@ -143,17 +146,26 @@ class GameConsumer(WebsocketConsumer):
             # Switch between actions
             if action == ACTION_GAME_PAUSE:
                 giorgio.pause_game()
-                response = { 'r': 0, 'm': 'ok' }
+                response = {
+                    'r': RESPONSE_GAME_RELATED,
+                    'm': 'ok'
+                }
             elif action == ACTION_GAME_STOP:
                 giorgio.end_game()
-                response = { 'r': 0, 'm': 'ok' }
+                response = {
+                    'r': RESPONSE_GAME_RELATED,
+                    'm': 'ok'
+                }
             elif action == ACTION_ENEMY_HIT_PLAYER_DIR:
                 player = giorgio.enemy_hit_player(entity, True)
             elif action == ACTION_ENEMY_HIT_PLAYER_IND:
                 player = giorgio.enemy_hit_player(entity, False)
             elif action == ACTION_ENEMY_HIT_MSHIP:
                 mship_lifes = giorgio.enemy_hit_mship(entity)
-                response = { 'r': 2, 'lifes': mship_lifes }
+                response = {
+                    'r': RESPONSE_MSHIP_LIFES,
+                    'lifes': mship_lifes
+                }
             elif action == ACTION_PLAYER_HIT_ENEMY:
                 # Check if given gun's type is valid
                 gun_type = data.get('g')
@@ -162,7 +174,10 @@ class GameConsumer(WebsocketConsumer):
                     or (gun_type == 1 and giorgio.player.side_gun is None):
                     raise GameDataException('g')
                 entity = giorgio.player_hit_enemy(gun_type, entity)
-                response = vars(entity)
+                response = {
+                    'r': RESPONSE_ENEMY_OBJECT,
+                    'enemy': entity.get_displayable()
+                }
             elif action == ACTION_PLAYER_GAIN_POWERUP:
                 player = giorgio.player_gain_powerup(entity)
                 if entity.type != POWERUP_TYPES['shield'][0]:
@@ -179,7 +194,7 @@ class GameConsumer(WebsocketConsumer):
             raise GameException("Game hasn't started", GameException.GAME_NOT_STARTED)
         if response is None:
             response = {
-                'r': 1,
+                'r': RESPONSE_PLAYER_OBJECT,
                 'player': player.get_displayable()
             }
         DEBUG('execute', 'WebSocket', ('Sending response (action: %i)' % action))
@@ -204,7 +219,7 @@ class GameConsumer(WebsocketConsumer):
             DEBUG('run_generation', 'WebSocket', 'Sending generated entities')
             # Send to client generated entity lists
             self.send_dict({
-                'r': 3,
+                'r': RESPONSE_GENERATED_ENTITIES,
                 'enemies': new_enemies,
                 'powerups': new_powerups
             })
@@ -223,7 +238,7 @@ class GameConsumer(WebsocketConsumer):
                 player.expired_powerups.add(powerup.type)
             DEBUG('expire_powerup', 'WebSocket', 'Sending expired powerups')
             self.send_dict({
-                'r': 1,
+                'r': RESPONSE_PLAYER_OBJECT,
                 'player': player.get_displayable()
             })
         else:

@@ -37,17 +37,37 @@ class Giorgio:
         # Increment player's expired powerups list
         self.player.expired_powerups.add(powerup.type)
 
-    def _generate_from_perc(self, ch1, ch2):
+    def _generate_enemy_from_perc(self, p1, p2):
         EnemyType = None
         rnd = random.random()
-        # print('DEBUG: ', self._generation, self._round, ch1, ch2, ' rand: ', rnd)
-        if rnd <= ch1:
+        # print('DEBUG: ', self._generation, self._round, p1 / 100, (p1 + p2) / 100, ' rand: ', rnd)
+        if rnd <= p1 / 100:
             EnemyType = ENEMY_TYPES['ship']
-        elif rnd <= ch2:
+        elif rnd <= (p1 + p2) / 100:
             EnemyType = ENEMY_TYPES['kamikaze']
         else:
             EnemyType = ENEMY_TYPES['interceptor']
+
+        self._last_entity_id += 1
+
         return EnemyType[1](self._last_entity_id)
+
+    def _generate_powerup_from_perc(self, p0, p1, p2=0):
+        PowerUpType = None
+        rnd = random.random()
+        # print('DEBUG: ', self._generation, self._round, p0 / 100, (p0 + p1) / 100, (p0 + p1 + p2) / 100, ' rand: ', rnd)
+        if rnd <= p0 / 100:
+            return None
+        elif rnd <= (p0 + p1) / 100:
+            PowerUpType = POWERUP_TYPES['fuel']
+        elif rnd <= (p0 + p1 + p2) / 100:
+            PowerUpType = POWERUP_TYPES['shield']
+        else:
+            PowerUpType = POWERUP_TYPES['damage']
+
+        self._last_entity_id += 1
+
+        return PowerUpType[1](self._last_entity_id)
 
     """
     'u guru digidàl v2'
@@ -58,46 +78,52 @@ class Giorgio:
         # Increment generations counter
         self._generation += 1
         new_enemies = []
+        new_powerups = []
         k = self._round
         g = self._generation
         # g + 3 - 10k > 0
         if g > 2 and (k == 0 or (g + 3 - (10 * k)) > 0):
             self._round += 1
+            # Update variable
+            k = self._round
         # Pb(k) = (100 - 10 - 10k)%
-        ch1 = 100 - 10 * (k + 1)
+        p1 = 100 - 10 * (k + 1)
         if k == 0: # k = 0
+            # Generated enemies
             for i in range(5):
-                self._last_entity_id += 1
                 new_enemies.append(ENEMY_TYPES['ship'][1](self._last_entity_id))
         elif k <= 5: # 1 <= k <= 5
+            # Generated enemies
             # Pk(k) = (15 + 5k)%
-            ch2 = ch1 + 5 * (k + 3)
+            p2 = 5 * (k + 3)
             # Pi(k) = (5(k - 1))%
             for i in range(5):
-                self._last_entity_id += 1
-                new_enemies.append(self._generate_from_perc(ch1 / 100, ch2 / 100))
+                new_enemies.append(self._generate_enemy_from_perc(p1, p2))
         else: # K >= 6
             if k > 6: # k != 6
                 # Pb(k) = 20%
-                ch1 = 20
+                p1 = 20
             # Pk(k) = 40%
-            ch2 = ch1 + 40
             for i in range(5):
-                self._last_entity_id += 1
-                new_enemies.append(self._generate_from_perc(ch1 / 100, ch2 / 100))
+                new_enemies.append(self._generate_enemy_from_perc(p1, 40))
+
+        # TODO: generate bosses
+
+        # Generate single powerup
+        powerup = None
+        if k == 1:
+            powerup = self._generate_powerup_from_perc(50, 50)
+        elif k == 2:
+            powerup = self._generate_powerup_from_perc(100/3, 100/3, 100/3)
+        elif k >= 3:
+            powerup = self._generate_powerup_from_perc(25, 25, 25)
+        
+        if powerup is not None:
+            new_powerups.append(powerup)
+        
         # Push new evemy to the stack
         for enemy in new_enemies:
             self.enemies[enemy.id] = enemy
-
-        # TODO: implement algorithm's powerups generation
-        new_powerups = []
-        # Generate 1 powerup every 5 generations
-        if self._generation % 5 == 0:
-            self._last_entity_id += 1
-            # Pick a random powerup from list
-            PowerUpType = random.choice(list(POWERUP_TYPES.values()))[1]
-            # Push created powerup to temp stack
-            new_powerups.append(PowerUpType(self._last_entity_id))
         # Push new powerups to the stack
         for powerup in new_powerups:
             self.powerups[powerup.id] = powerup
@@ -121,6 +147,9 @@ class Giorgio:
         if temp < 0:
             # enemy is dead
             self.player.killed.add(enemy.type)
+            # Give rewards to player
+            self.player.exp += enemy.exp_reward
+            self.player.gbucks += enemy.gbucks_reward
             # Remove enemy from stack
             del self.enemies[enemy.id]
             enemy.hp = 0
