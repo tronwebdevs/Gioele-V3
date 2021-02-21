@@ -27,7 +27,7 @@ class Player {
     this.width = 60,
     this.height = 60,
     this.x = 400;
-    this.y = 550;
+    this.y = 530;
 
     this.isMoving = false;
     this.direction = 0; // -1 left | +1 right
