@@ -86,11 +86,15 @@ What Martino (designer) handles:
 
 "Luca Sars" is the name of the algorithm that handles all clinet-related requests from the server
 
-Every requests is being controlled, the following actions are based on the id of the requests:
-
-      ----- WIP ----
-
-
+Enemy spawning:
+  - id      <-- identifier
+  - type    <-- type of enemy ship
+    - 0: normal enemy
+    - 1: kamikaze
+    - 2: interceptor
+  - x       <-- x coordinate value
+  - y       <-- y coordinate value
+  - radius  <-- enemy radius for hitbox calculation
 
 
 

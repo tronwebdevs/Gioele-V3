@@ -1,13 +1,13 @@
 // bullet patterns
 
 //straight
-let pattern_0 = function() {
-  this.y += this.speedY;
+function pattern_0() {
+  this.y -= this.speedY;
 }
 
 //   woblblbl
-let pattern_1 = function() {
-  this.y += this.speedY;
+function pattern_1() {
+  this.y -= this.speedY;
   this.x = this.constX + this.mult*Math.cos(this.arg*3.14/180);
   this.arg += 7;
   this.mult += 0.5;
@@ -15,8 +15,20 @@ let pattern_1 = function() {
 
 
 //bullet behaviors
-let behavior_0 = function () {
+function behavior_0() {
   this.constX = this.x;
   this.arg = 90;
   this.mult = 0;
+}
+
+
+// enemies patterns
+
+// normal 0
+function e_pattern_0() {
+  this.y += 0.4;
+}
+// normal 1
+function e_pattern_1() {
+  this.y += 0.6;
 }

@@ -74,18 +74,14 @@ class Player {
 }
 
 class Bullet {
-  constructor(x, y, speedY, isEnemy, pattern, behavior = function(){}){
+  constructor(x, y, speedY, pattern, behavior = function(){}){
     this.speedY = speedY;
     this.speedX = 2;
     this.x = x;
     this.y = y;
-    this.isEnemy = isEnemy;
     this.pattern = pattern;
     this.behavior = behavior;
     this.behavior()
-    if (!this.isEnemy) {
-      this.speedY = -this.speedY;
-    }
   }
   update() {
     let ctx = gameArea.canvas.getContext("2d");
@@ -107,10 +103,12 @@ class Bullet {
 }
 
 class Enemy {
-  constructor(id, x, radius){
+  constructor(id, type, x, y, radius){
     this.id = id;
+    this.type = type;
+    this.pattern = getPattern(this.type);
     this.x = x;
-    this.y = 0;
+    this.y = y;
     this.radius = radius;
   }
   update() {
@@ -118,6 +116,6 @@ class Enemy {
     ctx.drawImage(enemyskin, this.x - 15, this.y - 15)
   }
   move() {
-    this.y++;
+    this.pattern();
   }
 }

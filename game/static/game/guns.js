@@ -10,7 +10,7 @@ let mainGun_0 = {
   },
   shoot : function(){
     if (this.isReady) {
-      mainGunBullets.push(new Bullet(player.x + player.width/2, player.y, 8, false, pattern_0));
+      mainGunBullets.push(new Bullet(player.x + player.width/2, player.y, 8, pattern_0));
       mainGunBullets[mainGunBullets.length-1].behavior();
       this.isReady = false;
 
@@ -43,13 +43,13 @@ let sideGun_0 = {
   shoot : function(){
     if (this.isReady) {
       let tempx = player.x + player.width/2;
-      sideGunBullets.push(new Bullet(tempx, player.y, 3, false, pattern_1, behavior_0));
+      sideGunBullets.push(new Bullet(tempx, player.y, 3, pattern_1, behavior_0));
       let tempvar = 0;
       let tempint = setInterval(function(){
         if (tempvar >= 5) {
           clearInterval(tempint);
         }
-        sideGunBullets.push(new Bullet(tempx, player.y, 3, false, pattern_1, behavior_0));
+        sideGunBullets.push(new Bullet(tempx, player.y, 3, pattern_1, behavior_0));
         tempvar++;
       },50);
       this.isReady = false;

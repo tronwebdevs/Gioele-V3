@@ -13,7 +13,14 @@ gameSocket.onmessage = function (e) {
     const data = JSON.parse(e.data);
     if (data.r === 3) {
         for (let enemy of data.enemies) {
-            enemies.push(new Enemy(enemy.id, enemy.x, 15));
+
+
+            // TO FIX
+            let y = - Math.floor(Math.random() * 300);
+            console.log(y)
+            enemies.push(new Enemy(enemy.id, 0, enemy.x, y, 15));
+
+
         }
         console.log(data.enemies);
     } else {
