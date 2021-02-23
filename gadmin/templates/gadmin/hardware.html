@@ -1,0 +1,46 @@
+{% extends 'gadmin/page.html' %}
+{% load static %}
+{% block title %}Hardware{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12 col-lg-4 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">System</h4>
+                <ul class="list-unstyled mb-0">
+                    <li>
+                        <b>OS:</b> {{ system.system }}
+                    </li>
+                    <li>
+                        <b>Platform:</b> {{ system.platform }}
+                    </li>
+                    <li>
+                        <b>CPU Arch:</b> {{ system.machine }}
+                    </li>
+                    <li>
+                        <b>Python version:</b> {{ system.python_version }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-4 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Git</h4>
+                <ul class="list-unstyled mb-0">
+                    <li>
+                        <b>Commit:</b> {{ git.commit }}
+                    </li>
+                    <li>
+                        <b>Message:</b> {{ git.message }}
+                    </li>
+                    <li>
+                        <b>Author:</b> {{ git.author }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

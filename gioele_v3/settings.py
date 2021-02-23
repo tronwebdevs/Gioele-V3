@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'channels',
     'api.apps.ApiConfig',
     'game.apps.GameConfig',
+    'gadmin.apps.GAminConfig',
 ]
 
 MIDDLEWARE = [
@@ -51,7 +52,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'api.middleware.AuthTokenMiddleware'
+    'api.middleware.AuthTokenMiddleware',
+    'gadmin.middleware.AdminAuthMiddleware',
 ]
 
 ROOT_URLCONF = 'gioele_v3.urls'

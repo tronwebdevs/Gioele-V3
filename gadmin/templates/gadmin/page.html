@@ -1,0 +1,134 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Emanuele</title>
+    <meta name="color-scheme" content="dark">
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'gadmin/bootstrap/css/bootstrap-night.min.css' %}" />
+    <style>
+        .bd-placeholder-img {
+            font-size: 1.125rem;
+            text-anchor: middle;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+        }
+
+        @media (min-width: 768px) {
+            .bd-placeholder-img-lg {
+                font-size: 3.5rem;
+            }
+        }
+    </style>
+    <link type="text/css" rel="stylesheet" href="{% static 'gadmin/dashboard.css' %}" />
+    {% block stylesheets %}{% endblock %}
+</head>
+
+<body>
+
+    <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+        <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="#">Emanuele</a>
+        <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false"
+            aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <ul class="navbar-nav px-3">
+            <li class="nav-item text-nowrap">
+                <a class="nav-link" href="{% url 'gadmin:logout' %}">Log out</a>
+            </li>
+        </ul>
+    </header>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == "index" %}active{% endif %}"
+                                aria-current="page" href="{% url 'gadmin:index' %}">
+                                <span data-feather="home"></span>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == "users" %}active{% endif %}"
+                                aria-current="page" href="{% url 'gadmin:users' %}">
+                                <span data-feather="users"></span>
+                                Users
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == "stats" %}active{% endif %}"
+                                aria-current="page" href="{% url 'gadmin:stats' %}">
+                                <span data-feather="bar-chart-2"></span>
+                                Statistics
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == "hardware" %}active{% endif %}"
+                                aria-current="page" href="{% url 'gadmin:hardware' %}">
+                                <span data-feather="server"></span>
+                                Hardware
+                            </a>
+                        </li>
+                    </ul>
+
+                    <h6 class="sidebar-heading d-flex px-3 mt-4 mb-1 text-muted">
+                        <span>Game Related</span>
+                    </h6>
+                    <ul class="nav flex-column mb-2">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == "gbuck" %}active{% endif %}"
+                                aria-current="page" href="{% url 'gadmin:gbuck' %}">
+                                <span data-feather="activity"></span>
+                                GBuck
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == "guns" %}active{% endif %}"
+                                aria-current="page" href="{% url 'gadmin:guns' %}">
+                                <span data-feather="layers"></span>
+                                Guns
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == "skins" %}active{% endif %}"
+                                aria-current="page" href="{% url 'gadmin:skins' %}">
+                                <span data-feather="grid"></span>
+                                Skins
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-2">
+                    <h4>{% block title %}{% endblock %}</h4>
+                </div>
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+
+    <script src="{% static 'gadmin/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'gadmin/feather.min.js' %}"></script>
+    <script src="{% static 'gadmin/chartjs/Chart.bundle.min.js' %}"></script>
+    <script>
+        (function () {
+            'use strict';
+            feather.replace();
+        })();
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

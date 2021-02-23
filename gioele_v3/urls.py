@@ -22,6 +22,7 @@ from api.admin import admin_site
 urlpatterns = [
     path('', include('game.urls')),
     path('api/', include('api.urls')),
-    path('admin/', admin_site.urls),
+    # path('admin/', admin_site.urls),
+    path('admin/', include('gadmin.urls')),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]

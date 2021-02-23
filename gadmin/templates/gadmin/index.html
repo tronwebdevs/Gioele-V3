@@ -1,0 +1,116 @@
+{% extends 'gadmin/page.html' %}
+{% load static %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12 col-xl-3 col-lg-4 col-md-6 mb-3">
+        <div class="card">
+            <div class="p-3 d-flex align-items-center">
+                <span class="mr-3 stamp stamp-md bg-green text-white">
+                    <span class="icon" data-feather="users"></span>
+                </span>
+                <div class="h5 stamp-label">
+                    <a href="#">
+                        {{ stats.visitors }} <small>Visitors</small>
+                        <small class="subtitle">-12%</small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-xl-3 col-lg-4 col-md-6  mb-3">
+        <div class="card">
+            <div class="p-3 d-flex align-items-center">
+                <span class="mr-3 stamp stamp-md bg-blue text-white">
+                    <span class="icon" data-feather="users"></span>
+                </span>
+                <div class="h5 stamp-label">
+                    <a href="#">
+                        {{ stats.users }} <small>Users</small>
+                        <small class="subtitle">+25%</small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-xl-3 col-lg-4 col-md-6 mb-3">
+        <div class="card">
+            <div class="p-3 d-flex align-items-center">
+                <span class="mr-3 stamp stamp-md bg-red text-white">
+                    <span class="icon" data-feather="play"></span>
+                </span>
+                <div class="h5 stamp-label">
+                    <a href="#">
+                        {{ stats.matches }} <small>Matches played</small>
+                        <small class="subtitle">+10%</small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-xl-3 col-lg-4 col-md-6 mb-3">
+        <div class="card">
+            <div class="p-3 d-flex align-items-center">
+                <span class="mr-3 stamp stamp-md bg-yellow text-white">
+                    <span class="icon" data-feather="help-circle"></span>
+                </span>
+                <div class="h5 stamp-label">
+                    <a href="#">
+                        0 <small>Unknown</small>
+                        <small class="subtitle">+0%</small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 col-lg-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <canvas class="my-4 w-100" id="myChart" width="900" height="380"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Section title</h4>
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Header</th>
+                                <th>Header</th>
+                                <th>Header</th>
+                                <th>Header</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1,001</td>
+                                <td>random</td>
+                                <td>data</td>
+                                <td>placeholder</td>
+                                <td>text</td>
+                            </tr>
+                            <tr>
+                                <td>1,015</td>
+                                <td>random</td>
+                                <td>tabular</td>
+                                <td>information</td>
+                                <td>text</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block scripts %}
+<script src="{% static 'gadmin/dashboard.js' %}"></script>
+{% endblock %}
