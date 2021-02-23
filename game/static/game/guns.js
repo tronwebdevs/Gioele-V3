@@ -14,11 +14,6 @@ let mainGun_0 = {
       mainGunBullets[mainGunBullets.length-1].behavior();
       this.isReady = false;
 
-      gameSocket.send(JSON.stringify({
-        a: 5,
-        t: 0
-      }));
-
       reloadGun("main", this.cooldown);
       let timeout = setTimeout(function(){
         test.mainGun.isReady = true;
@@ -53,11 +48,6 @@ let sideGun_0 = {
         tempvar++;
       },50);
       this.isReady = false;
-
-      gameSocket.send(JSON.stringify({
-        a: 5,
-        t: 1
-      }));
 
       reloadGun("side", this.cooldown);
       let timeout = setTimeout(function(){

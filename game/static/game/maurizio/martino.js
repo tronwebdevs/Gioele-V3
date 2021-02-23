@@ -12,15 +12,18 @@ function update() {
   for (i = 0; i < mainGunBullets.length; i++) {
     mainGunBullets[i].move();
     mainGunBullets[i].update();
+    b_maurizio(mainGunBullets[i], i, 0);
   }
   for (i = 0; i < sideGunBullets.length; i++) {
     sideGunBullets[i].move();
     sideGunBullets[i].update();
+    b_maurizio(sideGunBullets[i], i, 1);
   }
 
   for (i = 0; i < enemies.length; i++) {
     enemies[i].move();
     enemies[i].update();
+    e_maurizio(enemies[i], i);
   }
 
   for (i = 0; i < mainGunBullets.length; i++) {
@@ -29,7 +32,7 @@ function update() {
         console.log('Killed #' + enemies[k].id)
         gameSocket.send(JSON.stringify({
             a: 6, // Action type
-            t: 0, // gun type (0:main, 1:side)
+            g: 0, // gun type (0:main, 1:side)
             i: enemies[k].id // enemy id
         }));
         enemies.splice(k,1);
@@ -50,8 +53,4 @@ function update() {
       }
     }
   }
-
-
-  maurizio();
-
 }

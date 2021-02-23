@@ -22,13 +22,28 @@ navigator.geolocation.getCurrentPosition(
 console.log("Expect Me")
 
 //garbage collection
-function maurizio(){
-  // cancels every enemy that surpasses player
-  for (i = 0; i < enemies.length; i++) {
-    if (enemies[i].y > gameArea.canvas.height + enemies[i].radius){
-      enemies.splice(i,1);
-      // TODO: hit mother ship
+function e_maurizio(_enemy, i){
+  if (_enemy.y > gameArea.canvas.height + _enemy.radius){
+    enemies.splice(i,1);
+    // TODO: hit mother ship
+  }
+}
+
+
+function b_maurizio(_bullet, i, gunType){
+  if (_bullet.y <= 0){
+    if (gunType == 0){
+      mainGunBullets.splice(i,1);
+      console.log("cancelled main bullet")
     }
+    if (gunType == 1){
+      sideGunBullets.splice(i,1);
+      console.log("cancelled side bullet")
+    }
+
+    // gunType 2 come nemico ????
+
+
   }
 }
 
