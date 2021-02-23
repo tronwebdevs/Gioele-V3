@@ -1,6 +1,7 @@
 import platform
 import subprocess
 
+import psutil
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.views import generic
@@ -8,18 +9,21 @@ from django.contrib.auth import authenticate
 from django.urls import reverse
 from django.contrib.auth.forms import AuthenticationForm
 
-from api.models import GUser, Gun, Skin, GameLog, VisitLog
+from api.models import GUser, BannedUser, Gun, Skin, GameLog, VisitLog, Stat, PurchaseLog
 
 
 def index(request):
-    visitors_count = VisitLog.objects.count()
-    users_count = GUser.objects.count()
-    matches_count = GameLog.objects.count()
     context = {
         'stats': {
-            'visitors': visitors_count,
-            'users': users_count,
-            'matches': matches_count,
+            'visitors': VisitLog.objects.count(),
+            'users': GUser.objects.count(),
+            'matches': GameLog.objects.count(),
+            'purchases': PurchaseLog.objects.count()
+        },
+        'charts_data': {
+            'users': Stat.objects.filter(key='users'),
+            'visitors': Stat.objects.filter(key='visitors'),
+            'games': Stat.objects.filter(key='games'),
         }
     }
     return render(request, 'gadmin/index.html', context)
@@ -38,9 +42,12 @@ class LoginView(generic.TemplateView):
         return self.render_to_response(context)
 
 
-class UsersView(generic.ListView):
-    model = GUser
-    template_name = 'gadmin/users.html'
+def users(request):
+    context = {
+        'users': GUser.objects.filter(user__is_active=True),
+        'banned': BannedUser.objects.all(),
+    }
+    return render(request, 'gadmin/users.html', context)
 
 
 def hardware(request):
@@ -51,7 +58,12 @@ def hardware(request):
     commit_author = subprocess.check_output(
         ['git', 'log', '-1', '--pretty=%an']).strip().decode()
     context = {
+        'psutil': psutil,
         'system': platform,
+        'charts_data': {
+            'cpu': Stat.objects.filter(key='cpu'),
+            'mem': Stat.objects.filter(key='mem'),
+        },
         'git': {
             'commit': commit_hash,
             'message': commit_message,

@@ -224,6 +224,9 @@ class GUser(models.Model):
         self.balance = rest
         self.save()
 
+        # Save transaction log
+        PurchaseLog.objects.create(by=self, price=db_item.price, item=db_item.id)
+
         return db_item
 
     def buy_gun(self, hashed_gun_id):
@@ -255,6 +258,27 @@ class GUser(models.Model):
 
     def __str__(self):
         return self.user.username
+
+
+class BannedUserManager(models.Manager):
+    def ban(self, user_id, reason, by_id, **extra_fields):
+        user = GUser.objects.get(pk=user_id)
+        user.is_active = False
+        user.save()
+        by = User.objects.get(pk=by_id)
+        return BannedUser.objects.create(user=user, reason=reason, by=by) 
+
+
+class BannedUser(models.Model):
+    user = models.OneToOneField(GUser, on_delete=models.CASCADE)
+    reason = models.CharField(max_length=256)
+    by = models.OneToOneField(User, on_delete=models.SET_NULL, related_name='by', null=True)
+    datetime = models.DateTimeField(auto_now_add=True)
+
+    objects = BannedUserManager()
+
+    def __str__(self):
+        return self.user.user.username + ': ' + self.reason
 
 
 class VisitLog(models.Model):
@@ -306,3 +330,16 @@ class GameLog(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+
+class PurchaseLog(models.Model):
+    by = models.OneToOneField(GUser, on_delete=models.CASCADE)
+    item = models.CharField(max_length=4)
+    price = models.FloatField()
+    datetime = models.DateTimeField(auto_now_add=True)
+
+
+class Stat(models.Model):
+    key = models.CharField(max_length=16)
+    value = models.FloatField()
+    at = models.DateTimeField(auto_now_add=True, editable=False)

@@ -1,9 +1,10 @@
 {% extends 'gadmin/page.html' %}
+{% load gadmin_extras %}
 {% load static %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
 <div class="row">
-    <div class="col-12 col-xl-3 col-lg-4 col-md-6 mb-3">
+    <div class="col-12 col-xl-3 col-lg-4 col-md-6 mb-4">
         <div class="card">
             <div class="p-3 d-flex align-items-center">
                 <span class="mr-3 stamp stamp-md bg-green text-white">
@@ -18,7 +19,7 @@
             </div>
         </div>
     </div>
-    <div class="col-12 col-xl-3 col-lg-4 col-md-6  mb-3">
+    <div class="col-12 col-xl-3 col-lg-4 col-md-6  mb-4">
         <div class="card">
             <div class="p-3 d-flex align-items-center">
                 <span class="mr-3 stamp stamp-md bg-blue text-white">
@@ -33,7 +34,7 @@
             </div>
         </div>
     </div>
-    <div class="col-12 col-xl-3 col-lg-4 col-md-6 mb-3">
+    <div class="col-12 col-xl-3 col-lg-4 col-md-6 mb-4">
         <div class="card">
             <div class="p-3 d-flex align-items-center">
                 <span class="mr-3 stamp stamp-md bg-red text-white">
@@ -48,7 +49,7 @@
             </div>
         </div>
     </div>
-    <div class="col-12 col-xl-3 col-lg-4 col-md-6 mb-3">
+    <div class="col-12 col-xl-3 col-lg-4 col-md-6 mb-4">
         <div class="card">
             <div class="p-3 d-flex align-items-center">
                 <span class="mr-3 stamp stamp-md bg-yellow text-white">
@@ -56,7 +57,7 @@
                 </span>
                 <div class="h5 stamp-label">
                     <a href="#">
-                        0 <small>Unknown</small>
+                        {{ stats.purchases }} <small>Purchases</small>
                         <small class="subtitle">+0%</small>
                     </a>
                 </div>
@@ -66,51 +67,77 @@
 </div>
 
 <div class="row">
-    <div class="col-12 col-lg-6 mb-3">
+    <div class="col-12 col-lg-6 mb-4">
         <div class="card">
             <div class="card-body">
-                <canvas class="my-4 w-100" id="myChart" width="900" height="380"></canvas>
+                <canvas class="my-4 w-100" id="users-chart" width="900" height="380"></canvas>
             </div>
         </div>
     </div>
-    <div class="col-12 col-lg-6 mb-3">
+    <div class="col-12 col-lg-6 mb-4">
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title">Section title</h4>
-                <div class="table-responsive">
-                    <table class="table table-striped table-sm">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Header</th>
-                                <th>Header</th>
-                                <th>Header</th>
-                                <th>Header</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>1,001</td>
-                                <td>random</td>
-                                <td>data</td>
-                                <td>placeholder</td>
-                                <td>text</td>
-                            </tr>
-                            <tr>
-                                <td>1,015</td>
-                                <td>random</td>
-                                <td>tabular</td>
-                                <td>information</td>
-                                <td>text</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <canvas class="my-4 w-100" id="matches-chart" width="900" height="380"></canvas>
             </div>
         </div>
     </div>
 </div>
 {% endblock content %}
 {% block scripts %}
-<script src="{% static 'gadmin/dashboard.js' %}"></script>
-{% endblock %}
+<script>
+(function () {
+    'use strict';
+    new Chart(document.getElementById('users-chart'), {
+        type: 'line',
+        data: {
+            labels: [
+                {% for row in charts_data.users %}
+                '{{ row.at|date:"H:m" }}',
+                {% endfor %}
+            ],
+            datasets: [
+                {
+                    data: {{ charts_data.users|model_to_jsarray }},
+                    lineTension: 0,
+                    backgroundColor: 'rgba(0,123,255,0.1)',
+                    borderColor: '#007bff',
+                    borderWidth: 4,
+                    pointBackgroundColor: '#007bff',
+                },
+                {
+                    data: {{ charts_data.visitors|model_to_jsarray }},
+                    lineTension: 0,
+                    backgroundColor: 'rgba(94,186,0,0.1)',
+                    borderColor: '#5eba00',
+                    borderWidth: 4,
+                    pointBackgroundColor: '#5eba00',
+                },
+            ],
+        },
+        options:{scales:{yAxes:[{ticks:{beginAtZero:false,},},],},legend: {display: false,},},
+    });
+
+    new Chart(document.getElementById('matches-chart'), {
+        type: 'line',
+        data: {
+            labels: [
+                {% for row in charts_data.games %}
+                '{{ row.at|date:"H:m" }}',
+                {% endfor %}
+            ],
+            datasets: [
+                {
+                    data: {{ charts_data.games|model_to_jsarray }},
+                    lineTension: 0,
+                    backgroundColor: 'rgba(250,70,84,0.1)',
+                    borderColor: '#fa4654',
+                    borderWidth: 4,
+                    pointBackgroundColor: '#fa4654',
+                },
+            ],
+        },
+        options:{scales:{yAxes:[{ticks:{beginAtZero:false,},},],},legend: {display: false,},},
+    });
+})();
+</script>
+{% endblock scripts %}

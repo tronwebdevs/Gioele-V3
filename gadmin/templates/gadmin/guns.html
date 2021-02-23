@@ -15,6 +15,7 @@
                                 <th>Type</th>
                                 <th>Damage</th>
                                 <th>Price</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -25,11 +26,17 @@
                                 <td>{{ gun.type }}</td>
                                 <td>{{ gun.damage }}</td>
                                 <td>{{ gun.price }}</td>
+                                <td>
+                                    <a href="#" class="action-link">
+                                        <span class="action-icon" data-feather="edit"></span>
+                                    </a>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                <a href="#" class="btn btn-sm btn-primary">Create</a>
             </div>
         </div>
     </div>

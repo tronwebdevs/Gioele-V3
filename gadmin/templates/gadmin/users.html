@@ -6,6 +6,7 @@
     <div class="col-12 col-lg-6 mb-3">
         <div class="card">
             <div class="card-body">
+                <h4 class="card-title">Users</h4>
                 <div class="table-responsive">
                     <table class="table table-striped table-sm">
                         <thead>
@@ -14,15 +15,59 @@
                                 <th>Username</th>
                                 <th>Email</th>
                                 <th>Staff</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for guser in object_list %}
+                            {% for guser in users %}
                             <tr>
                                 <td>{{ guser.user.id }}</td>
                                 <td>{{ guser.user.username }}</td>
                                 <td>{{ guser.user.email }}</td>
                                 <td>{{ guser.user.is_staff }}</td>
+                                <td>
+                                    <a href="#" class="action-link">
+                                        <span class="action-icon" data-feather="edit"></span>
+                                    </a>
+                                    <a href="#" class="action-link">
+                                        <span class="action-icon" data-feather="minus-circle"></span>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Banned</h4>
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Reason</th>
+                                <th>By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in banned %}
+                            <tr>
+                                <td>{{ user.user.user.id }}</td>
+                                <td>{{ user.user.user.username }}</td>
+                                <td>{{ user.reason }}</td>
+                                <td>{{ user.by.username }}</td>
+                                <td>
+                                    <a href="#" class="action-link">
+                                        <span class="action-icon" data-feather="trash-2"></span>
+                                    </a>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>

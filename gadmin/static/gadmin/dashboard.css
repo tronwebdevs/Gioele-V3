@@ -116,3 +116,11 @@ body {
     margin-top: 2px;
     font-size: 12px;
 }
+.action-icon {
+    display: inline-block;
+    margin: 0 3px;
+}
+a.action-link {
+    text-decoration: none;
+    color: var(--bs-table-striped-color);;
+}

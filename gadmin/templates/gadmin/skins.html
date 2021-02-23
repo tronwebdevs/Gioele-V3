@@ -13,6 +13,7 @@
                                 <th>ID</th>
                                 <th>Name</th>
                                 <th>Price</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -21,11 +22,17 @@
                                 <td>{{ skin.id }}</td>
                                 <td>{{ skin.name }}</td>
                                 <td>{{ skin.price }}</td>
+                                <td>
+                                    <a href="#" class="action-link">
+                                        <span class="action-icon" data-feather="edit"></span>
+                                    </a>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                <a href="#" class="btn btn-sm btn-primary">Create</a>
             </div>
         </div>
     </div>
