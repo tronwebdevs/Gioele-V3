@@ -23,7 +23,7 @@
                                 <td>{{ skin.name }}</td>
                                 <td>{{ skin.price }}</td>
                                 <td>
-                                    <a href="#" class="action-link">
+                                    <a href="{% url 'gadmin:skin' skin.id %}" class="action-link">
                                         <span class="action-icon" data-feather="edit"></span>
                                     </a>
                                 </td>
@@ -32,7 +32,7 @@
                         </tbody>
                     </table>
                 </div>
-                <a href="#" class="btn btn-sm btn-primary">Create</a>
+                <a href="{% url 'gadmin:new_skin' %}" class="btn btn-sm btn-primary">Create</a>
             </div>
         </div>
     </div>

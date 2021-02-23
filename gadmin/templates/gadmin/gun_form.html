@@ -1,0 +1,63 @@
+{% extends 'gadmin/page.html' %}
+{% load static %}
+{% block title %}Gun{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12 col-lg-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                {% if message %}
+                    <div class="alert alert-danger py-2" role="alert">
+                        {{ message }}
+                    </div>
+                {% endif %}
+                <form action="{% url 'gadmin:gun' gun.id %}" method="POST">
+                    {% csrf_token %}
+                    <div class="row mb-3">
+                        <label for="inputName" class="col-sm-2 col-form-label">Name</label>
+                        <div class="col-sm-10">
+                            <input type="text" name="name" class="form-control" id="inputName" value="{{ gun.name }}">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputType" class="col-sm-2 col-form-label">Type</label>
+                        <div class="col-sm-10">
+                            <select class="form-select" aria-label="Gun type" id="inputType" name="type">
+                                <option selected disabled>Select gun type</option>
+                                <option value="0" {% if gun.type == 0 %}selected{% endif %}>Main</option>
+                                <option value="1" {% if gun.type == 1 %}selected{% endif %}>Side</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputDesc" class="col-sm-2 col-form-label">Description</label>
+                        <div class="col-sm-10">
+                            <textarea name="description" class="form-control" id="inputDesc" rows="3">{{ gun.description }}</textarea>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputPrice" class="col-sm-2 col-form-label">Price</label>
+                        <div class="col-sm-10">
+                            <input name="price" min="0" type="number" class="form-control" id="inputPrice" value="{{ gun.price }}">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputDamage" class="col-sm-2 col-form-label">Damage</label>
+                        <div class="col-sm-10">
+                            <input name="damage" min="0" type="number" class="form-control" id="inputDamage" value="{{ gun.damage }}">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputCooldown" class="col-sm-2 col-form-label">Cooldown</label>
+                        <div class="col-sm-10">
+                            <input name="cooldown" min="0" type="number" class="form-control" id="inputCooldown" value="{{ gun.cooldown }}">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <a href="{% url 'gadmin:guns' %}" class="btn btn-outline-danger">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
