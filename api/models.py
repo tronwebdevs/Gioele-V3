@@ -33,6 +33,17 @@ class Gun(models.Model):
     def get_displayable_id(self):
         return hashlib.md5(str(self.id).encode()).hexdigest()
 
+    def readable_dict(self):
+        return {
+            'id': self.id,
+            'type': self.type,
+            'price': self.price,
+            'name': self.name,
+            'description': self.description,
+            'cooldown': self.cooldown,
+            'damage': self.damage,
+        }
+
     def __str__(self):
         return self.name
 
@@ -45,6 +56,14 @@ class Skin(models.Model):
 
     def get_displayable_id(self):
         return hashlib.md5(str(self.id).encode()).hexdigest()
+
+    def readable_dict(self):
+        return {
+            'id': self.id,
+            'price': self.price,
+            'name': self.name,
+            'description': self.description,
+        }
 
     def __str__(self):
         return self.name
@@ -76,30 +95,34 @@ class UserInventory(models.Model):
     with the guns database table (to retrieve the guns' names).
     IMPORTANT: Guns' ID are hashed (md5) when sent to the frontend.
     """
-    def _get_guns(self, g_type):
+    def _get_guns(self, g_type, hash_id=True):
         field = self.main_guns if g_type == 'main' else self.side_guns
         result = []
         for gun in parser.string_to_dicts(field, 'id', 'level'):
             db_gun = Gun.objects.get(pk=gun['id'])
-            hashed_id = hashlib.md5(gun['id'].encode()).hexdigest()
+            gun_id = gun['id']
+            if hash_id:
+                gun_id = hashlib.md5(gun['id'].encode()).hexdigest()
             result.append(
                 UserGun(
-                    id=hashed_id,
+                    id=gun_id,
                     name=db_gun.name,
                     level=gun['level'],
                 )
             )
         return result
 
-    def _get_listed_items(self, Item, field):
+    def _get_listed_items(self, Item, field, hash_id=True):
         if field is None:
             return list()
         obj_list = []
         for item in parser.string_to_list(field):
             db_item = Item.objects.get(pk=item)
-            hashed_id = hashlib.md5(item.encode()).hexdigest()
+            skin_id = item
+            if hash_id:
+                skin_id = hashlib.md5(item.encode()).hexdigest()
             obj_list.append({
-                'id': hashed_id,
+                'id': skin_id,
                 'name': db_item.name,
             })
         return obj_list
@@ -116,29 +139,29 @@ class UserInventory(models.Model):
         else:
             self.side_guns = parser.dicts_to_string(guns)
 
-    def get_main_guns(self):
-        return self._get_guns('main')
+    def get_main_guns(self, hash_id=True):
+        return self._get_guns('main', hash_id)
 
-    def get_main_guns_dict(self):
-        return list(map(vars, self.get_main_guns()))
+    def get_main_guns_dict(self, hash_id=True):
+        return list(map(vars, self.get_main_guns(hash_id)))
 
     def add_main_gun(self, gun_id):
         self._add_gun(gun_id, 'main')
 
-    def get_side_guns(self):
-        return self._get_guns('side')
+    def get_side_guns(self, hash_id=True):
+        return self._get_guns('side', hash_id)
 
-    def get_side_guns_dict(self):
-        return list(map(vars, self.get_side_guns()))
+    def get_side_guns_dict(self, hash_id=True):
+        return list(map(vars, self.get_side_guns(hash_id)))
 
     def add_side_gun(self, gun_id):
         self._add_gun(gun_id, 'side')
 
-    def get_skins(self):
-        return self._get_listed_items(Skin, self.skins)
+    def get_skins(self, hash_id=True):
+        return self._get_listed_items(Skin, self.skins, hash_id)
 
-    def get_skins_dict(self):
-        return self.get_skins()
+    def get_skins_dict(self, hash_id=True):
+        return self.get_skins(hash_id)
 
     def add_skin(self, skin_id):
         skins = parser.string_to_list(self.skins)
@@ -263,8 +286,8 @@ class GUser(models.Model):
 class BannedUserManager(models.Manager):
     def ban(self, user_id, reason, by_id, **extra_fields):
         user = GUser.objects.get(pk=user_id)
-        user.is_active = False
-        user.save()
+        user.user.is_active = False
+        user.user.save()
         by = User.objects.get(pk=by_id)
         return BannedUser.objects.create(user=user, reason=reason, by=by) 
 
@@ -272,7 +295,7 @@ class BannedUserManager(models.Manager):
 class BannedUser(models.Model):
     user = models.OneToOneField(GUser, on_delete=models.CASCADE)
     reason = models.CharField(max_length=256)
-    by = models.OneToOneField(User, on_delete=models.SET_NULL, related_name='by', null=True)
+    by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='by', null=True)
     datetime = models.DateTimeField(auto_now_add=True)
 
     objects = BannedUserManager()

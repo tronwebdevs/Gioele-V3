@@ -1,0 +1,40 @@
+{% extends 'gadmin/page.html' %}
+{% load static %}
+{% load gadmin_extras %}
+{% block title %}User{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12 col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <form action="{% url 'gadmin:ban_user' user.user.id %}" method="POST">
+                    {% csrf_token %}
+                    <p>
+                        Are you sure you want to ban <b>{{ user.user.username }}</b>?.
+                    </p>
+                    <p>
+                        To confirm please type the username of the user to ban:
+                    </p>
+                    <div class="row mb-3">
+                        <label for="inputUsername" class="col-sm-2 col-form-label">Username</label>
+                        <div class="col-sm-10">
+                            <input type="text" name="username" class="form-control" id="inputUsername">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputReason" class="col-sm-2 col-form-label">Reason</label>
+                        <div class="col-sm-10">
+                            <textarea name="reason" class="form-control" id="inputReason" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="float-end">
+                        <button type="submit" class="btn btn-primary me-2">Ban</button>
+                        <a href="{% url 'gadmin:users' %}" class="btn btn-outline-danger">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

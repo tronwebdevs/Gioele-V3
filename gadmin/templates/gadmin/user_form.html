@@ -1,0 +1,207 @@
+{% extends 'gadmin/page.html' %}
+{% load static %}
+{% load gadmin_extras %}
+{% block title %}User{% endblock %}
+{% block content %}
+{% if error %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-danger py-2" role="alert">
+            {{ error }}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% if message %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-success py-2" role="alert">
+            {{ message }}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% if ban %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-warning py-2" role="alert">
+            This user is currently banned for: "{{ ban.reason }}" <br>
+            Banned by {{ ban.by.username }} on {{ ban.datetime|date }}
+        </div>
+    </div>
+</div>
+{% endif %}
+<div class="row">
+    <div class="col-12 col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <form action="{% url 'gadmin:user' user.user.id %}" method="POST">
+                    {% csrf_token %}
+                    <div class="row mb-3">
+                        <label for="inputUsername" class="col-sm-2 col-form-label">Username</label>
+                        <div class="col-sm-10">
+                            <input type="text" name="username" class="form-control" id="inputUsername" value="{{ user.user.username }}">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputEmail" class="col-sm-2 col-form-label">Email</label>
+                        <div class="col-sm-10">
+                            <input type="email" name="email" class="form-control" id="inputEmail" value="{{ user.user.email }}">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label class="col-sm-2 col-form-label">Email Validation</label>
+                        <div class="col-sm-10">
+                            <div class="form-check mt-2">
+                                <input name="auth" class="form-check-input" type="checkbox" id="inputAuth" {% if user.auth %}checked{% endif %}>
+                                <label class="form-check-label" for="inputAuth">
+                                    Validated
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputBalance" class="col-sm-2 col-form-label">Balance</label>
+                        <div class="col-sm-10">
+                            <input name="balance" min="0" type="number" class="form-control" id="inputBalance" value="{{ user.balance }}">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputLevel" class="col-sm-2 col-form-label">Level</label>
+                        <div class="col-sm-1 mt-2">{{ user.level|rounddown }}</div>
+                        <div class="col-sm-9 mt-2">
+                            <div class="progress">
+                                <div class="progress-bar" style="width:{{ user.level|levelbarwitdth }};" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+
+                    <h5 class="mb-3">Items</h5>
+                    <div class="row mb-3">
+                        <label for="inputMainGun" class="col-sm-2 col-form-label">Main gun</label>
+                        <div class="col-sm-10">
+                            <select class="form-select" name="main_gun" id="inputMainGun">
+                                <option value="" {% if user.main_gun == None %}selected{% endif %}>-- No gun selected --</option>
+                                {% for gun in main_guns %}
+                                <option value="{{ gun.id }}" {% if gun.id == user.main_gun %}selected{% endif %}>{{ gun.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputSideGun" class="col-sm-2 col-form-label">Side gun</label>
+                        <div class="col-sm-10">
+                            <select class="form-select" name="side_gun" id="inputSideGun">
+                                <option value="" {% if user.side_gun == None %}selected{% endif %}>-- No gun selected --</option>
+                                {% for gun in side_guns %}
+                                <option value="{{ gun.id }}" {% if gun.id == user.side_gun %}selected{% endif %}>{{ gun.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputSkin" class="col-sm-2 col-form-label">Skin</label>
+                        <div class="col-sm-10">
+                            <select class="form-select" name="skin" id="inputSkin">
+                                <option value="" {% if user.skin == None %}selected{% endif %}>-- No gun selected --</option>
+                                {% for skin in skins %}
+                                <option value="{{ skin.id }}" {% if skin.id == user.skin %}selected{% endif %}>{{ skin.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="float-end">
+                        <button type="submit" class="btn btn-primary me-2">Save</button>
+                        <a href="{% url 'gadmin:users' %}" class="btn btn-outline-danger">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6 mb-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>Inventory</h5>
+                <form action="{% url 'gadmin:user_inventory' user.user.id %}" method="POST">
+                    {% csrf_token %}
+                    <div class="row mb-3">
+                        <div class="col-12 col-lg-4">
+                            <label for="inputUsername" class="form-label">Main guns ({{ user.inventory.get_main_guns|length }})</label>
+                            <div>
+                                <select class="form-select" name="main_guns" multiple aria-label="User main guns">
+                                    {% for gun in main_guns %}
+                                    <option value="{{ gun.id }}" {% if gun.owned %}selected{% endif %}>{{ gun.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-4">
+                            <label for="inputUsername" class="form-label">Side guns ({{ user.inventory.get_side_guns|length }})</label>
+                            <div>
+                                <select class="form-select" name="side_guns" multiple aria-label="User side guns">
+                                    {% for gun in side_guns %}
+                                    <option value="{{ gun.id }}" {% if gun.owned %}selected{% endif %}>{{ gun.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-4">
+                            <label for="inputUsername" class="form-label">Skins ({{ user.inventory.get_skins|length }})</label>
+                            <div>
+                                <select class="form-select" name="skins" multiple aria-label="User skins">
+                                    {% for skin in skins %}
+                                    <option value="{{ skin.id }}" {% if skin.owned %}selected{% endif %}>{{ skin.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="float-end">
+                        <button type="submit" class="btn btn-primary me-2">Save</button>
+                        <a href="{% url 'gadmin:users' %}" class="btn btn-outline-danger">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12 col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Games</h5>
+                        {% if games %}
+                        <ul class="list-unstyled mb-0">
+                            <li>
+                                <b>Played:</b> {{ games.count }}
+                                <b>Best:</b> {{ games.best.exp_earned }}
+                            </li>
+                        </ul>
+                        {% else %}
+                        <span class="text-muted my-4">No games played so far.</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Purchases</h5>
+                        {% if purchases %}
+                        <ul class="list-unstyled mb-0">
+                            <li>
+                                <b>Total:</b> {{ purchases.count }}
+                                <b>Highest:</b> {{ purchases.highest.price }}
+                            </li>
+                        </ul>
+                        {% else %}
+                        <span class="text-muted my-4">No pruchases so far.</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
