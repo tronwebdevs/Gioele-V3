@@ -284,11 +284,10 @@ class GUser(models.Model):
 
 
 class BannedUserManager(models.Manager):
-    def ban(self, user_id, reason, by_id, **extra_fields):
+    def ban(self, user_id, reason, by, **extra_fields):
         user = GUser.objects.get(pk=user_id)
         user.user.is_active = False
         user.user.save()
-        by = User.objects.get(pk=by_id)
         return BannedUser.objects.create(user=user, reason=reason, by=by) 
 
 
@@ -366,3 +365,9 @@ class Stat(models.Model):
     key = models.CharField(max_length=16)
     value = models.FloatField()
     at = models.DateTimeField(auto_now_add=True, editable=False)
+
+
+class AdminLog(models.Model):
+    action = models.CharField(max_length=256)
+    by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    datetime = models.DateTimeField(auto_now_add=True)

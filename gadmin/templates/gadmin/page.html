@@ -105,6 +105,19 @@
                             </a>
                         </li>
                     </ul>
+
+                    <h6 class="sidebar-heading d-flex px-3 mt-4 mb-1 text-muted">
+                        <span>Other</span>
+                    </h6>
+                    <ul class="nav flex-column mb-2">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == "logs" %}active{% endif %}"
+                                aria-current="page" href="{% url 'gadmin:logs' %}">
+                                <span data-feather="file"></span>
+                                Logs
+                            </a>
+                        </li>
+                    </ul>
                 </div>
             </nav>
 

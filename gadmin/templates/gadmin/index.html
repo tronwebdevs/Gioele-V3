@@ -13,7 +13,7 @@
                 <div class="h5 stamp-label">
                     <a href="#">
                         {{ stats.visitors }} <small>Visitors</small>
-                        <small class="subtitle">-12%</small>
+                        <small class="subtitle">{{ percentages.visitors }}</small>
                     </a>
                 </div>
             </div>
@@ -28,7 +28,7 @@
                 <div class="h5 stamp-label">
                     <a href="#">
                         {{ stats.users }} <small>Users</small>
-                        <small class="subtitle">+25%</small>
+                        <small class="subtitle">{{ percentages.users }}</small>
                     </a>
                 </div>
             </div>
@@ -43,7 +43,7 @@
                 <div class="h5 stamp-label">
                     <a href="#">
                         {{ stats.matches }} <small>Matches played</small>
-                        <small class="subtitle">+10%</small>
+                        <small class="subtitle">{{ percentages.matches }}</small>
                     </a>
                 </div>
             </div>
@@ -90,10 +90,7 @@
     new Chart(document.getElementById('users-chart'), {
         type: 'line',
         data: {
-            labels: [
-                {% for row in charts_data.users %}
-                '{{ row.at|date:"H:m" }}',
-                {% endfor %}
+            labels: [{% for row in charts_data.users %}'{{ row.at|date:"H:m" }}',{% endfor %}
             ],
             datasets: [
                 {
@@ -120,10 +117,7 @@
     new Chart(document.getElementById('matches-chart'), {
         type: 'line',
         data: {
-            labels: [
-                {% for row in charts_data.games %}
-                '{{ row.at|date:"H:m" }}',
-                {% endfor %}
+            labels: [{% for row in charts_data.games %}'{{ row.at|date:"H:m" }}',{% endfor %}
             ],
             datasets: [
                 {

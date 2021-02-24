@@ -1,0 +1,22 @@
+{% extends 'gadmin/page.html' %}
+{% load static %}
+{% block title %}Logs{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12 col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-body py-1">
+                {% if logs %}
+<pre class="m-0">
+{% for log in logs %}
+[{{ log.datetime|date:"SHORT_DATE_FORMAT" }} {{ log.datetime|time:"H:i:s" }}][{{ log.by.username }}] {{ log.action }}
+{% endfor %}
+</pre>
+                {% else %}
+                <span class="text-muted">No logs found</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

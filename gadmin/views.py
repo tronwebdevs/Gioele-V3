@@ -8,10 +8,18 @@ from django.shortcuts import render
 from django.views import generic
 from django.contrib.auth import authenticate
 from django.urls import reverse
+from django.utils import timezone
 from django.contrib.auth.forms import AuthenticationForm
 
 from api.utils import generate_short_id
-from api.models import GUser, BannedUser, Gun, Skin, GameLog, VisitLog, Stat, PurchaseLog
+from api.models import User, GUser, BannedUser, Gun, Skin, GameLog, VisitLog, Stat, PurchaseLog, AdminLog
+
+
+def get_percentage(current, last):
+    if last != 0:
+        return str((current - last) * 100 / last) + '%'
+    else:
+        return '+0%'
 
 
 def get_user(user_id):
@@ -32,17 +40,29 @@ def get_selected_items(dataset, user_dataset):
 
 
 def index(request):
+    users_dataset = list(Stat.objects.filter(key='users'))[:16]
+    visitors_dataset = list(Stat.objects.filter(key='visitors'))[:16]
+    games_dataset = list(Stat.objects.filter(key='games'))[:16]
+    visitors = VisitLog.objects.count()
+    users = GUser.objects.count()
+    matches = GameLog.objects.count()
+    purchases = PurchaseLog.objects.count()
     context = {
         'stats': {
-            'visitors': VisitLog.objects.count(),
-            'users': GUser.objects.count(),
-            'matches': GameLog.objects.count(),
-            'purchases': PurchaseLog.objects.count()
+            'visitors': visitors,
+            'users': users,
+            'matches': matches,
+            'purchases': purchases,
+        },
+        'percentages': {
+            'users': get_percentage(users, users_dataset[-1].value),
+            'visitors': get_percentage(visitors, visitors_dataset[-1].value),
+            'matches': get_percentage(matches, games_dataset[-1].value),
         },
         'charts_data': {
-            'users': Stat.objects.filter(key='users'),
-            'visitors': Stat.objects.filter(key='visitors'),
-            'games': Stat.objects.filter(key='games'),
+            'users': users_dataset + [Stat(key='users',value=users)],
+            'visitors': visitors_dataset + [Stat(key='visitors',value=visitors)],
+            'games': games_dataset + [Stat(key='games',value=matches)],
         }
     }
     return render(request, 'gadmin/index.html', context)
@@ -84,11 +104,14 @@ class UserBanView(generic.View):
         reason = request.POST.get('reason')
         if user is None or (reason is None or reason == '') or user.user.username != username:
             return HttpResponseRedirect(reverse('gadmin:users') + '?m=err')
+        admin = User.objects.get(pk=request.session.get('admin_id'))
+        user_id = user.user.id
         BannedUser.objects.ban(
-            user_id=user.user.id,
+            user_id=user_id,
             reason=reason,
-            by_id=request.session.get('admin_id')
+            by=admin
         )
+        AdminLog.objects.create(action=f'Banned user #{user_id}', by=admin)
         return HttpResponseRedirect(reverse('gadmin:users') + '?m=ok')
 
 
@@ -112,6 +135,10 @@ class UserInventoryView(generic.View):
             if len(Skin.objects.filter(pk=sid)) > 0:
                 user.inventory.add_skin(sid)
         user.inventory.save()
+        AdminLog.objects.create(
+            action=f'Edited user #{user.user.id} inventory',
+            by=User.objects.get(pk=request.session.get('admin_id'))
+        )
         return HttpResponseRedirect(reverse('gadmin:users') + '?m=ok')
 
 
@@ -188,6 +215,10 @@ class UserModelView(generic.TemplateView):
             extra[1] = str(e)
         context = self._craft_context(user)
         context[extra[0]] = extra[1]
+        AdminLog.objects.create(
+            action=f'Edited user #{user.user.id} profile',
+            by=User.objects.get(pk=request.session.get('admin_id'))
+        )
         return self.render_to_response(context)
 
 
@@ -202,8 +233,8 @@ def hardware(request):
         'psutil': psutil,
         'system': platform,
         'charts_data': {
-            'cpu': Stat.objects.filter(key='cpu'),
-            'mem': Stat.objects.filter(key='mem'),
+            'cpu': Stat.objects.filter(key='cpu')[:10],
+            'mem': Stat.objects.filter(key='mem')[:10],
         },
         'git': {
             'commit': commit_hash,
@@ -245,8 +276,10 @@ class GunModelView(generic.TemplateView):
         gun_list = Gun.objects.filter(pk=pk)
         if len(gun_list) == 0:
             gun = Gun(id=pk)
+            action = 'Create'
         else:
             gun = gun_list[0]
+            action = 'Edit'
         try:
             gun.name = request.POST.get('name')
             gun.type = request.POST.get('type')
@@ -257,6 +290,11 @@ class GunModelView(generic.TemplateView):
             gun.save()
         except Exception as e:
             return self.render_to_response({ 'gun': gun, 'message': str(e) })
+        
+        AdminLog.objects.create(
+            action=f'{action}ed gun #{gun.id}',
+            by=User.objects.get(pk=request.session.get('admin_id'))
+        )
 
         return HttpResponseRedirect(reverse('gadmin:guns'))
 
@@ -284,8 +322,10 @@ class SkinModelView(generic.TemplateView):
         skin_list = Skin.objects.filter(pk=pk)
         if len(skin_list) == 0:
             skin = Skin(id=pk)
+            action = 'Create'
         else:
             skin = skin_list[0]
+            action = 'Edit'
         try:
             skin.name = request.POST.get('name')
             skin.description = request.POST.get('description')
@@ -294,7 +334,16 @@ class SkinModelView(generic.TemplateView):
         except Exception as e:
             return self.render_to_response({ 'skin': skin, 'message': str(e) })
 
+        AdminLog.objects.create(
+            action=f'{action}ed skin #{skin.id}',
+            by=User.objects.get(pk=request.session.get('admin_id'))
+        )
+
         return HttpResponseRedirect(reverse('gadmin:skins'))
+
+
+def admin_logs(request):
+    return render(request, 'gadmin/admin_logs.html', { 'logs': AdminLog.objects.all() })
 
 
 def logout(request):
