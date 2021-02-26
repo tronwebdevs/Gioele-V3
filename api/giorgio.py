@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from .classes import Parser
 from .exceptions import GameException
-from .game import MAX_MSHIP_LIFES, Player, ENEMY_TYPES, POWERUP_TYPES
+from .game import MAX_MSHIP_LIFES, Player, ENEMY_TYPES, POWERUP_TYPES, ENEMIES_PER_GENERATION
 from .models import GameLog
 
 parser = Parser()
@@ -37,20 +37,24 @@ class Giorgio:
         # Increment player's expired powerups list
         self.player.expired_powerups.add(powerup.type)
 
-    def _generate_enemy_from_perc(self, p1, p2):
+    def _generate_enemies_from_perc(self, p1, p2):
         EnemyType = None
-        rnd = random.random()
-        # print('DEBUG: ', self._generation, self._round, p1 / 100, (p1 + p2) / 100, ' rand: ', rnd)
-        if rnd <= p1 / 100:
-            EnemyType = ENEMY_TYPES['ship']
-        elif rnd <= (p1 + p2) / 100:
-            EnemyType = ENEMY_TYPES['kamikaze']
-        else:
-            EnemyType = ENEMY_TYPES['interceptor']
+        generated = []
+        for i in range(ENEMIES_PER_GENERATION):
+            rnd = random.random()
+            # print('DEBUG: ', self._generation, self._round, p1 / 100, (p1 + p2) / 100, ' rand: ', rnd)
+            if rnd <= p1 / 100:
+                EnemyType = ENEMY_TYPES['ship']
+            elif rnd <= (p1 + p2) / 100:
+                EnemyType = ENEMY_TYPES['kamikaze']
+            else:
+                EnemyType = ENEMY_TYPES['interceptor']
 
-        self._last_entity_id += 1
-
-        return EnemyType[1](self._last_entity_id)
+            self._last_entity_id += 1
+            EnemyTypeClass = EnemyType[1]
+            hp = EnemyTypeClass.BASE_HP * (1 + self._round / 10)
+            generated.append(EnemyTypeClass(self._last_entity_id, hp))
+        return generated
 
     def _generate_powerup_from_perc(self, p0, p1, p2=0):
         PowerUpType = None
@@ -77,8 +81,7 @@ class Giorgio:
     def generate_entities(self):
         # Increment generations counter
         self._generation += 1
-        new_enemies = []
-        new_powerups = []
+
         k = self._round
         g = self._generation
         # g + 3 - 10k > 0
@@ -90,22 +93,19 @@ class Giorgio:
         p1 = 100 - 10 * (k + 1)
         if k == 0: # k = 0
             # Generated enemies
-            for i in range(5):
-                new_enemies.append(ENEMY_TYPES['ship'][1](self._last_entity_id))
+            gen_enemies = self._generate_enemies_from_perc(100, 0)
         elif k <= 5: # 1 <= k <= 5
             # Generated enemies
             # Pk(k) = (15 + 5k)%
             p2 = 5 * (k + 3)
             # Pi(k) = (5(k - 1))%
-            for i in range(5):
-                new_enemies.append(self._generate_enemy_from_perc(p1, p2))
+            gen_enemies = self._generate_enemies_from_perc(p1, p2)
         else: # K >= 6
             if k > 6: # k != 6
                 # Pb(k) = 20%
                 p1 = 20
             # Pk(k) = 40%
-            for i in range(5):
-                new_enemies.append(self._generate_enemy_from_perc(p1, 40))
+            gen_enemies = self._generate_enemies_from_perc(p1, 40)
 
         # TODO: generate bosses
 
@@ -118,18 +118,19 @@ class Giorgio:
         elif k >= 3:
             powerup = self._generate_powerup_from_perc(25, 25, 25)
         
+        gen_powerups = []
         if powerup is not None:
-            new_powerups.append(powerup)
+            gen_powerups.append(powerup)
         
         # Push new evemy to the stack
-        for enemy in new_enemies:
+        for enemy in gen_enemies:
             self.enemies[enemy.id] = enemy
         # Push new powerups to the stack
-        for powerup in new_powerups:
+        for powerup in gen_powerups:
             self.powerups[powerup.id] = powerup
 
         # Return generated entities
-        return new_enemies, new_powerups
+        return gen_enemies, gen_powerups
 
     """
     Check if enemy has been killed (and remove it from stack) or just

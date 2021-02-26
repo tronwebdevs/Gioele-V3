@@ -1,4 +1,5 @@
 import datetime
+import inspect
 import random
 import re
 import string
@@ -38,6 +39,7 @@ BADWORDS = (
     'mvja27',
 )
 SCHOOL_EMAIL_ADDRESS = '@tronzanella.edu.it'
+THREADS = {}
 
 # 
 # REMEMBER TO EDIT THIS SETTINGS
@@ -81,5 +83,17 @@ def generate_short_id(verify_set=None):
             return generate_short_id(verify_set)
     return generated
 
-def log(func, who, message, ltype='INFO'):
-    print('[%s/%s][%s][%s] %s' % (threading.get_ident(), func, ltype, who, message))
+def log(who, message, ltype='INFO'):
+    func = inspect.stack()[1].function
+    tname = THREADS.get(threading.get_ident())
+    if tname is None:
+        if len(THREADS) == 0:
+            tname = 'Thread-0'
+            THREADS[threading.get_ident()] = tname
+        else:
+            tname = 'Thread-' + str(int(THREADS[list(THREADS.keys())[-1]].split('-')[-1]) + 1)
+            THREADS[threading.get_ident()] = tname
+    color = '\033[92m'
+    if ltype == 'WARNING':
+        color = '\033[93m'
+    print('%s[%s/%s][%s][%s] %s' % (color, tname, func, ltype, who, message))

@@ -1,4 +1,4 @@
-from random import random
+import random
 
 from .classes import Parser
 from .exceptions import GameCheatDetectedException, GameException
@@ -15,6 +15,7 @@ PLAYER_BASE_MODIFIER = 1
 MAX_PLAYER_SHIELD = 100
 POWERUPS_LAST_TIME = 10 # in seconds
 CLIENT_CANVAS_WIDTH = 800 # in pixels
+ENEMIES_PER_GENERATION = 5
 
 parser = Parser()
 
@@ -23,7 +24,7 @@ class Entity:
     def __init__(self, id, type):
         self.id = id
         self.type = type
-        self.x = round(random() * (CLIENT_CANVAS_WIDTH - 50))
+        self.x = random.randint(25, CLIENT_CANVAS_WIDTH - 25)
 
 
 class PowerUp(Entity):
@@ -79,12 +80,13 @@ class Enemy(Entity):
 
 class BaseShipEnemy(Enemy):
     TYPE = 0
+    BASE_HP = 100
 
-    def __init__(self, id, rarity=Enemy.RARITIES['base']):
+    def __init__(self, id, hp=BASE_HP, rarity=Enemy.RARITIES['base']):
         super().__init__(
             id=id,
             type=self.TYPE,
-            hp=5,
+            hp=hp,
             exp_reward=1,
             gbucks_reward=1,
             damage=10,
@@ -95,12 +97,13 @@ class BaseShipEnemy(Enemy):
 
 class KamikazeShipEnemy(Enemy):
     TYPE = 1
+    BASE_HP = 150
 
-    def __init__(self, id, rarity=Enemy.RARITIES['base']):
+    def __init__(self, id, hp=BASE_HP, rarity=Enemy.RARITIES['base']):
         super().__init__(
             id=id,
             type=self.TYPE,
-            hp=20,
+            hp=hp,
             exp_reward=2,
             gbucks_reward=2,
             damage=5,
@@ -111,12 +114,13 @@ class KamikazeShipEnemy(Enemy):
 
 class InterceptorShipEnemy(Enemy):
     TYPE = 2
+    BASE_HP = 200
 
-    def __init__(self, id, rarity=Enemy.RARITIES['base']):
+    def __init__(self, id, hp=BASE_HP, rarity=Enemy.RARITIES['base']):
         super().__init__(
             id=id,
             type=self.TYPE,
-            hp=40,
+            hp=hp,
             exp_reward=10,
             gbucks_reward=10,
             damage=40,
