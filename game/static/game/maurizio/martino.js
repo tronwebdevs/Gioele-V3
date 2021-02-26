@@ -46,7 +46,7 @@ function update() {
         console.log('Killed #' + enemies[k].id)
         gameSocket.send(JSON.stringify({
             a: 6, // Action type
-            t: 1, // gun type (0:main, 1:side)
+            g: 1, // gun type (0:main, 1:side)
             i: enemies[k].id // enemy id
         }));
         enemies.splice(k,1);
