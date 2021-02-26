@@ -5,9 +5,7 @@ from django.test import TestCase
 
 from .exceptions import NotEnoughtCoins, AlreadyExist
 from .models import GUser, Gun, Skin
-from .classes import Parser
-
-pstr_parser = Parser()
+from .utils import parser
 
 def create_test_user():
     user = GUser.objects.create_user(username='test', password='test', email='test@test.com')
@@ -83,8 +81,8 @@ class GUserModelTest(TestCase):
         hid2 = hashlib.md5(guns[2].id.encode()).hexdigest()
         user.buy_gun(hid2)
 
-        user_main_guns = pstr_parser.string_to_dicts(user.inventory.main_guns, 'id', 'name')
-        user_side_guns = pstr_parser.string_to_dicts(user.inventory.side_guns, 'id', 'name')
+        user_main_guns = parser.string_to_dicts(user.inventory.main_guns, 'id', 'name')
+        user_side_guns = parser.string_to_dicts(user.inventory.side_guns, 'id', 'name')
         self.assertEqual(user_main_guns[1]['id'], Gun.objects.filter(type=Gun.MAIN_GUN)[1].id)
         self.assertEqual(user_side_guns[0]['id'], Gun.objects.filter(type=Gun.SIDE_GUN)[0].id)
 
@@ -94,7 +92,7 @@ class GUserModelTest(TestCase):
 
         hid = hashlib.md5(skins[1].id.encode()).hexdigest()
         user.buy_skin(hid)
-        user_skins = pstr_parser.string_to_list(user.inventory.skins)
+        user_skins = parser.string_to_list(user.inventory.skins)
         self.assertEqual(len(user_skins), 2)
 
     def test_user_buys_gun_already_exists(self):

@@ -10,7 +10,8 @@ from channels.layers import get_channel_layer
 from django.contrib.auth.models import AnonymousUser
 
 from .exceptions import GameDataException, GameException
-from .game import POWERUPS_LAST_TIME, DELAY_BETWEEN_ENEMIES_GENERATIONS, POWERUP_TYPES
+from .game.constants import POWERUPS_LAST_TIME, DELAY_BETWEEN_ENEMIES_GENERATIONS
+from .game.powerups import POWERUP_TYPES
 from .giorgio import Giorgio
 from .utils import log as DEBUG
 
@@ -216,15 +217,15 @@ class GameConsumer(WebsocketConsumer):
         if giorgio.running:
             DEBUG('Giorgio', 'Generating entities')
             # Run algorithm witch generates entities and get result
-            new_enemies, new_powerups = giorgio.generate_entities()
-            new_enemies = list(map(vars, new_enemies))
-            new_powerups = list(map(vars, new_powerups))
+            gen_enemies, gen_powerups = giorgio.generate_entities()
+            gen_enemies = list(map(lambda e: e.get_displayable(), gen_enemies))
+            gen_powerups = list(map(lambda p: p.get_displayable(), gen_powerups))
             DEBUG('WebSocket', 'Sending generated entities')
             # Send to client generated entity lists
             self.send_dict({
                 'r': RESPONSE_GENERATED_ENTITIES,
-                'enemies': new_enemies,
-                'powerups': new_powerups
+                'enemies': gen_enemies,
+                'powerups': gen_powerups
             })
         else:
             DEBUG('WebSocket', 'Generation prevented as the game is stopped')

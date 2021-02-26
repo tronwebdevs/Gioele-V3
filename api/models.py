@@ -4,11 +4,9 @@ from uuid import uuid4
 from django.db import models
 from django.contrib.auth.models import User
 
-from .utils import generate_short_id
+from .utils import generate_short_id, parser
 from .exceptions import ParseException, AlreadyExist, NotEnoughtCoins
-from .classes import UserSkin, UserGun, Parser
-
-parser = Parser()
+from .classes import UserSkin, UserGun
 
 
 # GAME RELATED MODELS

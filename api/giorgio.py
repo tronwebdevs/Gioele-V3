@@ -4,12 +4,13 @@ from uuid import uuid4
 
 from django.utils import timezone
 
-from .classes import Parser
 from .exceptions import GameException
-from .game import MAX_MSHIP_LIFES, Player, ENEMY_TYPES, POWERUP_TYPES, ENEMIES_PER_GENERATION
+from .utils import parser
+from .game.constants import MAX_MSHIP_LIFES, ENEMIES_PER_GENERATION
+from .game.player import Player
+from .game.enemies import ENEMY_TYPES
+from .game.powerups import POWERUP_TYPES
 from .models import GameLog
-
-parser = Parser()
 
 
 class Giorgio:
@@ -53,7 +54,12 @@ class Giorgio:
             self._last_entity_id += 1
             EnemyTypeClass = EnemyType[1]
             hp = EnemyTypeClass.BASE_HP * (1 + self._round / 10)
-            generated.append(EnemyTypeClass(self._last_entity_id, hp))
+            gen_enemy = EnemyTypeClass(self._last_entity_id, hp)
+            # Regen enemy position if too close to others
+            # for enemy_id in self.enemies:
+            #     if gen_enemy.pos.check(self.enemies[enemy_id].pos):
+            #         gen_enemy.pos.generate()
+            generated.append(gen_enemy)
         return generated
 
     def _generate_powerup_from_perc(self, p0, p1, p2=0):

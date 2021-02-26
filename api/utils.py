@@ -8,6 +8,8 @@ import threading
 from django.utils import timezone
 from jose import jwt
 
+from api.classes import Parser
+
 BADWORDS = (
     #sezione generale
     'merd', 'cazz', 'negr', 'stupr', 'bastard',
@@ -26,7 +28,8 @@ BADWORDS = (
     'adolf', 'partigian', 'lager', 'gulag', 'stalin',
     'lenin', 'ebrei', 'auschwitz',
     #sezione Politica (senza leader politici)
-    'comunis', 'liberalis', 'anarchi',
+    'comunis', 'liberalis', 'anarchi', 'draghi', 'renzi',
+    'salvini', 'zingaretti',
     #sezione internazionale
     'faggot', 'nigger', 'retard', 'fuck', 'shit',
     'kurwa', # polski
@@ -50,6 +53,21 @@ JWT_SETTINGS = {
     'issuer': 'com.example.API',
     'audience': 'com.example.Fronted',
 }
+
+parser = Parser()
+
+# Hippity hoppity, your code is now MY property
+# credits: https://stackoverflow.com/a/287944
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 def is_valid_word(word):
     for regex in BADWORDS:
@@ -93,7 +111,9 @@ def log(who, message, ltype='INFO'):
         else:
             tname = 'Thread-' + str(int(THREADS[list(THREADS.keys())[-1]].split('-')[-1]) + 1)
             THREADS[threading.get_ident()] = tname
-    color = '\033[92m'
+    color = bcolors.OKBLUE
     if ltype == 'WARNING':
-        color = '\033[93m'
-    print('%s[%s/%s][%s][%s] %s' % (color, tname, func, ltype, who, message))
+        color = bcolors.WARNING
+    elif ltype == 'ERROR':
+        color = bcolors.FAIL
+    print('%s[%s/%s][%s][%s] %s%s' % (color, tname, func, ltype, who, message, bcolors.ENDC))
