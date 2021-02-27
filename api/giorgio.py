@@ -24,7 +24,7 @@ class Giorgio:
         self.powerups = dict()
         self.mship_lifes = MAX_MSHIP_LIFES
         self._last_entity_id = 0
-        self._generation = 0
+        self.generation = 0
         self.round = 1
 
     def start_game(self):
@@ -43,7 +43,7 @@ class Giorgio:
         generated = []
         for i in range(ENEMIES_PER_GENERATION):
             rnd = random.random()
-            print('DEBUG ENEMIES GEN: g=%i, k=%i, p1=%f, p2=%f, rand:%f' % (self._generation, self.round, p1 / 100, (p1 + p2) / 100, rnd))
+            print('DEBUG ENEMIES GEN: g=%i, k=%i, p1=%f, p2=%f, rand:%f' % (self.generation, self.round, p1 / 100, (p1 + p2) / 100, rnd))
             if rnd <= p1 / 100:
                 EnemyType = ENEMY_TYPES['ship']
             elif rnd <= (p1 + p2) / 100:
@@ -65,7 +65,7 @@ class Giorgio:
     def generate_powerups(self, p0, p1, p2=0):
         PowerUpType = None
         rnd = random.random()
-        print('DEBUG POWERUPS GEN: g=%i, k=%i, p0=%f, p1=%f, p2=%f, rand:%f' % (self._generation, self.round, p0 / 100, (p0 + p1) / 100, (p0 + p1 + p2) / 100, rnd))
+        print('DEBUG POWERUPS GEN: g=%i, k=%i, p0=%f, p1=%f, p2=%f, rand:%f' % (self.generation, self.round, p0 / 100, (p0 + p1) / 100, (p0 + p1 + p2) / 100, rnd))
         if rnd <= p0 / 100:
             return None
         elif rnd <= (p0 + p1) / 100:
@@ -86,12 +86,12 @@ class Giorgio:
     """
     def generate_entities(self):
         # Increment generations counter
-        self._generation += 1
+        self.generation += 1
 
         k = self.round
-        g = self._generation
+        g = self.generation
         if g > k:
-            g = self._generation = 1
+            g = self.generation = 1
             self.round += 1
             # Update variable
             k = self.round
