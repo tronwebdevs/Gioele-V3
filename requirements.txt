@@ -12,6 +12,7 @@ cryptography==3.4.6
 daphne==3.0.1
 Django==3.1.7
 djangorestframework==3.12.2
+ecdsa==0.14.1
 hiredis==1.1.0
 hyperlink==21.0.0
 idna==3.1
@@ -23,7 +24,9 @@ pyasn1-modules==0.2.8
 pycparser==2.20
 PyHamcrest==2.0.2
 pyOpenSSL==20.0.1
+python-jose==3.2.0
 pytz==2021.1
+rsa==4.7.2
 service-identity==18.1.0
 six==1.15.0
 sqlparse==0.4.1
