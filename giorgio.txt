@@ -68,6 +68,9 @@ json
 
 On the other hand, the payload of server responses follows the format:
 - 'r': response type, possible values:
+    - -1: an error occurred:
+        - 'c': error code (int)
+        - 'm': error message (str)
     - 0: game related (soon)
         - 'm': response message (str)
     - 1: player object
@@ -79,9 +82,6 @@ On the other hand, the payload of server responses follows the format:
         - 'powerups': generated powerups (array)
     - 4: enemy object
         - 'enemy': enemy object (other)
-Furthermore, server error responses have format:
-- 'code': error code (int)
-- 'message': message describing the exception happend (str)
 e.g.
 Server send updated player object
 +-----------------------------------+
@@ -105,49 +105,49 @@ Server send updated player object
 ╚██████╔╝  ╚██████╔╝╚██████╔╝██║░░██║╚██████╔╝  ██████╔╝██║╚██████╔╝██║██████╔╝██║░░██║███████╗  ░░╚██╔╝░░███████╗
 ░╚═════╝░  ░╚═════╝░░╚═════╝░╚═╝░░╚═╝░╚═════╝░  ╚═════╝░╚═╝░╚═════╝░╚═╝╚═════╝░╚═╝░░╚═╝╚══════╝  ░░░╚═╝░░░╚══════╝
 "u guru digidàl v2" is the name of the generation algorithm for enemies and powerups in Gioele V3.
+On every generation 5 enemies and 0 or 1 powerup are generated and sent to the client (Giorgio->Maurizio).
+(k = round)
+The delay between generations is variable, following: d = (5000 + 400 * (k - 1)) milliseconds.
+Number of enemies per round: n = 5k
+Enemies life: h = base * (1 + (k - 1) / 10)
 
 ░█▀▀█ ░█▀▀█ ░█▀▀▀█ ░█▀▀█ ─█▀▀█ ░█▀▀█ ▀█▀ ░█─── ▀█▀ ▀▀█▀▀ ░█──░█ 
 ░█▄▄█ ░█▄▄▀ ░█──░█ ░█▀▀▄ ░█▄▄█ ░█▀▀▄ ░█─ ░█─── ░█─ ─░█── ░█▄▄▄█ 
 ░█─── ░█─░█ ░█▄▄▄█ ░█▄▄█ ░█─░█ ░█▄▄█ ▄█▄ ░█▄▄█ ▄█▄ ─░█── ──░█──
-g = generation counter, starts from 1 and increments by 1 each generation
-k = round counter, starts from 0 and increments by 1 when F(g, k) > 0
-h = offset, number of generations before spawning enemies other than base ship (const, 2)
-F(g, k) = g - h - 5(k - 1) - 5k
-        = g + 3 - 10k
 
 ENEMIES
-                  +-----+-------+-------+-------+-------+
-                  |  k  |   B   |   K   |   I   |  tot  |
-+-----------------+-----+-------+-------+-------+-------+    Legend:
-| 1 <= g <= 2     |  0  |  100% |    0% |    0% |    10 |    g, k: see above
-+-----------------+-----+-------+-------+-------+-------+    B: probability to spawn base ship
-| 3 <= g <= 7     |  1  |   80% |   20% |    0% |    25 |    K: probability to spawn kamikaze ship
-+-----------------+-----+-------+-------+-------+-------+    I: probability to spawn interceptor ship
-| 8 <= g <= 17    |  2  |   70% |   25% |    5% |    50 |    tot: number of enemies generated in that round
-+-----------------+-----+-------+-------+-------+-------+
-| 18 <= g <= 32   |  3  |   60% |   30% |   10% |    75 |
-+-----------------+-----+-------+-------+-------+-------+
-| 33 <= g <= 52   |  4  |   50% |   35% |   15% |   100 |
-+-----------------+-----+-------+-------+-------+-------+
-| 53 <= g <= 77   |  5  |   40% |   40% |   20% |   125 |
-+-----------------+-----+-------+-------+-------+-------+
-| 78 <= g <= 107  |  6  |   30% |   40% |   30% |   150 |
-+-----------------+-----+-------+-------+-------+-------+
-| g <= 108        | 7.. |   20% |   40% |   40% |   175 |
-+-----------------+-----+-------+-------+-------+-------+
++-----+-------+-------+-------+-------+
+|  k  |   B   |   K   |   I   |  tot  |
++-----+-------+-------+-------+-------+    Legend:
+|  1  |  100% |    0% |    0% |     5 |    k: see above
++-----+-------+-------+-------+-------+    B: probability to spawn base ship
+|  2  |   80% |   20% |    0% |    10 |    K: probability to spawn kamikaze ship
++-----+-------+-------+-------+-------+    I: probability to spawn interceptor ship
+|  3  |   70% |   25% |    5% |    15 |    tot: number of enemies generated in that round
++-----+-------+-------+-------+-------+
+|  4  |   60% |   30% |   10% |    20 |
++-----+-------+-------+-------+-------+
+|  5  |   50% |   35% |   15% |    25 |
++-----+-------+-------+-------+-------+
+|  6  |   40% |   40% |   20% |    30 |
++-----+-------+-------+-------+-------+
+|  7  |   30% |   40% |   30% |    35 |
++-----+-------+-------+-------+-------+
+| k+1 |   20% |   40% |   40% | tot+5 |
++-----+-------+-------+-------+-------+
 
 POWERUPS
-                  +-----+-------+-------+-------+
-                  |  k  |   S   |   H   |   D   |
-+-----------------+-----+-------+-------+-------+    Legend:
-| 1 <= g <= 2     |  0  |    0% |    0% |    0% |    g, k: see above
-+-----------------+-----+-------+-------+-------+    S: probability to spawn speed powerup
-| 3 <= g <= 7     |  1  |   50% |    0% |    0% |    H: probability to spawn shield powerup
-+-----------------+-----+-------+-------+-------+    D: probability to spawn damage powerup
-| 8 <= g <= 17    |  2  |   33% |   33% |    0% |    
-+-----------------+-----+-------+-------+-------+    Note: missing percentage refers to the possibility
-| g >= 18         | 3.. |   25% |   25% |   25% |          that the powerup shall not spawn
-+-----------------+-----+-------+-------+-------+
++-----+-------+-------+-------+
+|  k  |   S   |   H   |   D   |
++-----+-------+-------+-------+    Legend:
+|  0  |    0% |    0% |    0% |    k: see above
++-----+-------+-------+-------+    S: probability to spawn speed powerup
+|  1  |   50% |    0% |    0% |    H: probability to spawn shield powerup
++-----+-------+-------+-------+    D: probability to spawn damage powerup
+|  2  |   33% |   33% |    0% |    
++-----+-------+-------+-------+    Note: missing percentage refers to the possibility
+| k+1 |   25% |   25% |   25% |          that the powerup shall not spawn
++-----+-------+-------+-------+
 
 
 
