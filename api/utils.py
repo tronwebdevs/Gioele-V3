@@ -19,7 +19,7 @@ BADWORDS = (
     'zoccol', 'succhia', 'mannaggia', 'tette',
     #sezione sessualità
     'ricchione', 'froci', 'culatton', 'culaton',
-    'finocchi', 'lesbic', 'gay',
+    'finocchi', 'lesbic', 'gay', 'lgbt',
     #sezione Chiesa Cattolica
     'madonna', 'diopo', 'dioladr', 'diostra', 'diobastard', 
     'dioca', 'diof', 'dioim', 'diom', 'dios', 'padrepio',
@@ -33,7 +33,7 @@ BADWORDS = (
     #sezione internazionale
     'faggot', 'nigger', 'retard', 'fuck', 'shit',
     'kurwa', # polski
-    'bitch', 'hooker', 'whore',
+    'bitch', 'hooker', 'whore', 'cunt', 'cum',
     #sottosezione NAPOLI
     'mammt', 'bucchin', 'uagliò', 'uaglio', 'kitte',
     #sezione malattie
@@ -112,6 +112,9 @@ def log(who, message, ltype='INFO'):
             tname = 'Thread-' + str(int(THREADS[list(THREADS.keys())[-1]].split('-')[-1]) + 1)
             THREADS[threading.get_ident()] = tname
     color = bcolors.OKBLUE
+    if who == 'Giorgio':
+        color = bcolors.OKGREEN
+    
     if ltype == 'WARNING':
         color = bcolors.WARNING
     elif ltype == 'ERROR':

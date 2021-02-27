@@ -85,8 +85,50 @@ class InterceptorShipEnemy(Enemy):
         )
 
 
+class BossEnemy(Enemy):
+    def __init__(self, id, type, hp, exp_reward, gbucks_reward, \
+                 damage, rarity=Enemy.RARITIES['base']):
+        super().__init__(
+            id=id,
+            type=type,
+            hp=hp,
+            exp_reward=exp_reward,
+            gbucks_reward=gbucks_reward,
+            damage=damage,
+            rarity=rarity,
+            is_boss=True
+        )
+
+    def attack(self, giorgio):
+        pass
+
+
+class ShitAssBossEnemy(BossEnemy):
+    TYPE = 10
+    BASE_HP = 5000
+
+    def __init__(self, id, hp=BASE_HP, rarity=Enemy.RARITIES['base']):
+        super().__init__(
+            id=id,
+            type=self.TYPE,
+            hp=hp,
+            exp_reward=1000,
+            gbucks_reward=1000,
+            damage=10,
+            rarity=rarity
+        )
+
+    def attack(self, giorgio):
+        # giorgio.generate_enemies(100, 0)
+        print('ShitAss is attacking you.')
+
+
 ENEMY_TYPES  = {
     'ship': (BaseShipEnemy.TYPE, BaseShipEnemy),
     'kamikaze': (KamikazeShipEnemy.TYPE, KamikazeShipEnemy),
     'interceptor': (InterceptorShipEnemy.TYPE, InterceptorShipEnemy),
+}
+
+BOSS_TYPES = {
+    'shitass': (ShitAssBossEnemy.TYPE, ShitAssBossEnemy),
 }

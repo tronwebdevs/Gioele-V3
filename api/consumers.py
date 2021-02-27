@@ -37,9 +37,11 @@ def generation_worker(giorgio, channel_name):
     async_to_sync(channel_layer.group_send)(channel_name, {
         'type': 'run_generation'
     })
+    # d = (5000 + 400 * (k - 1)) milliseconds
+    delay = DELAY_BETWEEN_ENEMIES_GENERATIONS + (4 * (giorgio.round - 1)) / 10
     if giorgio.running:
         threading.Timer(
-            DELAY_BETWEEN_ENEMIES_GENERATIONS,
+            delay,
             generation_worker,
             (giorgio,channel_name,)
         ).start()
@@ -107,8 +109,8 @@ class GameConsumer(WebsocketConsumer):
         if 'code' in vars(exception):
             code = exception.code
         self.send_dict({
-            'code': code,
-            'message': str(exception)
+            'c': code,
+            'm': str(exception)
         })
 
     def get_entity(self, action, eid):

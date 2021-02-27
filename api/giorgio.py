@@ -25,7 +25,7 @@ class Giorgio:
         self.mship_lifes = MAX_MSHIP_LIFES
         self._last_entity_id = 0
         self._generation = 0
-        self._round = 0
+        self.round = 1
 
     def start_game(self):
         self.start_time = timezone.now()
@@ -38,12 +38,12 @@ class Giorgio:
         # Increment player's expired powerups list
         self.player.expired_powerups.add(powerup.type)
 
-    def _generate_enemies_from_perc(self, p1, p2):
+    def generate_enemies(self, p1, p2):
         EnemyType = None
         generated = []
         for i in range(ENEMIES_PER_GENERATION):
             rnd = random.random()
-            # print('DEBUG: ', self._generation, self._round, p1 / 100, (p1 + p2) / 100, ' rand: ', rnd)
+            print('DEBUG ENEMIES GEN: g=%i, k=%i, p1=%f, p2=%f, rand:%f' % (self._generation, self.round, p1 / 100, (p1 + p2) / 100, rnd))
             if rnd <= p1 / 100:
                 EnemyType = ENEMY_TYPES['ship']
             elif rnd <= (p1 + p2) / 100:
@@ -53,7 +53,7 @@ class Giorgio:
 
             self._last_entity_id += 1
             EnemyTypeClass = EnemyType[1]
-            hp = EnemyTypeClass.BASE_HP * (1 + self._round / 10)
+            hp = EnemyTypeClass.BASE_HP * (1 + (self.round - 1) / 10)
             gen_enemy = EnemyTypeClass(self._last_entity_id, hp)
             # Regen enemy position if too close to others
             # for enemy_id in self.enemies:
@@ -62,10 +62,10 @@ class Giorgio:
             generated.append(gen_enemy)
         return generated
 
-    def _generate_powerup_from_perc(self, p0, p1, p2=0):
+    def generate_powerups(self, p0, p1, p2=0):
         PowerUpType = None
         rnd = random.random()
-        # print('DEBUG: ', self._generation, self._round, p0 / 100, (p0 + p1) / 100, (p0 + p1 + p2) / 100, ' rand: ', rnd)
+        print('DEBUG POWERUPS GEN: g=%i, k=%i, p0=%f, p1=%f, p2=%f, rand:%f' % (self._generation, self.round, p0 / 100, (p0 + p1) / 100, (p0 + p1 + p2) / 100, rnd))
         if rnd <= p0 / 100:
             return None
         elif rnd <= (p0 + p1) / 100:
@@ -88,41 +88,41 @@ class Giorgio:
         # Increment generations counter
         self._generation += 1
 
-        k = self._round
+        k = self.round
         g = self._generation
-        # g + 3 - 10k > 0
-        if g > 2 and (k == 0 or (g + 3 - (10 * k)) > 0):
-            self._round += 1
+        if g > k:
+            g = self._generation = 1
+            self.round += 1
             # Update variable
-            k = self._round
+            k = self.round
         # Pb(k) = (100 - 10 - 10k)%
         p1 = 100 - 10 * (k + 1)
-        if k == 0: # k = 0
+        if k == 1: # k = 1
             # Generated enemies
-            gen_enemies = self._generate_enemies_from_perc(100, 0)
-        elif k <= 5: # 1 <= k <= 5
+            gen_enemies = self.generate_enemies(100, 0)
+        elif k <= 6: # 2 <= k <= 6
             # Generated enemies
             # Pk(k) = (15 + 5k)%
             p2 = 5 * (k + 3)
             # Pi(k) = (5(k - 1))%
-            gen_enemies = self._generate_enemies_from_perc(p1, p2)
-        else: # K >= 6
-            if k > 6: # k != 6
+            gen_enemies = self.generate_enemies(p1, p2)
+        else: # K >= 7
+            if k > 7: # k != 7
                 # Pb(k) = 20%
                 p1 = 20
             # Pk(k) = 40%
-            gen_enemies = self._generate_enemies_from_perc(p1, 40)
+            gen_enemies = self.generate_enemies(p1, 40)
 
         # TODO: generate bosses
 
         # Generate single powerup
         powerup = None
         if k == 1:
-            powerup = self._generate_powerup_from_perc(50, 50)
+            powerup = self.generate_powerups(50, 50)
         elif k == 2:
-            powerup = self._generate_powerup_from_perc(100/3, 100/3, 100/3)
+            powerup = self.generate_powerups(100/3, 100/3, 100/3)
         elif k >= 3:
-            powerup = self._generate_powerup_from_perc(25, 25, 25)
+            powerup = self.generate_powerups(25, 25, 25)
         
         gen_powerups = []
         if powerup is not None:

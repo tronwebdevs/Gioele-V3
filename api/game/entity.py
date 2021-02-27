@@ -1,5 +1,7 @@
 from random import randint
 
+from django.utils import timezone
+
 from api.game.constants import CLIENT_CANVAS_WIDTH, CLIENT_MAX_CANVAS_DEPTH
 
 class Position:
@@ -24,3 +26,4 @@ class Entity:
         self.type = type
         self.pos = Position()
         self.pos.generate()
+        self.born_at = timezone.now()

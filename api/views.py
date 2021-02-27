@@ -56,7 +56,8 @@ def user_authentication(request, format=True):
         raise authentication_failed_exception
     
     user = authenticate(username=request.data['username'], password=request.data['password'])
-    if user is not None:
+    # Prevent admins from authenticating as gamers
+    if user is not None and not user.is_staff:
         try:
             guser = GUser.objects.get(pk=user.id)
         except GUser.DoesNotExist:
