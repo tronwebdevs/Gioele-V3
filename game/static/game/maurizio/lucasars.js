@@ -14,12 +14,8 @@ gameSocket.onmessage = function (e) {
     if (data.r === 3) {
         for (let enemy of data.enemies) {
 
-
-            // TO FIX
-            let y = - Math.floor(Math.random() * 300);
-            console.log(y)
-            enemies.push(new Enemy(enemy.id, 0, enemy.x, y, 15));
-
+            // FIXED ?
+            enemies.push(new Enemy(enemy.id, 0, enemy.pos.x, enemy.pos.y, 15));
 
         }
         console.log(data.enemies);

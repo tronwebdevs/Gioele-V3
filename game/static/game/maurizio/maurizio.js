@@ -29,7 +29,6 @@ function e_maurizio(_enemy, i){
   }
 }
 
-
 function b_maurizio(_bullet, i, gunType){
   if (_bullet.y <= 0){
     if (gunType == 0){
@@ -40,13 +39,23 @@ function b_maurizio(_bullet, i, gunType){
       sideGunBullets.splice(i,1);
       console.log("cancelled side bullet")
     }
-
     // gunType 2 come nemico ????
-
-
   }
 }
 
+function collision(x,g){
+  for (k = 0; k < enemies.length; k++) {
+    if (x.collide(enemies[k])) {
+      console.log('Killed #' + enemies[k].id)
+      gameSocket.send(JSON.stringify({
+          a: 6, // Action type
+          g: g, // gun type (0:main, 1:side)
+          i: enemies[k].id // enemy id
+      }));
+      enemies.splice(k,1);
+    }
+  }
+}
 
 //patterns based on enemy type
 function getPattern(x){
