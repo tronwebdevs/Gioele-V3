@@ -23,7 +23,7 @@
                             <tr>
                                 <td>{{ gun.id }}</td>
                                 <td>{{ gun.name }}</td>
-                                <td>{{ gun.type }}</td>
+                                <td>{{ gun.type|yesno:"Side,Main" }}</td>
                                 <td>{{ gun.damage }}</td>
                                 <td>{{ gun.price }}</td>
                                 <td>

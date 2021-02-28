@@ -13,7 +13,9 @@
                 <div class="h5 stamp-label">
                     <a href="#">
                         {{ stats.visitors }} <small>Visitors</small>
+                        {% if percentages %}
                         <small class="subtitle">{{ percentages.visitors }}</small>
+                        {% endif %}
                     </a>
                 </div>
             </div>
@@ -28,7 +30,9 @@
                 <div class="h5 stamp-label">
                     <a href="#">
                         {{ stats.users }} <small>Users</small>
+                        {% if percentages %}
                         <small class="subtitle">{{ percentages.users }}</small>
+                        {% endif %}
                     </a>
                 </div>
             </div>
@@ -43,7 +47,9 @@
                 <div class="h5 stamp-label">
                     <a href="#">
                         {{ stats.matches }} <small>Matches played</small>
+                        {% if percentages %}
                         <small class="subtitle">{{ percentages.matches }}</small>
+                        {% endif %}
                     </a>
                 </div>
             </div>
@@ -58,7 +64,9 @@
                 <div class="h5 stamp-label">
                     <a href="#">
                         {{ stats.purchases }} <small>Purchases</small>
+                        {% if percentages %}
                         <small class="subtitle">+0%</small>
+                        {% endif %}
                     </a>
                 </div>
             </div>
@@ -70,19 +78,32 @@
     <div class="col-12 col-lg-6 mb-4">
         <div class="card">
             <div class="card-body">
+                {% if charts_data %}
                 <canvas class="my-4 w-100" id="users-chart" width="900" height="380"></canvas>
+                {% else %}
+                <div class="text-center my-3">
+                    <span class="text-muted">No data available.</span>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
     <div class="col-12 col-lg-6 mb-4">
         <div class="card">
             <div class="card-body">
+                {% if charts_data %}
                 <canvas class="my-4 w-100" id="matches-chart" width="900" height="380"></canvas>
+                {% else %}
+                <div class="text-center my-3">
+                    <span class="text-muted">No data available.</span>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 {% endblock content %}
+{% if charts_data %}
 {% block scripts %}
 <script>
 (function () {
@@ -135,3 +156,4 @@
 })();
 </script>
 {% endblock scripts %}
+{% endif %}

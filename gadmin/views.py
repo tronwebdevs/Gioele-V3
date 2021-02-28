@@ -40,31 +40,32 @@ def get_selected_items(dataset, user_dataset):
 
 
 def index(request):
-    users_dataset = list(Stat.objects.filter(key='users'))[:16]
-    visitors_dataset = list(Stat.objects.filter(key='visitors'))[:16]
-    games_dataset = list(Stat.objects.filter(key='games'))[:16]
     visitors = VisitLog.objects.count()
     users = GUser.objects.count()
     matches = GameLog.objects.count()
     purchases = PurchaseLog.objects.count()
     context = {
-        'stats': {
-            'visitors': visitors,
-            'users': users,
-            'matches': matches,
-            'purchases': purchases,
-        },
-        'percentages': {
+            'stats': {
+                'visitors': visitors,
+                'users': users,
+                'matches': matches,
+                'purchases': purchases,
+            }
+    }
+    if Stat.objects.filter(key='users').count() > 0:
+        users_dataset = list(Stat.objects.filter(key='users'))[:16]
+        visitors_dataset = list(Stat.objects.filter(key='visitors'))[:16]
+        games_dataset = list(Stat.objects.filter(key='games'))[:16]
+        context['percentages'] = {
             'users': get_percentage(users, users_dataset[-1].value),
             'visitors': get_percentage(visitors, visitors_dataset[-1].value),
             'matches': get_percentage(matches, games_dataset[-1].value),
-        },
-        'charts_data': {
+        }
+        context['charts_data'] = {
             'users': users_dataset + [Stat(key='users',value=users)],
             'visitors': visitors_dataset + [Stat(key='visitors',value=visitors)],
             'games': games_dataset + [Stat(key='games',value=matches)],
         }
-    }
     return render(request, 'gadmin/index.html', context)
 
 
@@ -232,16 +233,17 @@ def hardware(request):
     context = {
         'psutil': psutil,
         'system': platform,
-        'charts_data': {
-            'cpu': Stat.objects.filter(key='cpu')[:10],
-            'mem': Stat.objects.filter(key='mem')[:10],
-        },
         'git': {
             'commit': commit_hash,
             'message': commit_message,
             'author': commit_author,
         },
     }
+    if Stat.objects.filter(key='cpu').count() > 0:
+        context['charts_data'] = {
+            'cpu': Stat.objects.filter(key='cpu')[:10],
+            'mem': Stat.objects.filter(key='mem')[:10],
+        }
     return render(request, 'gadmin/hardware.html', context)
 
 
