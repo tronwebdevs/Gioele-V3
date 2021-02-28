@@ -33,7 +33,7 @@ RESPONSE_ENEMY_OBJECT = 4
 
 def generation_worker(giorgio, channel_name):
     channel_layer = get_channel_layer()
-    DEBUG('Giorgio', 'Sending request to generate entities')
+    DEBUG('WebSocket', 'Sending request to generate entities')
     async_to_sync(channel_layer.group_send)(channel_name, {
         'type': 'run_generation'
     })
@@ -49,7 +49,7 @@ def generation_worker(giorgio, channel_name):
 
 def powerup_expire_worker(channel_name, powerup_id):
     channel_layer = get_channel_layer()
-    DEBUG('Giorgio', ('Sending request to expire powerup #%i' % powerup_id))
+    DEBUG('WebSocket', ('Sending request to expire powerup #%i' % powerup_id))
     async_to_sync(channel_layer.group_send)(channel_name, {
         'type': 'expire_powerup',
         'powerup_id': powerup_id
@@ -143,7 +143,6 @@ class GameConsumer(WebsocketConsumer):
                     'r': RESPONSE_GAME_RELATED,
                     'm': 'ok'
                 }
-                DEBUG('Giorgio', 'Game started (%s)' % self.scope['giorgio'].game_id)
             except Exception as e:
                 raise GameException(str(e))
         elif giorgio is not None and giorgio.running == True:
@@ -218,7 +217,6 @@ class GameConsumer(WebsocketConsumer):
     def run_generation(self, event):
         giorgio = self.scope['giorgio']
         if giorgio.running:
-            DEBUG('Giorgio', 'Generating entities')
             # Run algorithm witch generates entities and get result
             gen_enemies, gen_powerups = giorgio.generate_entities()
             gen_enemies = list(map(lambda e: e.get_displayable(), gen_enemies))
@@ -238,7 +236,6 @@ class GameConsumer(WebsocketConsumer):
         giorgio = self.scope['giorgio']
         if giorgio.running:
             powerup_id = event['powerup_id']
-            DEBUG('Giorgio', ('Expiring powerup #%i' % powerup_id))
             player = giorgio.player
             powerup = player.active_powerups.get(powerup_id)
             if powerup is not None:

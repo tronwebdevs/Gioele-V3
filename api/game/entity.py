@@ -1,4 +1,4 @@
-from random import randint
+import random
 
 from django.utils import timezone
 
@@ -12,8 +12,14 @@ class Position:
         self.y = y
 
     def generate(self):
-        self.x = randint(15, CLIENT_CANVAS_WIDTH - 15)
-        self.y = randint(0, CLIENT_MAX_CANVAS_DEPTH) * -1
+        # FIXME: bad entity's position generation
+        # see: https://stackoverflow.com/a/2145551
+        shuffled_x = list(range(15, CLIENT_CANVAS_WIDTH - 15))
+        shuffled_y = list(range(0, CLIENT_MAX_CANVAS_DEPTH))
+        random.shuffle(shuffled_x)
+        random.shuffle(shuffled_y)
+        self.x = random.choice(shuffled_x)
+        self.y = random.choice(shuffled_y) * -1
 
     def check(self, pos1):
         return abs(self.x - pos1.x) < self.CLOSE_DISTANCE_TOLLERATION \

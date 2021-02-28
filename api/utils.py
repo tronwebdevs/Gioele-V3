@@ -6,6 +6,7 @@ import string
 import threading
 
 from django.utils import timezone
+from gioele_v3.settings import DEBUG
 from jose import jwt
 
 from api.classes import Parser
@@ -101,7 +102,11 @@ def generate_short_id(verify_set=None):
             return generate_short_id(verify_set)
     return generated
 
-def log(who, message, ltype='INFO'):
+def log(who, message, ltype='INFO', force_color=None):
+    # Only print logs if DEBUG is set to true
+    if not DEBUG:
+        return
+    
     func = inspect.stack()[1].function
     tname = THREADS.get(threading.get_ident())
     if tname is None:
@@ -119,4 +124,10 @@ def log(who, message, ltype='INFO'):
         color = bcolors.WARNING
     elif ltype == 'ERROR':
         color = bcolors.FAIL
+    elif ltype == 'SUCCESS':
+        color = bcolors.OKGREEN
+    
+    if force_color is not None:
+        color = force_color
+    
     print('%s[%s/%s][%s][%s] %s%s' % (color, tname, func, ltype, who, message, bcolors.ENDC))

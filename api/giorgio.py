@@ -5,7 +5,7 @@ from uuid import uuid4
 from django.utils import timezone
 
 from .exceptions import GameException
-from .utils import parser
+from .utils import parser, log as DEBUG
 from .game.constants import MAX_MSHIP_LIFES, ENEMIES_PER_GENERATION
 from .game.player import Player
 from .game.enemies import ENEMY_TYPES
@@ -31,8 +31,12 @@ class Giorgio:
         self.start_time = timezone.now()
         # Mark game as running
         self.running = True
+        DEBUG('Giorgio', 'Game started (%s)' % self.game_id)
 
     def powerup_expired(self, powerup=None):
+
+        DEBUG('Giorgio', ('Expiring powerup #%i' % powerup.id))
+
         # Remove powerup from player's active powerups list
         del self.player.active_powerups[powerup.id]
         # Increment player's expired powerups list
@@ -42,8 +46,12 @@ class Giorgio:
         EnemyType = None
         generated = []
         for i in range(ENEMIES_PER_GENERATION):
+            # Generate pseudo-random to choose enemy's type (based on given percentages)
             rnd = random.random()
-            print('DEBUG ENEMIES GEN: g=%i, k=%i, p1=%f, p2=%f, rand:%f' % (self.generation, self.round, p1 / 100, (p1 + p2) / 100, rnd))
+
+            DEBUG('Giorgio', 'DEBUG ENEMIES GEN: g=%i, k=%i, p1=%f, p2=%f, rand:%f' % (self.generation, self.round, p1 / 100, (p1 + p2) / 100, rnd))
+
+            # Choose enemy's type based on given percentages
             if rnd <= p1 / 100:
                 EnemyType = ENEMY_TYPES['ship']
             elif rnd <= (p1 + p2) / 100:
@@ -51,21 +59,25 @@ class Giorgio:
             else:
                 EnemyType = ENEMY_TYPES['interceptor']
 
+            # Increment entity counter, which is also current enemy's id
             self._last_entity_id += 1
             EnemyTypeClass = EnemyType[1]
+
+            # Calculate enemy's health points based on: h = base * (1 + (k - 1) / 10)
             hp = EnemyTypeClass.BASE_HP * (1 + (self.round - 1) / 10)
-            gen_enemy = EnemyTypeClass(self._last_entity_id, hp)
-            # Regen enemy position if too close to others
-            # for enemy_id in self.enemies:
-            #     if gen_enemy.pos.check(self.enemies[enemy_id].pos):
-            #         gen_enemy.pos.generate()
-            generated.append(gen_enemy)
+
+            generated.append(EnemyTypeClass(self._last_entity_id, hp))
+        
         return generated
 
     def generate_powerups(self, p0, p1, p2=0):
         PowerUpType = None
+        # Generate pseudo-random to choose powerup's type (based on given percentages)
         rnd = random.random()
-        print('DEBUG POWERUPS GEN: g=%i, k=%i, p0=%f, p1=%f, p2=%f, rand:%f' % (self.generation, self.round, p0 / 100, (p0 + p1) / 100, (p0 + p1 + p2) / 100, rnd))
+        
+        DEBUG('Giorgio', 'DEBUG POWERUPS GEN: g=%i, k=%i, p0=%f, p1=%f, p2=%f, rand:%f' % (self.generation, self.round, p0 / 100, (p0 + p1) / 100, (p0 + p1 + p2) / 100, rnd))
+
+        # Choose powerup's type based on given percentages
         if rnd <= p0 / 100:
             return None
         elif rnd <= (p0 + p1) / 100:
@@ -75,6 +87,7 @@ class Giorgio:
         else:
             PowerUpType = POWERUP_TYPES['damage']
 
+        # Increment entity counter, which is also current powerup's id
         self._last_entity_id += 1
 
         return PowerUpType[1](self._last_entity_id)
@@ -82,28 +95,35 @@ class Giorgio:
     """
     'u guru digidàl v2'
     Generates enemies, bosses and powerups.
-    Return generated entities.
+    Returns generated entities.
     """
     def generate_entities(self):
+        gen_powerups = gen_enemies = []
+
         # Return if enemies from previous round are still alive
         if self.generation == 0 and len(self.enemies) > 0:
-            return [], []
+            return gen_powerups, gen_enemies
 
         # Increment generations counter
         self.generation += 1
 
         k = self.round
         g = self.generation
+        
+        DEBUG('Giorgio', 'Generating entities for round (%i)' % k)
+
         if g >= k:
+            # Current generation is the last of the round,
+            # reset generation counter and increment round counter
             self.generation = 0
             self.round += 1
+        
         # Pb(k) = (100 - 10 - 10k)%
         p1 = 100 - 10 * (k + 1)
+        # Generate enemies based on probability table (giorgio.txt)
         if k == 1: # k = 1
-            # Generated enemies
             gen_enemies = self.generate_enemies(100, 0)
         elif k <= 6: # 2 <= k <= 6
-            # Generated enemies
             # Pk(k) = (15 + 5k)%
             p2 = 5 * (k + 3)
             # Pi(k) = (5(k - 1))%
@@ -117,7 +137,7 @@ class Giorgio:
 
         # TODO: generate bosses
 
-        # Generate single powerup
+        # Generate powerup based on probability table (giorgio.txt)
         powerup = None
         if k == 1:
             powerup = self.generate_powerups(50, 50)
@@ -126,11 +146,10 @@ class Giorgio:
         elif k >= 3:
             powerup = self.generate_powerups(25, 25, 25)
         
-        gen_powerups = []
         if powerup is not None:
             gen_powerups.append(powerup)
         
-        # Push new evemy to the stack
+        # Push new evemies to the stack
         for enemy in gen_enemies:
             self.enemies[enemy.id] = enemy
         # Push new powerups to the stack
@@ -143,7 +162,7 @@ class Giorgio:
     """
     Check if enemy has been killed (and remove it from stack) or just
     remove xp from enemy and update counter of hit bullets.
-    Return updated enemy (hp).
+    Returns updated enemy (hp).
     """
     def player_hit_enemy(self, gun_type, enemy):
 
@@ -172,6 +191,7 @@ class Giorgio:
     If directly, remove the enemy from the stack, check if player died (trigger end game)
     or just remove xp (or shield) from player. If with bullet, just check for player
     death or remove xp (or sheild).
+    Returns updated player's object.
     """
     def enemy_hit_player(self, enemy, directly):
         if directly:
@@ -184,7 +204,7 @@ class Giorgio:
 
     """
     Subtract 1 from mother lifes (and check if she has died) and remove enemy from stack.
-    Return remained mship's lifes.
+    Returns remained mship's lifes.
     """
     def enemy_hit_mship(self, enemy):
         # Remove enemy from stack
@@ -202,6 +222,7 @@ class Giorgio:
 
     """
     Activate powerup and add it to the player's list.
+    Returns updated player's object.
     """
     def player_gain_powerup(self, powerup):
         # Activate powerup
@@ -219,6 +240,7 @@ class Giorgio:
 
     """
     Perform the ability effects and add it to the player's list.
+    Returns updated player's object.
     """
     def player_use_ability(self, ability):
         # Perform ability
