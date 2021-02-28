@@ -39,10 +39,6 @@ def generation_worker(giorgio, channel_name):
     })
     # d = (5000 + 400 * (k - 1)) milliseconds
     delay = DELAY_BETWEEN_ENEMIES_GENERATIONS + (4 * (giorgio.round - 1)) / 10
-
-    if giorgio.round == giorgio.generation:
-        # If this is the last generation of the round add an extra 2 seconds to the delay
-        delay += 10
     
     if giorgio.running:
         threading.Timer(

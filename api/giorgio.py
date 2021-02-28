@@ -85,16 +85,18 @@ class Giorgio:
     Return generated entities.
     """
     def generate_entities(self):
+        # Return if enemies from previous round are still alive
+        if self.generation == 0 and len(self.enemies) > 0:
+            return [], []
+
         # Increment generations counter
         self.generation += 1
 
         k = self.round
         g = self.generation
-        if g > k:
-            g = self.generation = 1
+        if g >= k:
+            self.generation = 0
             self.round += 1
-            # Update variable
-            k = self.round
         # Pb(k) = (100 - 10 - 10k)%
         p1 = 100 - 10 * (k + 1)
         if k == 1: # k = 1
