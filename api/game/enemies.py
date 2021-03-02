@@ -1,24 +1,42 @@
+import random
+
 from api.game.entity import Entity
 
 
 class Enemy(Entity):
     RARITIES = {
-        'base': 0,
-        'rare': 1,
-        'epic': 2,
-        'mytic': 3,
-        'leggendary': 4,
+        'base': (0, 1),
+        'rare': (1, 2),
+        'epic': (2, 5),
+        'mytic': (3, 10),
+        'leggendary': (4, 25),
     }
 
+    def _pick_rarity(self):
+        rnd = random.random()
+        if rnd <= 0.05: # 5%
+            return self.RARITIES['rare']
+        elif rnd <= 0.06: # 1%
+            return self.RARITIES['epic']
+        elif rnd <= 0.062: # 0.2%
+            return self.RARITIES['mytic']
+        elif rnd <= 0.0625: # 0.05%
+            return self.RARITIES['leggendary']
+        else: # 93.75%
+            return self.RARITIES['base']
+
     def __init__(self, id, type, hp, exp_reward, gbucks_reward, \
-                 damage, rarity=RARITIES['base'], is_boss=False):
+                 damage, rarity=None, is_boss=False):
         super().__init__(id, type)
-        self.hp = hp
-        self.damage = damage
+        if rarity is None:
+            rarity = self._pick_rarity()
         self.rarity = rarity
+        moltiplier = rarity[1]
+        self.hp = hp * moltiplier
+        self.damage = damage * moltiplier
+        self.exp_reward = exp_reward * moltiplier
+        self.gbucks_reward = gbucks_reward * moltiplier
         self.is_boss = is_boss
-        self.exp_reward = exp_reward
-        self.gbucks_reward = gbucks_reward
 
     def get_displayable(self):
         return {
@@ -26,8 +44,9 @@ class Enemy(Entity):
             'type': self.type,
             'hp': self.hp,
             'damage': self.damage,
-            'rarity': self.rarity,
+            'rarity': self.rarity[0],
             'pos': vars(self.pos),
+            'is_boss': self.is_boss,
         }
 
     def __str__(self):
@@ -38,7 +57,7 @@ class BaseShipEnemy(Enemy):
     TYPE = 0
     BASE_HP = 100
 
-    def __init__(self, id, hp=BASE_HP, rarity=Enemy.RARITIES['base']):
+    def __init__(self, id, hp=BASE_HP, rarity=None):
         super().__init__(
             id=id,
             type=self.TYPE,
@@ -55,7 +74,7 @@ class KamikazeShipEnemy(Enemy):
     TYPE = 1
     BASE_HP = 150
 
-    def __init__(self, id, hp=BASE_HP, rarity=Enemy.RARITIES['base']):
+    def __init__(self, id, hp=BASE_HP, rarity=None):
         super().__init__(
             id=id,
             type=self.TYPE,
@@ -72,7 +91,7 @@ class InterceptorShipEnemy(Enemy):
     TYPE = 2
     BASE_HP = 200
 
-    def __init__(self, id, hp=BASE_HP, rarity=Enemy.RARITIES['base']):
+    def __init__(self, id, hp=BASE_HP, rarity=None):
         super().__init__(
             id=id,
             type=self.TYPE,
@@ -86,8 +105,7 @@ class InterceptorShipEnemy(Enemy):
 
 
 class BossEnemy(Enemy):
-    def __init__(self, id, type, hp, exp_reward, gbucks_reward, \
-                 damage, rarity=Enemy.RARITIES['base']):
+    def __init__(self, id, type, hp, exp_reward, gbucks_reward, damage, rarity=None):
         super().__init__(
             id=id,
             type=type,
@@ -107,7 +125,7 @@ class ShitAssBossEnemy(BossEnemy):
     TYPE = 10
     BASE_HP = 5000
 
-    def __init__(self, id, hp=BASE_HP, rarity=Enemy.RARITIES['base']):
+    def __init__(self, id, hp=BASE_HP, rarity=None):
         super().__init__(
             id=id,
             type=self.TYPE,
@@ -123,6 +141,26 @@ class ShitAssBossEnemy(BossEnemy):
         print('ShitAss is attacking you.')
 
 
+class JarvisBossEnemy(BossEnemy):
+    TYPE = 11
+    BASE_HP = 10000
+
+    def __init__(self, id, hp=BASE_HP, rarity=None):
+        super().__init__(
+            id=id,
+            type=self.TYPE,
+            hp=hp,
+            exp_reward=8000,
+            gbucks_reward=12000,
+            damage=90,
+            rarity=rarity
+        )
+
+    def attack(self, giorgio):
+        # giorgio.generate_enemies(100, 0)
+        print('Jarvis is attacking you.')
+
+
 ENEMY_TYPES  = {
     'ship': (BaseShipEnemy.TYPE, BaseShipEnemy),
     'kamikaze': (KamikazeShipEnemy.TYPE, KamikazeShipEnemy),
@@ -131,4 +169,5 @@ ENEMY_TYPES  = {
 
 BOSS_TYPES = {
     'shitass': (ShitAssBossEnemy.TYPE, ShitAssBossEnemy),
+    'jarvis': (JarvisBossEnemy.TYPE, JarvisBossEnemy),
 }

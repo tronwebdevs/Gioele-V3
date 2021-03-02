@@ -107,7 +107,7 @@ Server send updated player object
 "u guru digidàl v2" is the name of the generation algorithm for enemies and powerups in Gioele V3.
 On every generation 5 enemies and 0 or 1 powerup are generated and sent to the client (Giorgio->Maurizio).
 (k = round)
-The delay between generations is variable, following: d = (5000 + 400 * (k - 1)) milliseconds.
+The delay between generations is variable, following: d = (10000 + 400 * (k - 1)) milliseconds.
 Number of enemies per round: n = 5k
 Enemies life: h = base * (1 + (k - 1) / 10)
 
@@ -116,6 +116,7 @@ Enemies life: h = base * (1 + (k - 1) / 10)
 ░█─── ░█─░█ ░█▄▄▄█ ░█▄▄█ ░█─░█ ░█▄▄█ ▄█▄ ░█▄▄█ ▄█▄ ─░█── ──░█──
 
 ENEMIES
+type:
 +-----+-------+-------+-------+-------+
 |  k  |   B   |   K   |   I   |  tot  |
 +-----+-------+-------+-------+-------+    Legend:
@@ -135,16 +136,23 @@ ENEMIES
 +-----+-------+-------+-------+-------+
 | k+1 |   20% |   40% |   40% | tot+5 |
 +-----+-------+-------+-------+-------+
+rarity:
++----------+------+------+--------+---------+
+|   base   | rare | epic | mytic  | leggen. |
++----------+------+------+--------+---------+
+|  93.75%  |  5%  |  1%  |  0.2%  |  0.05%  |
++----------+------+------+--------+---------+
+
 
 POWERUPS
 +-----+-------+-------+-------+
 |  k  |   S   |   H   |   D   |
 +-----+-------+-------+-------+    Legend:
-|  0  |    0% |    0% |    0% |    k: see above
+|  1  |    0% |    0% |    0% |    k: see above
 +-----+-------+-------+-------+    S: probability to spawn speed powerup
-|  1  |   50% |    0% |    0% |    H: probability to spawn shield powerup
+|  2  |   50% |    0% |    0% |    H: probability to spawn shield powerup
 +-----+-------+-------+-------+    D: probability to spawn damage powerup
-|  2  |   33% |   33% |    0% |    
+|  3  |   33% |   33% |    0% |    
 +-----+-------+-------+-------+    Note: missing percentage refers to the possibility
 | k+1 |   25% |   25% |   25% |          that the powerup shall not spawn
 +-----+-------+-------+-------+

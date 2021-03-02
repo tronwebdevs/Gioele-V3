@@ -8,7 +8,7 @@ from .exceptions import GameException
 from .utils import parser, log as DEBUG
 from .game.constants import MAX_MSHIP_LIFES, ENEMIES_PER_GENERATION
 from .game.player import Player
-from .game.enemies import ENEMY_TYPES
+from .game.enemies import ENEMY_TYPES, BOSS_TYPES
 from .game.powerups import POWERUP_TYPES
 from .models import GameLog
 
@@ -113,33 +113,38 @@ class Giorgio:
         g = self._generation
         
         DEBUG('Giorgio', 'Generating entities for round %i' % k)
-        
-        # Pb(k) = (100 - 10 - 10k)%
-        p1 = 100 - 10 * (k + 1)
-        # Generate enemies based on probability table (giorgio.txt)
-        if k == 1: # k = 1
-            gen_enemies = self.generate_enemies(100, 0)
-        elif k <= 6: # 2 <= k <= 6
-            # Pk(k) = (15 + 5k)%
-            p2 = 5 * (k + 3)
-            # Pi(k) = (5(k - 1))%
-            gen_enemies = self.generate_enemies(p1, p2)
-        else: # K >= 7
-            if k > 7: # k != 7
-                # Pb(k) = 20%
-                p1 = 20
-            # Pk(k) = 40%
-            gen_enemies = self.generate_enemies(p1, 40)
 
-        # TODO: generate bosses
+
+        if k >= 20 and k % 10 == 0:
+            # From round 20, every 10 rounds, spawn a random boss
+            self._last_entity_id += 1
+            EnemyBossClass = random.choice(list(BOSS_TYPES.values()))[1]
+            gen_enemies.append(EnemyBossClass(self._last_entity_id))
+        else:
+            # Pb(k) = (100 - 10 - 10k)%
+            p1 = 100 - 10 * (k + 1)
+            # Generate enemies based on probability table (giorgio.txt)
+            if k == 1: # k = 1
+                gen_enemies = self.generate_enemies(100, 0)
+            elif k <= 6: # 2 <= k <= 6
+                # Pk(k) = (15 + 5k)%
+                p2 = 5 * (k + 3)
+                # Pi(k) = (5(k - 1))%
+                gen_enemies = self.generate_enemies(p1, p2)
+            else: # K >= 7
+                if k > 7: # k != 7
+                    # Pb(k) = 20%
+                    p1 = 20
+                # Pk(k) = 40%
+                gen_enemies = self.generate_enemies(p1, 40)
 
         # Generate powerup based on probability table (giorgio.txt)
         powerup = None
-        if k == 1:
+        if k == 2:
             powerup = self.generate_powerups(50, 50)
-        elif k == 2:
+        elif k == 3:
             powerup = self.generate_powerups(100/3, 100/3, 100/3)
-        elif k >= 3:
+        elif k >= 4:
             powerup = self.generate_powerups(25, 25, 25)
         
         if powerup is not None:

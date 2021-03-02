@@ -43,7 +43,11 @@ def user_registration(request, format=True):
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-    guser = GUser.objects.create_user(username=data['username'], password=data['password'], email=data['email'])
+    guser = GUser.objects.create_user(
+        username=data.get('username'),
+        password=data.get('password'),
+        email=data.get('email')
+    )
 
     # TODO: send confirm email
 
@@ -52,11 +56,7 @@ def user_registration(request, format=True):
 
 @api_view(['POST'])
 def user_authentication(request, format=True):
-    authentication_failed_exception = exceptions.NotAuthenticated(detail='Dati non validi')
-    if 'username' not in request.data or 'password' not in request.data:
-        raise authentication_failed_exception
-    
-    user = authenticate(username=request.data['username'], password=request.data['password'])
+    user = authenticate(username=request.data.get('username'), password=request.data.get('password'))
     # Prevent admins from authenticating as gamers
     if user is not None and not user.is_staff:
         try:
@@ -67,7 +67,7 @@ def user_authentication(request, format=True):
         token = forge_auth_token(user.id, user.get_username())
         return Response(data=serializer.data, headers={ 'Token': token })
     else:
-        raise authentication_failed_exception
+        raise exceptions.NotAuthenticated(detail='Dati non validi')
 
 @api_view(['GET'])
 def get_scoreboard(request, format=True):
