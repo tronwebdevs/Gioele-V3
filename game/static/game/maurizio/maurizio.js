@@ -46,16 +46,29 @@ function b_maurizio(_bullet, i, gunType){
   }
 }
 
-function collision(x,g){
+function collision(x,i,g){
+  if (x === undefined){
+    return;
+  }
   for (k = 0; k < enemies.length; k++) {
     if (x.collide(enemies[k])) {
-      console.log('Killed #' + enemies[k].id)
       gameSocket.send(JSON.stringify({
           a: 6, // Action type
           g: g, // gun type (0:main, 1:side)
           i: enemies[k].id // enemy id
       }));
-      enemies.splice(k,1);
+
+      if (g == 0){
+        mainGunBullets.splice(i,1);
+        enemies[k].hp -= mainGun_0.damage;
+      }
+      if (g == 1){
+        sideGunBullets.splice(i,1);
+        enemies[k].hp -= sideGun_0.damage;
+      }
+      if (enemies[k].hp <= 0){
+        enemies.splice(k,1);
+      }
     }
   }
 }

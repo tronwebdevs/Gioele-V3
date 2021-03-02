@@ -15,20 +15,36 @@ function update() {
     e_maurizio(enemies[i], i);
   }
   for (i = 0; i < mainGunBullets.length; i++) {
-    mainGunBullets[i].move();
-    mainGunBullets[i].update();
-    collision(mainGunBullets[i], 0);
-    b_maurizio(mainGunBullets[i], i, 0);
+    if (mainGunBullets[i] != undefined){
+      mainGunBullets[i].move();
+      mainGunBullets[i].update();
+      b_maurizio(mainGunBullets[i], i, 0);
+      collision(mainGunBullets[i], i, 0);
+    }
   }
   for (i = 0; i < sideGunBullets.length; i++) {
-    sideGunBullets[i].move();
-    sideGunBullets[i].update();
-    collision(sideGunBullets[i], 1);
-    b_maurizio(sideGunBullets[i], i, 1);
+    if (sideGunBullets[i] != undefined){
+      sideGunBullets[i].move();
+      sideGunBullets[i].update();
+      b_maurizio(sideGunBullets[i], i, 1);
+      collision(sideGunBullets[i], i, 1);
+    }
   }
   for (i = 0; i < enemiesBullets.length; i++) {
     enemiesBullets[i].move();
     enemiesBullets[i].update();
   }
+
+  /* TEMP */
+        if (document.getElementById("x").checked){
+          for (i = 0; i < enemies.length; i++) {
+            let ctx = gameArea.canvas.getContext("2d");
+            ctx.beginPath();
+            ctx.lineWidth = "4";
+            ctx.strokeStyle = "rgb("+ 255/enemies[i].tothp*(enemies[i].tothp-enemies[i].hp) + ","+ 255/enemies[i].tothp*enemies[i].hp +",0)";
+            ctx.rect(enemies[i].x - enemies[i].radius, enemies[i].y - 2*enemies[i].radius, 2*enemies[i].radius,2);
+            ctx.stroke();
+          }
+        }
 
 }

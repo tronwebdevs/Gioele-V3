@@ -103,12 +103,14 @@ class Bullet {
 }
 
 class Enemy {
-  constructor(id, type, x, y, radius){
+  constructor(id, type, x, y, hp, radius){
     this.id = id;
     this.type = type;
     this.pattern = getPattern(this.type);
     this.x = x;
     this.y = y;
+    this.hp = hp;
+    this.tothp = hp;
     this.radius = radius;
     /*  TEMP  */this.p_y = Math.floor(Math.random()*(gameArea.canvas.height/2));
                 this.hasShot = false;

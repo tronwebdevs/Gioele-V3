@@ -4,6 +4,7 @@ let mainGun_0 = {
   id : "MG0",
   name : "Blaster Mk1",
   cooldown : 1200,
+  damage : 100,
   isReady : true,
   check : function(){
     // TODO:  anticheat
@@ -31,6 +32,7 @@ let sideGun_0 = {
   id : "SG0",
   name : "Cannone a Onde",
   cooldown : 3000,
+  damage : 40,
   isReady : true,
   check : function(){
     // TODO:  anticheat
