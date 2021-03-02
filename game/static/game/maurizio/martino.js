@@ -13,7 +13,7 @@ function update() {
     enemies[i].move();
     enemies[i].update();
     e_maurizio(enemies[i], i);
-  }  
+  }
   for (i = 0; i < mainGunBullets.length; i++) {
     mainGunBullets[i].move();
     mainGunBullets[i].update();
@@ -25,6 +25,10 @@ function update() {
     sideGunBullets[i].update();
     collision(sideGunBullets[i], 1);
     b_maurizio(sideGunBullets[i], i, 1);
+  }
+  for (i = 0; i < enemiesBullets.length; i++) {
+    enemiesBullets[i].move();
+    enemiesBullets[i].update();
   }
 
 }

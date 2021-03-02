@@ -24,8 +24,11 @@ console.log("Expect Me")
 //garbage collection
 function e_maurizio(_enemy, i){
   if (_enemy.y > gameArea.canvas.height + _enemy.radius){
+    gameSocket.send(JSON.stringify({
+      a: 5, // Action type
+      i: _enemy.id // enemy id
+    }));
     enemies.splice(i,1);
-    // TODO: hit mother ship
   }
 }
 
@@ -57,7 +60,7 @@ function collision(x,g){
   }
 }
 
-//patterns based on enemy type
+//patterns based on enemy type (x)
 function getPattern(x){
   if (x === 0){
     switch (Math.floor(Math.random() * 2)) {

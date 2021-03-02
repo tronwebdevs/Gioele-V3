@@ -110,6 +110,8 @@ class Enemy {
     this.x = x;
     this.y = y;
     this.radius = radius;
+    /*  TEMP  */this.p_y = Math.floor(Math.random()*(gameArea.canvas.height/2));
+                this.hasShot = false;
   }
   update() {
     let ctx = gameArea.context;
