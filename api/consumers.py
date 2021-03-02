@@ -61,12 +61,12 @@ class GameConsumer(WebsocketConsumer):
     def connect(self):
         user = self.scope['user']
         if type(user) is AnonymousUser:
-            DEBUG('WebSocket', 'Unauthenticated user', ltype='WARGING')
+            DEBUG('WebSocket', 'Unauthenticated user', ltype='WARNING')
             self.close()
             return
         self.scope['giorgio'] = Giorgio(
             user=user,
-            visit_id=uuid.UUID('19488172-d2fe-4025-a273-08803c4664ad'),
+            visit_id=self.scope['visit_id'],
             abilities=user.inventory.abilities,
             main_gun_id=user.main_gun,
             side_gun_id=user.side_gun,

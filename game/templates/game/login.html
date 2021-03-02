@@ -1,0 +1,27 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title> Gioele V3 </title>
+</head>
+<body>
+    <div>
+        <h1>Login</h1>
+        {% if error %}
+            <div style="color:white;background-color: red;padding:20px;margin:10px">
+                {{ error.message }}
+            </div>
+        {% endif %}
+
+        {% if error.code != 2 %}
+        <form method="POST" action="{% url 'game:login' %}">
+            {% csrf_token %}
+            <input type="text" name="username" placeholder="Username" />
+            <input type="password" name="password" placeholder="Password" />
+            <button type="submit">Login</button>
+        </form>
+        {% endif %}
+    </div>
+</body>
+</html>

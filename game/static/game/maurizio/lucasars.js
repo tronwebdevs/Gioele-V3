@@ -1,5 +1,33 @@
-// FIXME: temp cookie, remove soon
-document.cookie = 'visit_id=kdfjghskdjfghkdsjfhgkdsjfgk';
+//
+// UPDATE VISIT LOG (for analiytics)
+//
+/*
+// Get visit_id
+for (cookie of document.cookie.split(';')) {
+    spt = cookie.trim().split('=');
+    if (spt[0] == 'visit_id') {
+        visitId = spt[1];
+        break;
+    }
+}
+// Check if device is has touch screen (https://www.geeksforgeeks.org/how-to-detect-touch-screen-device-using-javascript/)
+istouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+// Request update to API
+fetch('/api/vl/', {
+    method: 'POST',
+    headers: { 'Content-type': 'application/json;charset=UTF-8' },
+    body: JSON.stringify({
+        id: visitId,
+        l: navigator.language,
+        ua: navigator.userAgent,
+        p: navigator.platform,
+        sw: window.innerWidth,
+        sh: window.innerHeight,
+        r: document.referrer,
+        ts: istouch
+    })
+});
+*/
 
 const gameSocket = new WebSocket(
     'ws://' + window.location.host + '/ws/api/game'

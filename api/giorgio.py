@@ -24,7 +24,7 @@ class Giorgio:
         self.powerups = dict()
         self.mship_lifes = MAX_MSHIP_LIFES
         self._last_entity_id = 0
-        self.generation = 0
+        self._generation = 0
         self.round = 1
 
     def start_game(self):
@@ -49,7 +49,7 @@ class Giorgio:
             # Generate pseudo-random to choose enemy's type (based on given percentages)
             rnd = random.random()
 
-            DEBUG('Giorgio', 'DEBUG ENEMIES GEN: g=%i, k=%i, p1=%f, p2=%f, rand:%f' % (self.generation, self.round, p1 / 100, (p1 + p2) / 100, rnd))
+            DEBUG('Giorgio', 'DEBUG ENEMIES GEN: g=%i, k=%i, p1=%f, p2=%f, rand:%f' % (self._generation, self.round, p1 / 100, (p1 + p2) / 100, rnd))
 
             # Choose enemy's type based on given percentages
             if rnd <= p1 / 100:
@@ -64,7 +64,7 @@ class Giorgio:
             EnemyTypeClass = EnemyType[1]
 
             # Calculate enemy's health points based on: h = base * (1 + (k - 1) / 10)
-            hp = EnemyTypeClass.BASE_HP * (1 + (self.round - 1) / 10)
+            hp = round(EnemyTypeClass.BASE_HP * (1 + (self.round - 1) / 10))
 
             generated.append(EnemyTypeClass(self._last_entity_id, hp))
         
@@ -75,7 +75,7 @@ class Giorgio:
         # Generate pseudo-random to choose powerup's type (based on given percentages)
         rnd = random.random()
         
-        DEBUG('Giorgio', 'DEBUG POWERUPS GEN: g=%i, k=%i, p0=%f, p1=%f, p2=%f, rand:%f' % (self.generation, self.round, p0 / 100, (p0 + p1) / 100, (p0 + p1 + p2) / 100, rnd))
+        DEBUG('Giorgio', 'DEBUG POWERUPS GEN: g=%i, k=%i, p0=%f, p1=%f, p2=%f, rand:%f' % (self._generation, self.round, p0 / 100, (p0 + p1) / 100, (p0 + p1 + p2) / 100, rnd))
 
         # Choose powerup's type based on given percentages
         if rnd <= p0 / 100:
@@ -101,22 +101,16 @@ class Giorgio:
         gen_powerups = gen_enemies = []
 
         # Return if enemies from previous round are still alive
-        if self.generation == 0 and len(self.enemies) > 0:
+        if self._generation == 0 and len(self.enemies) > 0:
             return gen_powerups, gen_enemies
 
         # Increment generations counter
-        self.generation += 1
+        self._generation += 1
 
         k = self.round
-        g = self.generation
+        g = self._generation
         
         DEBUG('Giorgio', 'Generating entities for round (%i)' % k)
-
-        if g >= k:
-            # Current generation is the last of the round,
-            # reset generation counter and increment round counter
-            self.generation = 0
-            self.round += 1
         
         # Pb(k) = (100 - 10 - 10k)%
         p1 = 100 - 10 * (k + 1)
@@ -155,6 +149,12 @@ class Giorgio:
         # Push new powerups to the stack
         for powerup in gen_powerups:
             self.powerups[powerup.id] = powerup
+
+        if g >= k:
+            # Current generation was the last of the round,
+            # reset generation counter and increment round counter
+            self._generation = 0
+            self.round += 1
 
         # Return generated entities
         return gen_enemies, gen_powerups

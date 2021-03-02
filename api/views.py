@@ -1,5 +1,6 @@
 import datetime
 import hashlib
+import uuid
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User, Group
@@ -168,3 +169,37 @@ class ShopItemDetail(APIView):
         duser = DisplayUserSerializer(user)
         data = {'user': duser.data, 'item': serializer.data}
         return Response(data=data)
+
+@api_view(['POST'])
+def visit(request):
+    lang = request.data.get('l')
+    browser = request.data.get('ua')
+    platform = request.data.get('p')
+    screen_width = request.data.get('sw')
+    screen_height = request.data.get('sh')
+    referrer = request.data.get('r')
+    has_touchscreen = request.data.get('ts')
+    if lang is not None and \
+        browser is not None and \
+        platform is not None and \
+        screen_width is not None and \
+        screen_height is not None and \
+        referrer is not None and \
+        has_touchscreen is not None:
+
+        visit_id = request.get_cookie('visit_id')
+        try:
+            visit_log = VisitLog.objects.get(pk=uuid.UUID(visit_id))
+            visit_log.lang = lang
+            visit_log.browser = browser
+            visit_log.platform = platform
+            visit_log.screen_width = screen_width
+            visit_log.screen_height = screen_height
+            visit_log.referrer = referrer
+            visit_log.has_touchscreen = has_touchscreen
+            visit_log.updated_at = timezone.now()
+            visit_log.save()
+            print('Visit log updated')
+        except VisitLog.DoesNotExist:
+            print('Visit id not found')
+    return Response(status=status.HTTP_204_NO_CONTENT)

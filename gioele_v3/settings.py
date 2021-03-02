@@ -54,6 +54,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'api.middleware.AuthTokenMiddleware',
     'gadmin.middleware.AdminAuthMiddleware',
+    'game.middleware.GameMiddleware',
+]
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.AllowAllUsersModelBackend',
 ]
 
 ROOT_URLCONF = 'gioele_v3.urls'

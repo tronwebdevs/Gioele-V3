@@ -31,7 +31,11 @@
     <main class="form-signin">
         <form action="{% url 'gadmin:login' %}" method="POST">
             {% csrf_token %}
-            <img class="mb-4" src="{% static 'gadmin/img/logo.png' %}" alt="Gioele logo" width="200">
+            {% if message %}
+            <img class="mb-4" src="{% static 'gadmin/img/error_logo.png' %}" alt="Gioele logo" width="180%" style="margin-left:-40%">
+            {% else %}
+            <img class="mb-4" src="{% static 'gadmin/img/logo.png' %}" alt="Gioele logo" width="100%">
+            {% endif %}
             <h1 class="h3 mb-3 fw-normal">Emanuele</h1>
             {% if message %}
                 <div class="alert alert-danger py-2" role="alert">

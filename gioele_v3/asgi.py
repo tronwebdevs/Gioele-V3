@@ -12,6 +12,7 @@ import os
 from django.core.asgi import get_asgi_application
 from channels.auth import AuthMiddleware
 from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.sessions import SessionMiddlewareStack
 
 import api.routing
 from api.middleware import WebSocketAuthMiddleware
@@ -20,9 +21,11 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gioele_v3.settings')
 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),
-    "websocket": WebSocketAuthMiddleware(
-        URLRouter(
-            api.routing.websocket_urlpatterns,
+    "websocket": SessionMiddlewareStack(
+        WebSocketAuthMiddleware(
+            URLRouter(
+                api.routing.websocket_urlpatterns,
+            )
         )
     )
 })

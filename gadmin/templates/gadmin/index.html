@@ -103,8 +103,8 @@
     </div>
 </div>
 {% endblock content %}
-{% if charts_data %}
 {% block scripts %}
+{% if charts_data %}
 <script>
 (function () {
     'use strict';
@@ -155,5 +155,5 @@
     });
 })();
 </script>
-{% endblock scripts %}
 {% endif %}
+{% endblock scripts %}

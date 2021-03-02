@@ -15,12 +15,7 @@ def authenticator(headers, key):
     if key not in headers or type(headers[key]) is not str:
         raise auth_exception
     
-    # If headers if from API request split on space, if it comes from other source
-    # split on | (cookie are not allowed to have whitespaces)
-    if key == 'Authorization':
-        spt_token = headers[key].split(' ')
-    else:
-        spt_token = headers[key].split('|')
+    spt_token = headers[key].split(' ')
     # Check if token is valid
     if len(spt_token) != 2 or spt_token[0] != 'Bearer' or type(spt_token[1]) is not str:
         raise auth_exception
@@ -53,7 +48,10 @@ class AuthTokenMiddleware:
         response = None
         
         # Check if request is for API and isn't to authenticate
-        if request.path.startswith('/api/') and request.path != '/api/users/auth' and (request.path != '/api/users/register' and request.method != 'PUT'):
+        if request.path.startswith('/api/') \
+            and request.path != '/api/users/auth' \
+            and (request.path != '/api/users/register' and request.method != 'PUT') \
+            and (request.path != '/api/vl' and request.method != 'POST'):
             try:
                 data = authenticator(headers=request.headers, key='Authorization')
                 request.user_id = data['id']
@@ -73,33 +71,27 @@ class AuthTokenMiddleware:
 
         return response
 
-@database_sync_to_async
-def get_user(user_id):
-    return GUser.objects.get(pk=user_id)
-
 
 class WebSocketAuthMiddleware:
     def __init__(self, app):
         self.app = app
 
+    @database_sync_to_async
+    def get_user(self, user_id):
+        return GUser.objects.get(pk=user_id)
+    
+    @database_sync_to_async
+    def get_from_session(self, session, key):
+        return session.get(key)
+
     async def __call__(self, scope, receive, send):
-        cookies = SimpleCookie()
-        for i, header in enumerate(scope['headers']):
-            if header[0] == b'cookie':
-                cookies.load(scope['headers'][i][1].decode())
-                break
-        headers = dict()
-        for c in cookies:
-            headers[c] = cookies[c].value
+        visit_id = await self.get_from_session(scope['session'], 'visit_id')
+        scope['visit_id'] = visit_id
+
+        user_id = await self.get_from_session(scope['session'], 'user_id')
         try:
-            data = authenticator(headers=headers, key='token')
-            scope['user'] = await get_user(data['id'])
-        except:
-            # DEBUG
-            print('Unrecognized token in cookies')
-            print(headers)
-            print(cookies)
-            # /DEBUG
+            scope['user'] = await self.get_user(user_id)
+        except GUser.DoesNotExist:
             scope['user'] = AnonymousUser()
-        scope['visit_id'] = cookies.get('visit_id')
+
         return await self.app(scope, receive, send)

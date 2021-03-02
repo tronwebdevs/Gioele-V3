@@ -18,6 +18,11 @@
 <body>
 
   <h1>Connection state: <span id="ws-conn">closed</span></h1>
+  <div>
+      <b>User:</b> {{ user.user.username }} <br/>
+      <b>Level:</b> {{ user.level }} <br/>
+      <b>Balance:</b> {{ user.balance }} gbucks <br/>
+  </div>
 
   <canvas id="gameCanvas" width="0" height="0"> </canvas>
 
@@ -53,6 +58,8 @@
     <li> w - side gun </li>
 
   </ul>
+
+  <a href="{% url 'game:logout' %}">Logout</a>
 
 
   <script src="{% static 'game/maurizio/lucasars.js' %}"></script>
