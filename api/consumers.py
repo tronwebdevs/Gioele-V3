@@ -110,6 +110,7 @@ class GameConsumer(WebsocketConsumer):
         if 'code' in vars(exception):
             code = exception.code
         self.send_dict({
+            'r': -1,
             'c': code,
             'm': str(exception)
         })

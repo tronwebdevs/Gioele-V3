@@ -28,10 +28,12 @@ class Giorgio:
         self.round = 1
 
     def start_game(self):
+
+        DEBUG('Giorgio', 'Game started (%s)' % self.game_id)
+
         self.start_time = timezone.now()
         # Mark game as running
         self.running = True
-        DEBUG('Giorgio', 'Game started (%s)' % self.game_id)
 
     def powerup_expired(self, powerup=None):
 
@@ -110,7 +112,7 @@ class Giorgio:
         k = self.round
         g = self._generation
         
-        DEBUG('Giorgio', 'Generating entities for round (%i)' % k)
+        DEBUG('Giorgio', 'Generating entities for round %i' % k)
         
         # Pb(k) = (100 - 10 - 10k)%
         p1 = 100 - 10 * (k + 1)
@@ -172,7 +174,7 @@ class Giorgio:
         self.player.bullet_hit(gun_type)
         # Calculate enemy's remained hp
         temp = enemy.hp - self.player.get_damage(gun_type)
-        if temp < 0:
+        if temp <= 0:
             # enemy is dead
             self.player.killed.add(enemy.type)
             # Give rewards to player
@@ -181,9 +183,15 @@ class Giorgio:
             # Remove enemy from stack
             del self.enemies[enemy.id]
             enemy.hp = 0
+
+            DEBUG('Giorgio', 'Player killed enemy #%i' % enemy.id)
+
         else:
             # enemy has lost hp
             self.enemies[enemy.id].hp = temp
+
+            DEBUG('Giorgio', 'Player hit enemy #%i, hp remaining: %i' % (enemy.id, enemy.hp))
+
         # Return updated enemy
         return enemy
 
@@ -194,6 +202,9 @@ class Giorgio:
     Returns updated player's object.
     """
     def enemy_hit_player(self, enemy, directly):
+
+        DEBUG('Giorgio', 'Enemy #%i hit player (directly:%s)' % (enemy.id, directly))
+
         if directly:
             # If enemy has collide with player (kamikaze) remove enemy from the stack
             del self.enemies[enemy.id]
@@ -207,11 +218,17 @@ class Giorgio:
     Returns remained mship's lifes.
     """
     def enemy_hit_mship(self, enemy):
+
+        DEBUG('Giorgio', 'Enemy #%i hit mother ship' % enemy.id)
+
         # Remove enemy from stack
         del self.enemies[enemy.id]
         lifes = self.mship_lifes - 1
-        if lifes < 0:
+        if lifes <= 0:
             # Mother ship is dead, game ends
+
+            DEBUG('Giorgio', 'Mother ship dead, game end')
+
             self.end_game()
             raise GameException('Game ended', 0)
         else:
@@ -225,6 +242,9 @@ class Giorgio:
     Returns updated player's object.
     """
     def player_gain_powerup(self, powerup):
+
+        DEBUG('Giorgio', 'Player gain powerup %i (#%i)' % (powerup.type, powerup.id))
+
         # Activate powerup
         powerup.activate(self.player)
         ptype = powerup.type
@@ -243,6 +263,9 @@ class Giorgio:
     Returns updated player's object.
     """
     def player_use_ability(self, ability):
+
+        DEBUG('Giorgio', 'Player used ability %i' % ability.type)
+
         # Perform ability
         ability.run(self)
         # Add player's ability counter
