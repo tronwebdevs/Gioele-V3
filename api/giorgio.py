@@ -235,6 +235,7 @@ class Giorgio:
     Returns remained mship's lifes.
     """
     def enemy_hit_mship(self, enemy):
+        enemy.hp = 0
 
         DEBUG('Giorgio', 'Enemy #%i hit mother ship' % enemy.id, broadcast=True)
 
@@ -246,12 +247,25 @@ class Giorgio:
 
             DEBUG('Giorgio', 'Mother ship dead, game end', broadcast=True)
 
+            redis_broadcast('general', {
+                't': 3,
+                'lifes': 0,
+                'enemy': enemy.get_displayable(True),
+            })
+
             self.end_game()
             raise GameException('Game ended', 0)
         else:
             # Mother ship lost a life
             self.mship_lifes = lifes
         # Return updated mship's lifes
+
+        redis_broadcast('general', {
+            't': 3,
+            'lifes': self.mship_lifes,
+            'enemy': enemy.get_displayable(True),
+        })
+
         return lifes
 
     """
@@ -298,7 +312,7 @@ class Giorgio:
     def end_game(self):
         self.running = False
         redis_broadcast('general', {
-            't': 3,
+            't': 4,
         })
         # TODO: implement the method
         raise GameException('Not implemented yet')

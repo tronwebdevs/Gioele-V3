@@ -130,5 +130,7 @@ class Player:
             'hp': self.hp,
             'powerups': list(map(vars, self.active_powerups.values())),
             'speed': self.speed_modifier,
-            'damage_modifier': self.damage_modifier
+            'damage_modifier': self.damage_modifier,
+            'main_gun': self.main_gun.readable_dict(),
+            'side_gun': self.side_gun.readable_dict(),
         }
