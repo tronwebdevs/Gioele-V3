@@ -27,9 +27,20 @@ class Position:
 
 
 class Entity:
-    def __init__(self, id, type):
+    def __init__(self, id, type, gen_rnd):
         self.id = id
         self.type = type
+        self.gen_rnd = gen_rnd
         self.pos = Position()
         self.pos.generate()
         self.born_at = timezone.now()
+
+    def get_displayable(self, internal=False):
+        obj = {
+            'id': self.id,
+            'type': self.type,
+            'pos': vars(self.pos),
+        }
+        if internal:
+            obj['gen_rnd'] = self.gen_rnd
+        return obj

@@ -4,9 +4,12 @@ import random
 import re
 import string
 import threading
+import asyncio
 
+import aioredis
+from asgiref.sync import async_to_sync
 from django.utils import timezone
-from gioele_v3.settings import DEBUG
+from gioele_v3.settings import DEBUG, CHANNEL_LAYERS
 from jose import jwt
 
 from api.classes import Parser
@@ -102,7 +105,18 @@ def generate_short_id(verify_set=None):
             return generate_short_id(verify_set)
     return generated
 
-def log(who, message, ltype='INFO', force_color=None):
+def redis_broadcast(channel, data):
+    if not DEBUG:
+        return
+
+    redis_settings = CHANNEL_LAYERS['default']['CONFIG']['hosts'][0]
+    channel_name = 'giorgio:games:%s' % channel
+    pub = async_to_sync(aioredis.create_redis)('redis://%s:%i' % (redis_settings[0], redis_settings[1]))
+    res = async_to_sync(pub.publish_json)(channel_name, data)
+    pub.close()
+    return res
+
+def log(who, message, ltype='INFO', force_color=None, broadcast=False):
     # Only print logs if DEBUG is set to true
     if not DEBUG:
         return
@@ -129,5 +143,10 @@ def log(who, message, ltype='INFO', force_color=None):
     
     if force_color is not None:
         color = force_color
-    
-    print('%s[%s/%s][%s][%s] %s%s' % (color, tname, func, ltype, who, message, bcolors.ENDC))
+
+    msg = '%s[%s/%s][%s][%s] %s%s' % (color, tname, func, ltype, who, message, bcolors.ENDC)
+
+    if broadcast:
+        redis_broadcast('general', { 't':0, 'm': msg })
+
+    print(msg)

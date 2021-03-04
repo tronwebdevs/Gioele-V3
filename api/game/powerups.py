@@ -2,8 +2,8 @@ from api.game.entity import Entity
 
 
 class PowerUp(Entity):
-    def __init__(self, id, type):
-        super().__init__(id, type)
+    def __init__(self, id, type, rnd):
+        super().__init__(id, type, rnd)
 
     def activate(self, player):
         pass
@@ -11,19 +11,12 @@ class PowerUp(Entity):
     def deactivate(self, player):
         pass
 
-    def get_displayable(self):
-        return {
-            'id': self.id,
-            'type': self.type,
-            'pos': vars(self.pos),
-        }
-
 
 class ShieldPowerUp(PowerUp):
     TYPE = 0
 
-    def __init__(self, id):
-        super().__init__(id, self.TYPE)
+    def __init__(self, id, rnd):
+        super().__init__(id, self.TYPE, rnd)
     
     def activate(self, player):
         player.reload_shield()
@@ -35,8 +28,8 @@ class ShieldPowerUp(PowerUp):
 class FuelPowerUp(PowerUp):
     TYPE = 1
 
-    def __init__(self, id):
-        super().__init__(id, self.TYPE)
+    def __init__(self, id, rnd):
+        super().__init__(id, self.TYPE, rnd)
     
     def activate(self, player):
         player.speed_up()
@@ -48,8 +41,8 @@ class FuelPowerUp(PowerUp):
 class DamagePowerUp(PowerUp):
     TYPE = 2
 
-    def __init__(self, id):
-        super().__init__(id, self.TYPE)
+    def __init__(self, id, rnd):
+        super().__init__(id, self.TYPE, rnd)
     
     def activate(self, player):
         player.damage_up()

@@ -2,18 +2,21 @@ import json
 import threading
 import time
 import uuid
+import asyncio
 from random import random
 
+import aioredis
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 from channels.layers import get_channel_layer
 from django.contrib.auth.models import AnonymousUser
 
+from gioele_v3.settings import CHANNEL_LAYERS
 from .exceptions import GameDataException, GameException
 from .game.constants import POWERUPS_LAST_TIME, DELAY_BETWEEN_ENEMIES_GENERATIONS
 from .game.powerups import POWERUP_TYPES
 from .giorgio import Giorgio
-from .utils import log as DEBUG
+from .utils import redis_broadcast, log as DEBUG
 
 ACTION_GAME_START = 0
 ACTION_GAME_PAUSE = 1
@@ -25,11 +28,14 @@ ACTION_PLAYER_HIT_ENEMY = 6
 ACTION_PLAYER_GAIN_POWERUP = 7
 ACTION_PLAYER_USE_ABILITY = 8
 
+RESPONSE_ERROR = -1
 RESPONSE_GAME_RELATED = 0
 RESPONSE_PLAYER_OBJECT = 1
 RESPONSE_MSHIP_LIFES = 2
 RESPONSE_GENERATED_ENTITIES = 3
 RESPONSE_ENEMY_OBJECT = 4
+
+redis_settings = CHANNEL_LAYERS['default']['CONFIG']['hosts'][0]
 
 def generation_worker(giorgio, channel_name):
     channel_layer = get_channel_layer()
@@ -37,7 +43,7 @@ def generation_worker(giorgio, channel_name):
     async_to_sync(channel_layer.group_send)(channel_name, {
         'type': 'run_generation'
     })
-    # d = (5000 + 400 * (k - 1)) milliseconds
+    # d = (base_delay + 400 * (k - 1)) milliseconds
     delay = DELAY_BETWEEN_ENEMIES_GENERATIONS + (4 * (giorgio.round - 1)) / 10
     
     if giorgio.running:
@@ -56,14 +62,44 @@ def powerup_expire_worker(channel_name, powerup_id):
     })
 
 
+async def user_is_playing(channel_name):
+    redis = await aioredis.create_redis_pool('redis://%s:%i' % (redis_settings[0], redis_settings[1]))
+    result = await redis.exists('asgi:group:%s' % channel_name)
+    redis.close()
+    return result
+
+
+# async def register_match(game_id, channel_id):
+#     redis = await aioredis.create_redis_pool('redis://%s:%i' % (redis_settings[0], redis_settings[1]))
+#     await redis.set('giorgio:games:%s' % game_id, channel_id)
+#     redis.close()
+
+
+# async def clear_match(game_id):
+#     redis = await aioredis.create_redis_pool('redis://%s:%i' % (redis_settings[0], redis_settings[1]))
+#     await redis.delete('giorgio:games:%s' % game_id)
+#     redis.close()
+
+
 class GameConsumer(WebsocketConsumer):
 
     def connect(self):
         user = self.scope['user']
         if type(user) is AnonymousUser:
+
             DEBUG('WebSocket', 'Unauthenticated user', ltype='WARNING')
+
             self.close()
             return
+
+        self.delayed_channel_name = 'giorgio_%i' % user.user.id
+        # if asyncio.run(user_is_playing(self.delayed_channel_name)):
+            
+        #     DEBUG('WebSocket', '"%s" is already playing' % user.user.username)
+
+        #     self.close()
+        #     return
+        # Create giorgio
         self.scope['giorgio'] = Giorgio(
             user=user,
             visit_id=self.scope['visit_id'],
@@ -72,23 +108,37 @@ class GameConsumer(WebsocketConsumer):
             side_gun_id=user.side_gun,
             skin_id=user.skin
         )
+
         DEBUG('WebSocket', ('"%s" connected, giorgio started' % user.user.username))
-        self.delayed_channel_name = 'giorgio_%i_%i' % (user.user.id, round(random() * 1000))
+
+        # Generate channel name and add to Redis
         async_to_sync(self.channel_layer.group_add)(
             self.delayed_channel_name,
             self.channel_name
         )
+
+        # asyncio.run(register_match(self.scope['giorgio'].game_id, self.delayed_channel_name))
+
         DEBUG('WebSocket', 'Channel for delayed comunications created (%s)' % self.delayed_channel_name)
+
         self.accept()
 
     def disconnect(self, close_code):
         user = self.scope['user']
         giorgio = self.scope.get('giorgio')
         if type(user) is not AnonymousUser:
+            # Remove channel from Redis
+            # async_to_sync(self.channel_layer.group_discard)(
+            #     self.delayed_channel_name,
+            #     self.channel_name
+            # )
+
+            # asyncio.run(clear_match(giorgio.game_id))
+
             if giorgio is not None and giorgio.running == True:
-                giorgio.running = False
-                # giorgio.end_game()
-            DEBUG('WebSocket', ('%s disconnected' % user.user.username))
+                # giorgio.running = False
+                giorgio.end_game()
+            DEBUG('WebSocket', ('"%s" disconnected' % user.user.username))
 
     def validate_data(self, text_data):
         data = json.loads(text_data)
@@ -110,7 +160,7 @@ class GameConsumer(WebsocketConsumer):
         if 'code' in vars(exception):
             code = exception.code
         self.send_dict({
-            'r': -1,
+            'r': RESPONSE_ERROR,
             'c': code,
             'm': str(exception)
         })
@@ -219,14 +269,14 @@ class GameConsumer(WebsocketConsumer):
         giorgio = self.scope['giorgio']
         if giorgio.running:
             # Run algorithm witch generates entities and get result
-            gen_enemies, gen_powerups = giorgio.generate_entities()
+            gen_enemies, gen_powerups, current_round = giorgio.generate_entities()
             gen_enemies = list(map(lambda e: e.get_displayable(), gen_enemies))
             gen_powerups = list(map(lambda p: p.get_displayable(), gen_powerups))
             DEBUG('WebSocket', 'Sending generated entities')
             # Send to client generated entity lists
             self.send_dict({
                 'r': RESPONSE_GENERATED_ENTITIES,
-                'round': giorgio.round,
+                'round': current_round,
                 'enemies': gen_enemies,
                 'powerups': gen_powerups
             })

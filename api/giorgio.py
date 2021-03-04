@@ -5,7 +5,7 @@ from uuid import uuid4
 from django.utils import timezone
 
 from .exceptions import GameException
-from .utils import parser, log as DEBUG
+from .utils import parser, redis_broadcast, log as DEBUG
 from .game.constants import MAX_MSHIP_LIFES, ENEMIES_PER_GENERATION
 from .game.player import Player
 from .game.enemies import ENEMY_TYPES, BOSS_TYPES
@@ -29,7 +29,7 @@ class Giorgio:
 
     def start_game(self):
 
-        DEBUG('Giorgio', 'Game started (%s)' % self.game_id)
+        DEBUG('Giorgio', 'Game started (%s)' % self.game_id, broadcast=True)
 
         self.start_time = timezone.now()
         # Mark game as running
@@ -37,7 +37,7 @@ class Giorgio:
 
     def powerup_expired(self, powerup=None):
 
-        DEBUG('Giorgio', ('Expiring powerup #%i' % powerup.id))
+        DEBUG('Giorgio', ('Expiring powerup #%i' % powerup.id), broadcast=True)
 
         # Remove powerup from player's active powerups list
         del self.player.active_powerups[powerup.id]
@@ -68,7 +68,7 @@ class Giorgio:
             # Calculate enemy's health points based on: h = base * (1 + (k - 1) / 10)
             hp = round(EnemyTypeClass.BASE_HP * (1 + (self.round - 1) / 10))
 
-            generated.append(EnemyTypeClass(self._last_entity_id, hp))
+            generated.append(EnemyTypeClass(id=self._last_entity_id, hp=hp, rnd=rnd))
         
         return generated
 
@@ -92,7 +92,7 @@ class Giorgio:
         # Increment entity counter, which is also current powerup's id
         self._last_entity_id += 1
 
-        return PowerUpType[1](self._last_entity_id)
+        return PowerUpType[1](self._last_entity_id, rnd)
 
     """
     'u guru digidàl v2'
@@ -104,7 +104,7 @@ class Giorgio:
 
         # Return if enemies from previous round are still alive
         if self._generation == 0 and len(self.enemies) > 0:
-            return gen_powerups, gen_enemies
+            return gen_powerups, gen_enemies, self.round
 
         # Increment generations counter
         self._generation += 1
@@ -112,14 +112,14 @@ class Giorgio:
         k = self.round
         g = self._generation
         
-        DEBUG('Giorgio', 'Generating entities for round %i' % k)
+        DEBUG('Giorgio', 'Generating entities for round %i' % k, broadcast=True)
 
 
         if k >= 20 and k % 10 == 0:
             # From round 20, every 10 rounds, spawn a random boss
             self._last_entity_id += 1
             EnemyBossClass = random.choice(list(BOSS_TYPES.values()))[1]
-            gen_enemies.append(EnemyBossClass(self._last_entity_id))
+            gen_enemies.append(EnemyBossClass(id=self._last_entity_id, rnd=1.0))
         else:
             # Pb(k) = (100 - 10 - 10k)%
             p1 = 100 - 10 * (k + 1)
@@ -163,8 +163,15 @@ class Giorgio:
             self._generation = 0
             self.round += 1
 
+        redis_broadcast('general', {
+            't': 1,
+            'round': k,
+            'enemies': list(map(lambda e: e.get_displayable(internal=True), gen_enemies)),
+            'powerups': list(map(lambda pu: pu.get_displayable(internal=True), gen_powerups)),
+        })
+
         # Return generated entities
-        return gen_enemies, gen_powerups
+        return gen_enemies, gen_powerups, k
 
     """
     Check if enemy has been killed (and remove it from stack) or just
@@ -189,13 +196,18 @@ class Giorgio:
             del self.enemies[enemy.id]
             enemy.hp = 0
 
-            DEBUG('Giorgio', 'Player killed enemy #%i' % enemy.id)
+            DEBUG('Giorgio', 'Player killed enemy #%i' % enemy.id, broadcast=True)
 
         else:
             # enemy has lost hp
             self.enemies[enemy.id].hp = temp
 
-            DEBUG('Giorgio', 'Player hit enemy #%i, hp remaining: %i' % (enemy.id, enemy.hp))
+            DEBUG('Giorgio', 'Player hit enemy #%i, hp remaining: %i' % (enemy.id, enemy.hp), broadcast=True)
+
+        redis_broadcast('general', {
+            't': 2,
+            'enemy': enemy.get_displayable(True),
+        })
 
         # Return updated enemy
         return enemy
@@ -208,7 +220,7 @@ class Giorgio:
     """
     def enemy_hit_player(self, enemy, directly):
 
-        DEBUG('Giorgio', 'Enemy #%i hit player (directly:%s)' % (enemy.id, directly))
+        DEBUG('Giorgio', 'Enemy #%i hit player (directly:%s)' % (enemy.id, directly), broadcast=True)
 
         if directly:
             # If enemy has collide with player (kamikaze) remove enemy from the stack
@@ -224,7 +236,7 @@ class Giorgio:
     """
     def enemy_hit_mship(self, enemy):
 
-        DEBUG('Giorgio', 'Enemy #%i hit mother ship' % enemy.id)
+        DEBUG('Giorgio', 'Enemy #%i hit mother ship' % enemy.id, broadcast=True)
 
         # Remove enemy from stack
         del self.enemies[enemy.id]
@@ -232,7 +244,7 @@ class Giorgio:
         if lifes <= 0:
             # Mother ship is dead, game ends
 
-            DEBUG('Giorgio', 'Mother ship dead, game end')
+            DEBUG('Giorgio', 'Mother ship dead, game end', broadcast=True)
 
             self.end_game()
             raise GameException('Game ended', 0)
@@ -248,7 +260,7 @@ class Giorgio:
     """
     def player_gain_powerup(self, powerup):
 
-        DEBUG('Giorgio', 'Player gain powerup %i (#%i)' % (powerup.type, powerup.id))
+        DEBUG('Giorgio', 'Player gain powerup %i (#%i)' % (powerup.type, powerup.id), broadcast=True)
 
         # Activate powerup
         powerup.activate(self.player)
@@ -269,7 +281,7 @@ class Giorgio:
     """
     def player_use_ability(self, ability):
 
-        DEBUG('Giorgio', 'Player used ability %i' % ability.type)
+        DEBUG('Giorgio', 'Player used ability %i' % ability.type, broadcast=True)
 
         # Perform ability
         ability.run(self)
@@ -285,6 +297,9 @@ class Giorgio:
 
     def end_game(self):
         self.running = False
+        redis_broadcast('general', {
+            't': 3,
+        })
         # TODO: implement the method
         raise GameException('Not implemented yet')
 
