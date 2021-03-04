@@ -227,6 +227,14 @@ class Giorgio:
             del self.enemies[enemy.id]
         # Compute attack
         self.player.attacked(enemy.damage)
+
+        enemy.hp = 0
+        redis_broadcast('general', {
+            't': 4,
+            'player': self.player.get_displayable(),
+            'enemy': enemy.get_displayable(),
+        })
+
         # Return updated player
         return self.player
 
@@ -312,7 +320,7 @@ class Giorgio:
     def end_game(self):
         self.running = False
         redis_broadcast('general', {
-            't': 4,
+            't': 5,
         })
         # TODO: implement the method
         raise GameException('Not implemented yet')

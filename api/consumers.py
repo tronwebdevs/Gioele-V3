@@ -192,6 +192,7 @@ class GameConsumer(WebsocketConsumer):
                 generation_worker(self.scope['giorgio'], self.delayed_channel_name)
                 response = {
                     'r': RESPONSE_GAME_RELATED,
+                    'player': self.scope['giorgio'].player.get_displayable(),
                     'm': 'ok'
                 }
             except Exception as e:
