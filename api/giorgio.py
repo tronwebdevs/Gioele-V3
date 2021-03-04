@@ -32,6 +32,10 @@ class Giorgio:
         DEBUG('Giorgio', 'Game started (%s)' % self.game_id, broadcast=True)
 
         self.start_time = timezone.now()
+        redis_broadcast('general', {
+            't': 4,
+            'player': self.player.get_displayable(),
+        })
         # Mark game as running
         self.running = True
 

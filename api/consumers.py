@@ -192,9 +192,12 @@ class GameConsumer(WebsocketConsumer):
                 generation_worker(self.scope['giorgio'], self.delayed_channel_name)
                 response = {
                     'r': RESPONSE_GAME_RELATED,
-                    'player': self.scope['giorgio'].player.get_displayable(),
                     'm': 'ok'
                 }
+                self.send_dict({
+                    'r': RESPONSE_PLAYER_OBJECT,
+                    'player': self.scope['giorgio'].player.get_displayable(),
+                })
             except Exception as e:
                 raise GameException(str(e))
         elif giorgio is not None and giorgio.running == True:
