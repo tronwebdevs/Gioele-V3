@@ -39,17 +39,26 @@ class Enemy(Entity):
         self.gbucks_reward = gbucks_reward * moltiplier
         self.is_boss = is_boss
 
-    def get_displayable(self, internal=False):
-        obj = {
-            **super().get_displayable(internal),
+    def to_safe_dict(self):
+        return {
+            **super().to_safe_dict(),
             'hp': self.hp,
             'damage': self.damage,
             'rarity': self.rarity[0],
             'is_boss': self.is_boss,
         }
-        if internal:
-            obj['rarity_rnd'] = self.rarity_rnd
-        return obj
+
+    def to_dict(self):
+        return {
+            **super().to_dict(),
+            'hp': self.hp,
+            'damage': self.damage,
+            'rarity': self.rarity[0],
+            'is_boss': self.is_boss,
+            'rarity_rnd': self.rarity_rnd,
+            'exp_reward': self.exp_reward,
+            'gbucks_reward': self.gbucks_reward,
+        }
 
     def __str__(self):
         return f'{self.id}({self.type}): {self.hp} [{self.rarity}]'

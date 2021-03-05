@@ -29,7 +29,7 @@ def get_user(user_id):
         return None
 
 def get_selected_items(dataset, user_dataset):
-    dataset = list(map(lambda i: i.readable_dict(), dataset))
+    dataset = list(map(lambda i: i.to_dict(), dataset))
     for mi in dataset:
         mi['owned'] = False
         for ui in user_dataset:

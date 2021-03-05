@@ -35,12 +35,16 @@ class Entity:
         self.pos.generate()
         self.born_at = timezone.now()
 
-    def get_displayable(self, internal=False):
-        obj = {
+    def to_safe_dict(self):
+        return {
             'id': self.id,
             'type': self.type,
             'pos': vars(self.pos),
         }
-        if internal:
-            obj['gen_rnd'] = self.gen_rnd
-        return obj
+
+    def to_dict(self):
+        return {
+            **self.to_safe_dict(),
+            'gen_rnd': self.gen_rnd,
+            'born_at': str(self.born_at),
+        }

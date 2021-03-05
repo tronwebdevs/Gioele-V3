@@ -27,6 +27,9 @@ class Manager:
     def remove(self, _id):
         self.data[_id] -= 1
 
+    def to_dict(self):
+        return self.data
+
     def __str__(self):
         return parser.dict_to_string(self.data)
 
@@ -124,13 +127,29 @@ class Player:
         gun_damage = self.main_gun.damage if gun_type == 0 else self.side_gun.damage
         return gun_damage * self.damage_modifier
 
-    def get_displayable(self):
+    def to_dict(self):
+        obj = {
+            **self.to_safe_dict(),
+            'user_id': self.user_id,
+            'main_hit': self.main_hit,
+            'side_hit': self.side_hit,
+            'killed': self.killed.to_dict(),
+        }
+        obj['main_gun'] = self.main_gun.to_dict()
+        obj['side_gun'] = self.side_gun.to_dict()
+        return obj
+
+    def to_safe_dict(self):
         return {
             'shield': self.shield,
             'hp': self.hp,
             'powerups': list(map(vars, self.active_powerups.values())),
-            'speed': self.speed_modifier,
+            'abilities': list(map(lambda a: a.to_safe_dict(), self.abilities)),
+            'speed_modifier': self.speed_modifier,
             'damage_modifier': self.damage_modifier,
-            'main_gun': self.main_gun.readable_dict(),
-            'side_gun': self.side_gun.readable_dict(),
+            'gbucks': self.gbucks,
+            'exp': self.exp,
+            'main_gun': self.main_gun.to_safe_dict(),
+            'side_gun': self.side_gun.to_safe_dict(),
+            'skin': self.skin.to_safe_dict(),
         }

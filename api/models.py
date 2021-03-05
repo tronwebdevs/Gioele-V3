@@ -31,15 +31,20 @@ class Gun(models.Model):
     def get_displayable_id(self):
         return hashlib.md5(str(self.id).encode()).hexdigest()
 
-    def readable_dict(self):
+    def to_safe_dict(self):
         return {
             'id': self.id,
-            'type': self.type,
-            'price': self.price,
             'name': self.name,
-            'description': self.description,
             'cooldown': self.cooldown,
             'damage': self.damage,
+        }
+
+    def to_dict(self):
+        return {
+            **self.to_safe_dict(),
+            'type': self.type,
+            'price': self.price,
+            'description': self.description,
         }
 
     def __str__(self):
@@ -55,11 +60,16 @@ class Skin(models.Model):
     def get_displayable_id(self):
         return hashlib.md5(str(self.id).encode()).hexdigest()
 
-    def readable_dict(self):
+    def to_safe_dict(self):
         return {
             'id': self.id,
-            'price': self.price,
             'name': self.name,
+        }
+
+    def to_dict(self):
+        return {
+            **self.to_safe_dict(),
+            'price': self.price,
             'description': self.description,
         }
 

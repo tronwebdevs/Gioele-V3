@@ -16,7 +16,7 @@ from .exceptions import GameDataException, GameException
 from .game.constants import POWERUPS_LAST_TIME, DELAY_BETWEEN_ENEMIES_GENERATIONS
 from .game.powerups import POWERUP_TYPES
 from .giorgio import Giorgio
-from .utils import redis_broadcast, log as DEBUG
+from .utils import log as DEBUG
 
 ACTION_GAME_START = 0
 ACTION_GAME_PAUSE = 1
@@ -128,16 +128,15 @@ class GameConsumer(WebsocketConsumer):
         giorgio = self.scope.get('giorgio')
         if type(user) is not AnonymousUser:
             # Remove channel from Redis
-            # async_to_sync(self.channel_layer.group_discard)(
-            #     self.delayed_channel_name,
-            #     self.channel_name
-            # )
+            async_to_sync(self.channel_layer.group_discard)(
+                self.delayed_channel_name,
+                self.channel_name
+            )
 
             # asyncio.run(clear_match(giorgio.game_id))
 
             if giorgio is not None and giorgio.running == True:
-                # giorgio.running = False
-                giorgio.end_game()
+                giorgio.end_game('connection closed')
             DEBUG('WebSocket', ('"%s" disconnected' % user.user.username))
 
     def validate_data(self, text_data):
@@ -196,7 +195,7 @@ class GameConsumer(WebsocketConsumer):
                 }
                 self.send_dict({
                     'r': RESPONSE_PLAYER_OBJECT,
-                    'player': self.scope['giorgio'].player.get_displayable(),
+                    'player': self.scope['giorgio'].player.to_safe_dict(),
                 })
             except Exception as e:
                 raise GameException(str(e))
@@ -212,7 +211,7 @@ class GameConsumer(WebsocketConsumer):
                     'm': 'ok'
                 }
             elif action == ACTION_GAME_STOP:
-                giorgio.end_game()
+                giorgio.end_game('received game stop command')
                 response = {
                     'r': RESPONSE_GAME_RELATED,
                     'm': 'ok'
@@ -237,7 +236,7 @@ class GameConsumer(WebsocketConsumer):
                 entity = giorgio.player_hit_enemy(gun_type, entity)
                 response = {
                     'r': RESPONSE_ENEMY_OBJECT,
-                    'enemy': entity.get_displayable()
+                    'enemy': entity.to_safe_dict()
                 }
             elif action == ACTION_PLAYER_GAIN_POWERUP:
                 player = giorgio.player_gain_powerup(entity)
@@ -256,7 +255,7 @@ class GameConsumer(WebsocketConsumer):
         if response is None:
             response = {
                 'r': RESPONSE_PLAYER_OBJECT,
-                'player': player.get_displayable()
+                'player': player.to_safe_dict()
             }
         DEBUG('WebSocket', ('Sending response (action: %i)' % action))
         self.send_dict(response)
@@ -274,8 +273,8 @@ class GameConsumer(WebsocketConsumer):
         if giorgio.running:
             # Run algorithm witch generates entities and get result
             gen_enemies, gen_powerups, current_round = giorgio.generate_entities()
-            gen_enemies = list(map(lambda e: e.get_displayable(), gen_enemies))
-            gen_powerups = list(map(lambda p: p.get_displayable(), gen_powerups))
+            gen_enemies = list(map(lambda e: e.to_safe_dict(), gen_enemies))
+            gen_powerups = list(map(lambda p: p.to_safe_dict(), gen_powerups))
             DEBUG('WebSocket', 'Sending generated entities')
             # Send to client generated entity lists
             self.send_dict({
@@ -299,7 +298,7 @@ class GameConsumer(WebsocketConsumer):
             DEBUG('WebSocket', 'Sending expired powerups')
             self.send_dict({
                 'r': RESPONSE_PLAYER_OBJECT,
-                'player': player.get_displayable()
+                'player': player.to_safe_dict()
             })
         else:
             DEBUG('WebSocket', 'Expiration prevented as the game is stopped')

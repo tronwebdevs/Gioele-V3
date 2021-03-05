@@ -29,19 +29,19 @@ class Giorgio:
 
     def start_game(self):
 
-        DEBUG('Giorgio', 'Game started (%s)' % self.game_id, broadcast=True)
+        DEBUG('Giorgio', 'Game started (%s)' % self.game_id, broadcast_id=self.user.user.id)
 
         self.start_time = timezone.now()
-        redis_broadcast('general', {
+        redis_broadcast(self.user.user.id, {
             't': 4,
-            'player': self.player.get_displayable(),
+            'player': self.player.to_dict(),
         })
         # Mark game as running
         self.running = True
 
     def powerup_expired(self, powerup=None):
 
-        DEBUG('Giorgio', ('Expiring powerup #%i' % powerup.id), broadcast=True)
+        DEBUG('Giorgio', ('Expiring powerup #%i' % powerup.id), broadcast_id=self.user.user.id)
 
         # Remove powerup from player's active powerups list
         del self.player.active_powerups[powerup.id]
@@ -116,7 +116,7 @@ class Giorgio:
         k = self.round
         g = self._generation
         
-        DEBUG('Giorgio', 'Generating entities for round %i' % k, broadcast=True)
+        DEBUG('Giorgio', 'Generating entities for round %i' % k, broadcast_id=self.user.user.id)
 
 
         if k >= 20 and k % 10 == 0:
@@ -167,11 +167,11 @@ class Giorgio:
             self._generation = 0
             self.round += 1
 
-        redis_broadcast('general', {
+        redis_broadcast(self.user.user.id, {
             't': 1,
             'round': k,
-            'enemies': list(map(lambda e: e.get_displayable(internal=True), gen_enemies)),
-            'powerups': list(map(lambda pu: pu.get_displayable(internal=True), gen_powerups)),
+            'enemies': list(map(lambda e: e.to_dict(), gen_enemies)),
+            'powerups': list(map(lambda pu: pu.to_dict(), gen_powerups)),
         })
 
         # Return generated entities
@@ -192,25 +192,27 @@ class Giorgio:
         temp = enemy.hp - self.player.get_damage(gun_type)
         if temp <= 0:
             # enemy is dead
+            enemy.hp = 0
+
             self.player.killed.add(enemy.type)
             # Give rewards to player
             self.player.exp += enemy.exp_reward
             self.player.gbucks += enemy.gbucks_reward
+
             # Remove enemy from stack
             del self.enemies[enemy.id]
-            enemy.hp = 0
 
-            DEBUG('Giorgio', 'Player killed enemy #%i' % enemy.id, broadcast=True)
+            DEBUG('Giorgio', 'Player killed enemy #%i' % enemy.id, broadcast_id=self.user.user.id)
 
         else:
             # enemy has lost hp
             self.enemies[enemy.id].hp = temp
 
-            DEBUG('Giorgio', 'Player hit enemy #%i, hp remaining: %i' % (enemy.id, enemy.hp), broadcast=True)
+            DEBUG('Giorgio', 'Player hit enemy #%i, hp remaining: %i' % (enemy.id, enemy.hp), broadcast_id=self.user.user.id)
 
-        redis_broadcast('general', {
+        redis_broadcast(self.user.user.id, {
             't': 2,
-            'enemy': enemy.get_displayable(True),
+            'enemy': enemy.to_dict(),
         })
 
         # Return updated enemy
@@ -224,19 +226,19 @@ class Giorgio:
     """
     def enemy_hit_player(self, enemy, directly):
 
-        DEBUG('Giorgio', 'Enemy #%i hit player (directly:%s)' % (enemy.id, directly), broadcast=True)
+        DEBUG('Giorgio', 'Enemy #%i hit player (directly:%s)' % (enemy.id, directly), broadcast_id=self.user.user.id)
 
         if directly:
             # If enemy has collide with player (kamikaze) remove enemy from the stack
+            enemy.hp = 0
             del self.enemies[enemy.id]
         # Compute attack
         self.player.attacked(enemy.damage)
 
-        enemy.hp = 0
-        redis_broadcast('general', {
+        redis_broadcast(self.user.user.id, {
             't': 4,
-            'player': self.player.get_displayable(),
-            'enemy': enemy.get_displayable(),
+            'player': self.player.to_dict(),
+            'enemy': enemy.to_dict(),
         })
 
         # Return updated player
@@ -249,7 +251,7 @@ class Giorgio:
     def enemy_hit_mship(self, enemy):
         enemy.hp = 0
 
-        DEBUG('Giorgio', 'Enemy #%i hit mother ship' % enemy.id, broadcast=True)
+        DEBUG('Giorgio', 'Enemy #%i hit mother ship' % enemy.id, broadcast_id=self.user.user.id)
 
         # Remove enemy from stack
         del self.enemies[enemy.id]
@@ -257,25 +259,25 @@ class Giorgio:
         if lifes <= 0:
             # Mother ship is dead, game ends
 
-            DEBUG('Giorgio', 'Mother ship dead, game end', broadcast=True)
+            DEBUG('Giorgio', 'Mother ship dead, game end', broadcast_id=self.user.user.id)
 
-            redis_broadcast('general', {
+            redis_broadcast(self.user.user.id, {
                 't': 3,
                 'lifes': 0,
-                'enemy': enemy.get_displayable(True),
+                'enemy': enemy.to_dict(),
             })
 
-            self.end_game()
+            self.end_game('MShip is dead')
             raise GameException('Game ended', 0)
         else:
             # Mother ship lost a life
             self.mship_lifes = lifes
         # Return updated mship's lifes
 
-        redis_broadcast('general', {
+        redis_broadcast(self.user.user.id, {
             't': 3,
             'lifes': self.mship_lifes,
-            'enemy': enemy.get_displayable(True),
+            'enemy': enemy.to_dict(),
         })
 
         return lifes
@@ -286,7 +288,7 @@ class Giorgio:
     """
     def player_gain_powerup(self, powerup):
 
-        DEBUG('Giorgio', 'Player gain powerup %i (#%i)' % (powerup.type, powerup.id), broadcast=True)
+        DEBUG('Giorgio', 'Player gain powerup %i (#%i)' % (powerup.type, powerup.id), broadcast_id=self.user.user.id)
 
         # Activate powerup
         powerup.activate(self.player)
@@ -307,7 +309,7 @@ class Giorgio:
     """
     def player_use_ability(self, ability):
 
-        DEBUG('Giorgio', 'Player used ability %i' % ability.type, broadcast=True)
+        DEBUG('Giorgio', 'Player used ability %i' % ability.type, broadcast_id=self.user.user.id)
 
         # Perform ability
         ability.run(self)
@@ -321,10 +323,11 @@ class Giorgio:
         # TODO: implement the method
         raise GameException('Not implemented yet')
 
-    def end_game(self):
+    def end_game(self, reason):
         self.running = False
-        redis_broadcast('general', {
+        redis_broadcast(self.user.user.id, {
             't': 5,
+            'message': reason
         })
         # TODO: implement the method
         raise GameException('Not implemented yet')

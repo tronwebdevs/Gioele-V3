@@ -105,9 +105,11 @@ def generate_short_id(verify_set=None):
             return generate_short_id(verify_set)
     return generated
 
-def redis_broadcast(channel, data):
+def redis_broadcast(user_id, data):
     if not DEBUG:
         return
+
+    channel = 'general'
 
     redis_settings = CHANNEL_LAYERS['default']['CONFIG']['hosts'][0]
     channel_name = 'giorgio:games:%s' % channel
@@ -116,7 +118,7 @@ def redis_broadcast(channel, data):
     pub.close()
     return res
 
-def log(who, message, ltype='INFO', force_color=None, broadcast=False):
+def log(who, message, ltype='INFO', force_color=None, broadcast_id=None):
     # Only print logs if DEBUG is set to true
     if not DEBUG:
         return
@@ -146,7 +148,7 @@ def log(who, message, ltype='INFO', force_color=None, broadcast=False):
 
     msg = '%s[%s/%s][%s][%s] %s%s' % (color, tname, func, ltype, who, message, bcolors.ENDC)
 
-    if broadcast:
-        redis_broadcast('general', { 't':0, 'm': msg })
+    if broadcast_id is not None:
+        redis_broadcast(broadcast_id, { 't':0, 'm': msg })
 
     print(msg)
