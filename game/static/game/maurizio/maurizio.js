@@ -60,11 +60,11 @@ function collision(x,i,g){
 
       if (g == 0){
         mainGunBullets.splice(i,1);
-        enemies[k].hp -= mainGun_0.damage;
+        enemies[k].hp -= player.equip.mainGun.damage;
       }
       if (g == 1){
         sideGunBullets.splice(i,1);
-        enemies[k].hp -= sideGun_0.damage;
+        enemies[k].hp -= player.equip.sideGun.damage;
       }
       if (enemies[k].hp <= 0){
         enemies.splice(k,1);

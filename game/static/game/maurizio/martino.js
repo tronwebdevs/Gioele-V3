@@ -35,6 +35,8 @@ function update() {
     enemiesBullets[i].update();
   }
 
+  showRound()
+
   /* TEMP */
         if (document.getElementById("x").checked){
           for (i = 0; i < enemies.length; i++) {
@@ -46,5 +48,25 @@ function update() {
             ctx.stroke();
           }
         }
+}
 
+
+//GRAPHICS
+function checkRound(x){
+  if (currentround != x){
+    currentround = x;
+    canvasround = true;
+    setTimeout(function(){
+      canvasround = false;
+    }, 2000);
+  }
+}
+function showRound(){
+  if (canvasround){
+    let ctx = gameArea.canvas.getContext("2d");
+    ctx.font = "30px Audiowide";
+    ctx.fillStyle = "red";
+    ctx.textAlign = "center";
+    ctx.fillText("Ondata " + currentround, gameArea.canvas.width/2, gameArea.canvas.height/4);
+  }
 }

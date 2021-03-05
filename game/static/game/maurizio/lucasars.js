@@ -27,21 +27,24 @@ let wsConnEl = document.getElementById('ws-conn')
 wsConnEl.innerText = 'open';
 wsConnEl.style.color = 'green';
 
-
+//push new enemy
 gameSocket.onmessage = function (e) {
     const data = JSON.parse(e.data);
     if (data.r === 3) {
         for (let enemy of data.enemies) {
-
             // FIXED ?
             enemies.push(new Enemy(enemy.id, 0, enemy.pos.x, enemy.pos.y, enemy.hp, 15));
-
         }
-        console.log(data.enemies);
-    } else {
+        checkRound(data.round)
         console.log(data);
     }
+    if (data.r === 1) {
+      setPlayer(data.player)
+      console.log("---- PLAYER LOADED")
+    }
 };
+
+
 gameSocket.onclose = function (e) {
     wsConnEl.innerText = 'error';
     wsConnEl.style.color = 'red'

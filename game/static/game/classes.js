@@ -15,7 +15,7 @@ let gameArea = {
   updateBG : function(){
     this.context.drawImage(background, 0, this.bgy);
     this.context.drawImage(background, 0, - 1199 + this.bgy);
-    this.bgy++;
+    this.bgy += 0.2;
     if (this.bgy >= 1200){
       this.bgy = 0;
     }

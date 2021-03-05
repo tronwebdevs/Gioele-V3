@@ -1,13 +1,26 @@
 function startGame() {
-    gameSocket.send(JSON.stringify({a:0}));
-  gameArea.start();
-  player = new Player(test);
-  player.equip.mainGun.check();
+  gameSocket.send(JSON.stringify({a:0}));
+  console.log("---- GAME STARTED")
+
+  //while (Object.keys(player).length != 0) {
+  //  console.log("---- CANVAS CREATED")
+    gameArea.start();
+  //}
+
   document.getElementById("gameStartButton").disabled = true;
 }
 function pauseGame() {
   //gameArea.pause();
   console.log("WIP")
+}
+
+function setPlayer(obj) {
+  let mg = obj.main_gun;
+  let sg = obj.side_gun;
+  player = new Player({
+    mainGun: new MainGun(mg.id, mg.name, mg.cooldown, mg.damage),
+    sideGun: new SideGun(sg.id, sg.name, sg.cooldown, sg.damage)
+  });
 }
 
 

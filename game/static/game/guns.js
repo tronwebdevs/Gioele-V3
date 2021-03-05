@@ -1,15 +1,22 @@
 //  MAIN GUNS
 
-let mainGun_0 = {
-  id : "MG0",
-  name : "Blaster Mk1",
-  cooldown : 1200,
-  damage : 100,
-  isReady : true,
-  check : function(){
-    // TODO:  anticheat
-  },
-  shoot : function(){
+/*cooldown: 1200​​​
+damage: 100​​​
+description: "Nessuna descrizione"​​​
+id: "uLPa"​​​
+name: "Main gun 1"
+​price: 0​​
+type: 0*/
+
+class MainGun {
+  constructor(id, name, cooldown, damage){
+    this.id = id;
+    this.name = name;
+    this.cooldown = cooldown;
+    this.damage = damage;
+    this.isReady = true;
+  }
+  shoot() {
     if (this.isReady) {
       mainGunBullets.push(new Bullet(player.x + player.width/2, player.y, 8, pattern_0));
       mainGunBullets[mainGunBullets.length-1].behavior();
@@ -17,27 +24,22 @@ let mainGun_0 = {
 
       reloadGun("main", this.cooldown);
       let timeout = setTimeout(function(){
-        test.mainGun.isReady = true;
+        player.equip.mainGun.isReady = true;
       }, this.cooldown);
     }
   }
 }
 
-
-
-
-// SIDE GUNS
-
-let sideGun_0 = {
-  id : "SG0",
-  name : "Cannone a Onde",
-  cooldown : 3000,
-  damage : 40,
-  isReady : true,
-  check : function(){
-    // TODO:  anticheat
-  },
-  shoot : function(){
+// SIDE GUN
+class SideGun {
+  constructor(id, name, cooldown, damage){
+    this.id = id;
+    this.name = name;
+    this.cooldown = cooldown;
+    this.damage = damage;
+    this.isReady = true;
+  }
+  shoot() {
     if (this.isReady) {
       let tempx = player.x + player.width/2;
       sideGunBullets.push(new Bullet(tempx, player.y, 3, pattern_1, behavior_0));
@@ -53,7 +55,7 @@ let sideGun_0 = {
 
       reloadGun("side", this.cooldown);
       let timeout = setTimeout(function(){
-        test.sideGun.isReady = true;
+        player.equip.sideGun.isReady = true;
       }, this.cooldown);
     }
   }
