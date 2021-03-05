@@ -108,7 +108,7 @@ class Giorgio:
 
         # Return if enemies from previous round are still alive
         if self._generation == 0 and len(self.enemies) > 0:
-            return gen_powerups, gen_enemies, self.round
+            return gen_powerups, gen_enemies, self.round - 1
 
         # Increment generations counter
         self._generation += 1

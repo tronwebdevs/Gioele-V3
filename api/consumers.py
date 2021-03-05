@@ -273,16 +273,17 @@ class GameConsumer(WebsocketConsumer):
         if giorgio.running:
             # Run algorithm witch generates entities and get result
             gen_enemies, gen_powerups, current_round = giorgio.generate_entities()
-            gen_enemies = list(map(lambda e: e.to_safe_dict(), gen_enemies))
-            gen_powerups = list(map(lambda p: p.to_safe_dict(), gen_powerups))
-            DEBUG('WebSocket', 'Sending generated entities')
-            # Send to client generated entity lists
-            self.send_dict({
-                'r': RESPONSE_GENERATED_ENTITIES,
-                'round': current_round,
-                'enemies': gen_enemies,
-                'powerups': gen_powerups
-            })
+            if len(gen_enemies) > 0:
+                gen_enemies = list(map(lambda e: e.to_safe_dict(), gen_enemies))
+                gen_powerups = list(map(lambda p: p.to_safe_dict(), gen_powerups))
+                DEBUG('WebSocket', 'Sending generated entities')
+                # Send to client generated entity lists
+                self.send_dict({
+                    'r': RESPONSE_GENERATED_ENTITIES,
+                    'round': current_round,
+                    'enemies': gen_enemies,
+                    'powerups': gen_powerups
+                })
         else:
             DEBUG('WebSocket', 'Generation prevented as the game is stopped')
 
