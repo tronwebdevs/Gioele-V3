@@ -212,6 +212,7 @@ class Giorgio:
 
         redis_broadcast(self.user.user.id, {
             't': 2,
+            'gun': gun_type,
             'enemy': enemy.to_dict(),
         })
 
