@@ -108,16 +108,16 @@
     new Chart(document.getElementById('cpu-chart'), {
         type: 'line',
         data: {
-            labels: [{% for row in charts_data.cpu %}'{{ row.at|date:"H:m" }}',{% endfor %}
+            labels: [{% for row in charts_data.cpu %}'{{ row.at|date:"H:i" }}',{% endfor %}
             ],
             datasets: [
                 {
                     data: {{ charts_data.cpu|model_to_jsarray }},
                     lineTension: 0,
-                    backgroundColor: 'rgba(0,123,255,0.1)',
-                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(94,186,0,0.1)',
+                    borderColor: '#5eba00',
                     borderWidth: 4,
-                    pointBackgroundColor: '#007bff',
+                    pointBackgroundColor: '#5eba00',
                 },
             ],
         },
@@ -127,16 +127,16 @@
     new Chart(document.getElementById('mem-chart'), {
         type: 'line',
         data: {
-            labels: [{% for row in charts_data.mem %}'{{ row.at|date:"H:m" }}',{% endfor %}
+            labels: [{% for row in charts_data.mem %}'{{ row.at|date:"H:i" }}',{% endfor %}
             ],
             datasets: [
                 {
                     data: {{ charts_data.mem|model_to_jsarray }},
                     lineTension: 0,
-                    backgroundColor: 'rgba(250,70,84,0.1)',
-                    borderColor: '#fa4654',
+                    backgroundColor: 'rgba(0,123,255,0.1)',
+                    borderColor: '#007bff',
                     borderWidth: 4,
-                    pointBackgroundColor: '#fa4654',
+                    pointBackgroundColor: '#007bff',
                 },
             ],
         },

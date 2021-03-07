@@ -3,30 +3,12 @@
 {% load gadmin_extras %}
 {% block title %}User{% endblock %}
 {% block content %}
-{% if error %}
-<div class="row">
-    <div class="col-12">
-        <div class="alert alert-danger py-2" role="alert">
-            {{ error }}
-        </div>
-    </div>
-</div>
-{% endif %}
-{% if message %}
-<div class="row">
-    <div class="col-12">
-        <div class="alert alert-success py-2" role="alert">
-            {{ message }}
-        </div>
-    </div>
-</div>
-{% endif %}
 {% if ban %}
 <div class="row">
     <div class="col-12">
         <div class="alert alert-warning py-2" role="alert">
             This user is currently banned for: "{{ ban.reason }}" <br>
-            Banned by {{ ban.by.username }} on {{ ban.datetime|date }}
+            Banned by {{ ban.by.username }} on {{ ban.datetime|date:"d/m/Y H:i" }}
         </div>
     </div>
 </div>
@@ -63,7 +45,7 @@
                     <div class="row mb-3">
                         <label for="inputBalance" class="col-sm-2 col-form-label">Balance</label>
                         <div class="col-sm-10">
-                            <input name="balance" min="0" type="number" class="form-control" id="inputBalance" value="{{ user.balance }}">
+                            <input name="balance" min="0" step="0.01" type="number" class="form-control" id="inputBalance" value="{{ user.balance }}">
                         </div>
                     </div>
                     <div class="row mb-3">

@@ -136,7 +136,7 @@ class Player:
             'killed': self.killed.to_dict(),
         }
         obj['main_gun'] = self.main_gun.to_dict()
-        obj['side_gun'] = self.side_gun.to_dict()
+        obj['side_gun'] = None if self.side_gun is None else self.side_gun.to_dict()
         return obj
 
     def to_safe_dict(self):
@@ -150,6 +150,6 @@ class Player:
             'gbucks': self.gbucks,
             'exp': self.exp,
             'main_gun': self.main_gun.to_safe_dict(),
-            'side_gun': self.side_gun.to_safe_dict(),
+            'side_gun': None if self.side_gun is None else self.side_gun.to_safe_dict(),
             'skin': self.skin.to_safe_dict(),
         }

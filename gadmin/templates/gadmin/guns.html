@@ -6,6 +6,7 @@
     <div class="col-12 col-lg-6 mb-4">
         <div class="card">
             <div class="card-body">
+                <h6 class="card-title">Gun list</h6>
                 <div class="table-responsive">
                     <table class="table table-striped table-sm">
                         <thead>
@@ -19,7 +20,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for gun in object_list %}
+                            {% for gun in guns %}
                             <tr>
                                 <td>{{ gun.id }}</td>
                                 <td>{{ gun.name }}</td>
@@ -38,6 +39,44 @@
                 </div>
                 <div class="float-end">
                     <a href="{% url 'gadmin:new_gun' %}" class="btn btn-sm btn-primary">Create</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Bullet patterns</h6>
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Updated</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pattern in patterns %}
+                            <tr>
+                                <td>{{ pattern.id }}</td>
+                                <td>{{ pattern.name }}</td>
+                                <td>{{ pattern.created_at|date:"d/m/Y H:i" }}</td>
+                                <td>{{ pattern.created_at|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'gadmin:pattern' pattern.id %}" class="action-link">
+                                        <span class="action-icon" data-feather="edit"></span>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="float-end">
+                    <a href="{% url 'gadmin:new_pattern' %}" class="btn btn-sm btn-primary">Create</a>
                 </div>
             </div>
         </div>

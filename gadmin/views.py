@@ -3,23 +3,18 @@ import subprocess
 import hashlib
 
 import psutil
-from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.views import generic
 from django.contrib.auth import authenticate
 from django.urls import reverse
 from django.utils import timezone
+from django.shortcuts import redirect
 from django.contrib.auth.forms import AuthenticationForm
 
+from gadmin.utils import valid_string, valid_number, raise_if_not_valid, get_percentage
 from api.utils import generate_short_id
-from api.models import User, GUser, BannedUser, Gun, Skin, GameLog, VisitLog, Stat, PurchaseLog, AdminLog
-
-
-def get_percentage(current, last):
-    if last != 0:
-        return str((current - last) * 100 / last) + '%'
-    else:
-        return '+0%'
+from api.models import User, GUser, BannedUser, Gun, Skin, GameLog, \
+                        VisitLog, Stat, PurchaseLog, AdminLog, BulletPattern
 
 
 def get_user(user_id):
@@ -37,6 +32,18 @@ def get_selected_items(dataset, user_dataset):
                 mi['owned'] = True
                 break
     return dataset
+
+def get_messages(request, key):
+    err_key = key + '_error'
+    error = request.session.get(err_key)
+    if error is not None:
+        del request.session[err_key]
+    mess_key = key + '_message'
+    message = request.session.get(mess_key)
+    if message is not None:
+        del request.session[mess_key]
+    return { 'error': error, 'message': message }
+    
 
 
 def index(request):
@@ -78,51 +85,66 @@ class LoginView(generic.TemplateView):
         if user is not None and user.is_staff:
             request.session['admin_id'] = user.id
             request.session['admin_name'] = user.username
-            return HttpResponseRedirect(reverse('gadmin:index'))
-        context = {'message': 'Dati non validi'}
-        return self.render_to_response(context)
+            return redirect('gadmin:index')
+        else:
+            return self.render_to_response({ 'message': 'Dati non validi' })
 
 
 def users(request):
-    context = {
-        'error': 'An error occurred' if request.GET.get('m') == 'err' else None,
-        'message': 'Completed successfully' if request.GET.get('m') == 'ok' else None,
+    return render(request, 'gadmin/users.html', {
         'users': GUser.objects.filter(user__is_active=True),
         'banned': BannedUser.objects.all(),
-    }
-    return render(request, 'gadmin/users.html', context)
+        **get_messages(request, 'users')
+    })
 
 
 class UserBanView(generic.View):
     def get(self, request, pk):
         user = get_user(pk)
         if user is None:
-            return HttpResponseRedirect(reverse('gadmin:users'))
-        return render(request, 'gadmin/ban_user.html', { 'user': user })
+            return redirect('gadmin:users')
+        return render(request, 'gadmin/ban_user.html', {
+            'user': user,
+            **get_messages(request, 'banuser')
+        })
+
     def post(self, request, pk):
         user = get_user(pk)
-        username = request.POST.get('username')
-        reason = request.POST.get('reason')
-        if user is None or (reason is None or reason == '') or user.user.username != username:
-            return HttpResponseRedirect(reverse('gadmin:users') + '?m=err')
-        admin = User.objects.get(pk=request.session.get('admin_id'))
-        user_id = user.user.id
-        BannedUser.objects.ban(
-            user_id=user_id,
-            reason=reason,
-            by=admin
-        )
-        AdminLog.objects.create(action=f'Banned user #{user_id}', by=admin)
-        return HttpResponseRedirect(reverse('gadmin:users') + '?m=ok')
+        try:
+            if user is None:
+                return redirect('gadmin:users')
+            
+            username = request.POST.get('username')
+            reason = raise_if_not_valid(request.POST.get('reason'), valid_string, 'Reason')
+            if user.user.username != username:
+                raise Exception('Username validation failed')
+
+            admin = User.objects.get(pk=request.session.get('admin_id'))
+            user_id = user.user.id
+            BannedUser.objects.ban(
+                user_id=user_id,
+                reason=reason,
+                by=admin
+            )
+            AdminLog.objects.create(action=f'Banned user #{user_id}', by=admin)
+        except Exception as e:
+            request.session['banuser_error'] = str(e)
+            return redirect('gadmin:user', pk=pk)
+        
+        request.session['users_message'] = 'Operation completed successfully'
+        return redirect('gadmin:users')
 
 
 class UserInventoryView(generic.View):
     def get(self, request, pk=None):
-        return HttpResponseRedirect(reverse('gadmin:users'))
+        return redirect('gadmin:user', pk=pk)
+
     def post(self, request, pk=None):
         user = get_user(pk)
         if user is None:
-            return HttpResponseRedirect(reverse('gadmin:users')  + '?m=err')
+            request.session['users_error'] = 'User not found'
+            return redirect('gadmin:users')
+        
         user.inventory.main_guns = None
         for gid in request.POST.getlist('main_guns'):
             if len(Gun.objects.filter(pk=gid)) > 0:
@@ -140,13 +162,22 @@ class UserInventoryView(generic.View):
             action=f'Edited user #{user.user.id} inventory',
             by=User.objects.get(pk=request.session.get('admin_id'))
         )
-        return HttpResponseRedirect(reverse('gadmin:users') + '?m=ok')
+        request.session['user_message'] = 'Operation completed successfully'
+        return redirect('gadmin:user', pk=pk)
 
 
 class UserModelView(generic.TemplateView):
     template_name = 'gadmin/user_form.html'
 
-    def _craft_context(self, user):
+    def get(self, request, pk=None):
+        if pk is not None:
+            user = get_user(pk)
+            if user is None:
+                request.session['users_error'] = 'User not found'
+                return redirect('gadmin:users')
+        else:
+            user = GUser(type=0, price=0, cooldown=0, damage=0)
+        
         user_games = GameLog.objects.filter(user=user).order_by('exp_gained')
         games = None
         if len(user_games) > 0:
@@ -164,7 +195,8 @@ class UserModelView(generic.TemplateView):
         ban = None
         if not user.user.is_active:
             ban = BannedUser.objects.get(user=user)
-        return {
+
+        return self.render_to_response({
             'user': user,
             'main_guns': get_selected_items(
                 Gun.objects.filter(type=0),
@@ -181,18 +213,10 @@ class UserModelView(generic.TemplateView):
             'games': games,
             'purchases': purchases,
             'ban': ban,
-        }
+            **get_messages(request, 'user'),
+        })
 
-    def get(self, request, pk=None):
-        if pk is not None:
-            user = get_user(pk)
-            if user is None:
-                return HttpResponseRedirect(reverse('gadmin:users'))
-        else:
-            user = GUser(type=0, price=0, cooldown=0, damage=0)
-        return self.render_to_response(self._craft_context(user))
-
-    def post(self, request, pk):
+    def post(self, request, pk=None):
         user_list = GUser.objects.filter(pk=pk)
         extra = ['message', 'User updated successfully']
         if len(user_list) == 0:
@@ -200,27 +224,30 @@ class UserModelView(generic.TemplateView):
         else:
             user = user_list[0]
         try:
-            user.user.username = request.POST.get('username')
-            user.user.email = request.POST.get('email')
+            user.user.username = raise_if_not_valid(request.POST.get('username'), valid_string, 'Username')
+            user.user.email = raise_if_not_valid(request.POST.get('email'), valid_string, 'Email')
             user.user.save()
             user.auth = request.POST.get('auth') == 'on'
             items = ('main_gun', 'side_gun', 'skin')
             for item in items:
-                given_val = request.POST.get(item)
-                val = None if given_val == '' else given_val
+                val = request.POST.get(item)
+                if not valid_string(val):
+                    val = None
                 setattr(user, item, val)
-            user.balance = request.POST.get('balance')
+            user.balance = float(request.POST.get('balance'))
             user.save()
         except Exception as e:
             extra[0] = 'error'
             extra[1] = str(e)
-        context = self._craft_context(user)
-        context[extra[0]] = extra[1]
+
+        request.session[f'user_{extra[0]}'] = extra[1]
+
         AdminLog.objects.create(
             action=f'Edited user #{user.user.id} profile',
             by=User.objects.get(pk=request.session.get('admin_id'))
         )
-        return self.render_to_response(context)
+
+        return redirect('gadmin:user', pk=pk)
 
 
 def hardware(request):
@@ -241,8 +268,8 @@ def hardware(request):
     }
     if Stat.objects.filter(key='cpu').count() > 0:
         context['charts_data'] = {
-            'cpu': Stat.objects.filter(key='cpu')[:10],
-            'mem': Stat.objects.filter(key='mem')[:10],
+            'cpu': list(Stat.objects.filter(key='cpu'))[:10],
+            'mem': list(Stat.objects.filter(key='mem'))[:10],
         }
     return render(request, 'gadmin/hardware.html', context)
 
@@ -251,13 +278,19 @@ class StatsView(generic.TemplateView):
     template_name = 'gadmin/stats.html'
 
 
-class GBuckView(generic.TemplateView):
-    template_name = 'gadmin/gbuck.html'
+class GBucksView(generic.TemplateView):
+    template_name = 'gadmin/gbucks.html'
 
 
-class GunsView(generic.ListView):
-    model = Gun
+class GunsView(generic.TemplateView):
     template_name = 'gadmin/guns.html'
+
+    def get(self, request):
+        return self.render_to_response({
+            'guns': Gun.objects.all(),
+            'patterns': BulletPattern.objects.all(),
+            **get_messages(request, 'guns'),
+        })
 
 
 class GunModelView(generic.TemplateView):
@@ -267,43 +300,133 @@ class GunModelView(generic.TemplateView):
         if pk is not None:
             try:
                 gun = Gun.objects.get(pk=pk)
-            except Gun.DoesNotExist:
-                return HttpResponseRedirect(reverse('gadmin:guns'))
+            except Gun.DoesNotExist as e:
+                request.session['gun_error'] = str(e)
         else:
             gun = Gun(type=0, price=0, cooldown=0, damage=0)
-        return self.render_to_response({ 'gun': gun })
+        
+        patterns = list(map(lambda bp: bp.to_dict(), BulletPattern.objects.all()))
+        return self.render_to_response({
+            'gun': gun.to_dict(),
+            'patterns': patterns,
+            **get_messages(request, 'gun'),
+        })
 
-    def post(self, request, *args, **kwargs):
-        pk = request.path.split('/')[-2]
+    def post(self, request, pk=None, *args, **kwargs):
         gun_list = Gun.objects.filter(pk=pk)
+
+        form_type = request.POST.get('form_type')
+        if form_type != 'bullets' and form_type != 'info':
+            return redirect('gadmin:guns')
+
         if len(gun_list) == 0:
             gun = Gun(id=pk)
             action = 'Create'
         else:
             gun = gun_list[0]
             action = 'Edit'
-        try:
-            gun.name = request.POST.get('name')
-            gun.type = request.POST.get('type')
-            gun.description = request.POST.get('description')
-            gun.price = request.POST.get('price')
-            gun.damage = request.POST.get('damage')
-            gun.cooldown = request.POST.get('cooldown')
-            gun.save()
-        except Exception as e:
-            return self.render_to_response({ 'gun': gun, 'message': str(e) })
         
-        AdminLog.objects.create(
-            action=f'{action}ed gun #{gun.id}',
-            by=User.objects.get(pk=request.session.get('admin_id'))
-        )
+        try:
+            if form_type == 'info':
+                gun.name = raise_if_not_valid(request.POST.get('name'), valid_string, 'Name')
+                gun_type = int(request.POST.get('type'))
+                if gun_type != 0 and gun_type != 1:
+                    raise Exception('Type: Invalid value')
+                gun.type = gun_type
+                gun.description = raise_if_not_valid(request.POST.get('description'), valid_string, 'Description')
+                gun.price = float(request.POST.get('price'))
+                gun.damage = int(request.POST.get('damage'))
+                gun.cooldown = int(request.POST.get('cooldown'))
+            else:
+                conf_pass = request.POST.get('conf_pass')
+                auth_user = authenticate(
+                    username=request.session.get('admin_name'),
+                    password=conf_pass
+                )
+                if auth_user is None or auth_user.id != request.session.get('admin_id'):
+                    raise Exception('Authentication failed')
+                else:
+                    gun.shoot = raise_if_not_valid(request.POST.get('shoot'), valid_string, 'Shoot')
+                    gun.pattern = BulletPattern.objects.get(pk=request.POST.get('pattern'))
+            gun.save()
+            AdminLog.objects.create(
+                action=f'{action}ed gun #{gun.id}',
+                by=User.objects.get(pk=request.session.get('admin_id'))
+            )
+            request.session['gun_message'] = 'Operation completed successfully'
+        except Exception as e:
+            request.session['gun_error'] = str(e)
 
-        return HttpResponseRedirect(reverse('gadmin:guns'))
+        return redirect('gadmin:gun', pk=pk)
 
 
-class SkinsView(generic.ListView):
-    model = Skin
+class PatternModelView(generic.TemplateView):
+    template_name = 'gadmin/pattern_form.html'
+
+    def get(self, request, pk=None):
+        if pk is not None:
+            try:
+                pattern = BulletPattern.objects.get(pk=pk)
+            except BulletPattern.DoesNotExist as e:
+                perror = request.session.get('pattern_error')
+                if perror is None:
+                    perror = str(e)
+                else:
+                    del request.session['pattern_error']
+
+                request.session['guns_error'] = perror
+                return redirect('gadmin:guns')
+        else:
+            pattern = BulletPattern(name='', function='', behavior=None)
+        
+        return self.render_to_response({
+            'pattern': pattern.to_dict(),
+            **get_messages(request, 'pattern'),
+        })
+
+    def post(self, request, pk=None, *args, **kwargs):
+        pattern_list = BulletPattern.objects.filter(pk=pk)
+
+        if len(pattern_list) == 0:
+            pattern = BulletPattern(id=pk)
+            action = 'Create'
+        else:
+            pattern = pattern_list[0]
+            action = 'Edit'
+        
+        try:
+            conf_pass = request.POST.get('conf_pass')
+            auth_user = authenticate(
+                username=request.session.get('admin_name'),
+                password=conf_pass
+            )
+            if auth_user is None or auth_user.id != request.session.get('admin_id'):
+                raise Exception('Authentication failed')
+
+            pattern.name = raise_if_not_valid(request.POST.get('name'), valid_string, 'Name')
+            pattern.function = raise_if_not_valid(request.POST.get('function'), valid_string, 'Function')
+            pattern.behavior = raise_if_not_valid(request.POST.get('behavior'), valid_string, 'Function')
+            pattern.updated_at = timezone.now()
+            pattern.save()
+            AdminLog.objects.create(
+                action=f'{action}ed pattern #{pattern.id}',
+                by=User.objects.get(pk=request.session.get('admin_id'))
+            )
+            request.session['pattern_message'] = 'Operation completed successfully'
+        except Exception as e:
+            request.session['pattern_error'] = str(e)
+
+        return redirect('gadmin:pattern', pk=pk)
+
+
+class SkinsView(generic.TemplateView):
     template_name = 'gadmin/skins.html'
+
+    def get(self, request):
+        return self.render_to_response({
+            'skins': Skin.objects.all(),
+            **get_messages(request, 'skins'),
+        })
 
 
 class SkinModelView(generic.TemplateView):
@@ -313,14 +436,24 @@ class SkinModelView(generic.TemplateView):
         if pk is not None:
             try:
                 skin = Skin.objects.get(pk=pk)
-            except Skin.DoesNotExist:
-                return HttpResponseRedirect(reverse('gadmin:skins'))
+            except Skin.DoesNotExist as e:
+                skin_error = request.session.get('skin_error')
+                if skin_error is None:
+                    skin_error = str(e)
+                else:
+                    del request.session['skin_error']
+
+                request.session['skins_error'] = skin_error
+                return redirect('gadmin:skins')
         else:
             skin = Skin(price=0)
-        return self.render_to_response({ 'skin': skin })
+        
+        return self.render_to_response({
+            'skin': skin,
+            **get_messages(request, 'skin'),
+        })
 
-    def post(self, request, *args, **kwargs):
-        pk = request.path.split('/')[-2]
+    def post(self, request, pk=None, *args, **kwargs):
         skin_list = Skin.objects.filter(pk=pk)
         if len(skin_list) == 0:
             skin = Skin(id=pk)
@@ -329,19 +462,19 @@ class SkinModelView(generic.TemplateView):
             skin = skin_list[0]
             action = 'Edit'
         try:
-            skin.name = request.POST.get('name')
-            skin.description = request.POST.get('description')
-            skin.price = request.POST.get('price')
+            skin.name = raise_if_not_valid(request.POST.get('name'), valid_string, 'Name')
+            skin.description = raise_if_not_valid(request.POST.get('description'), valid_string, 'Description')
+            skin.price = float(request.POST.get('price'))
             skin.save()
+            AdminLog.objects.create(
+                action=f'{action}ed skin #{skin.id}',
+                by=User.objects.get(pk=request.session.get('admin_id'))
+            )
+            request.session['skin_message'] = 'Operation completed successfully'
         except Exception as e:
-            return self.render_to_response({ 'skin': skin, 'message': str(e) })
+            request.session['skin_error'] = str(e)
 
-        AdminLog.objects.create(
-            action=f'{action}ed skin #{skin.id}',
-            by=User.objects.get(pk=request.session.get('admin_id'))
-        )
-
-        return HttpResponseRedirect(reverse('gadmin:skins'))
+        return redirect('gadmin:skin', pk=pk)
 
 
 def admin_logs(request):
@@ -352,4 +485,4 @@ def logout(request):
     del request.session['admin_id']
     del request.session['admin_name']
 
-    return HttpResponseRedirect(reverse('gadmin:login'))
+    return redirect('gadmin:login')

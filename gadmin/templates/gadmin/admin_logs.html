@@ -9,8 +9,7 @@
                 {% if logs %}
 <pre class="m-0">
 {% for log in logs %}
-[{{ log.datetime|date:"SHORT_DATE_FORMAT" }} {{ log.datetime|time:"H:i:s" }}][{{ log.by.username }}] {{ log.action }}
-{% endfor %}
+[{{ log.datetime|date:"SHORT_DATE_FORMAT" }} {{ log.datetime|time:"H:i:s" }}][{{ log.by.username }}] {{ log.action }}{% endfor %}
 </pre>
                 {% else %}
                 <span class="text-muted">No logs found</span>

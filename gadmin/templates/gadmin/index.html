@@ -111,7 +111,7 @@
     new Chart(document.getElementById('users-chart'), {
         type: 'line',
         data: {
-            labels: [{% for row in charts_data.users %}'{{ row.at|date:"H:m" }}',{% endfor %}
+            labels: [{% for row in charts_data.users %}'{{ row.at|date:"H:i" }}',{% endfor %}
             ],
             datasets: [
                 {
@@ -138,7 +138,7 @@
     new Chart(document.getElementById('matches-chart'), {
         type: 'line',
         data: {
-            labels: [{% for row in charts_data.games %}'{{ row.at|date:"H:m" }}',{% endfor %}
+            labels: [{% for row in charts_data.games %}'{{ row.at|date:"H:i" }}',{% endfor %}
             ],
             datasets: [
                 {

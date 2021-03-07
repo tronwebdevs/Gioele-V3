@@ -1,0 +1,61 @@
+{% extends 'gadmin/page.html' %}
+{% load static %}
+{% block title %}Bullet pattern{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12 col-lg-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <form action="{% url 'gadmin:pattern' pattern.id %}" method="POST">
+                    {% csrf_token %}
+                    <div class="row mb-3">
+                        <label for="inputName" class="col-sm-2 col-form-label">Name</label>
+                        <div class="col-sm-10">
+                            <input type="text" name="name" class="form-control" id="inputName" value="{{ pattern.name }}">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputBehavior" class="col-sm-2 col-form-label">Behavior</label>
+                        <div class="col-sm-10">
+                            <textarea name="behavior" class="form-control" id="inputBehavior" rows="8" placeholder="Not set">{% if pattern.behavior %}{{ pattern.behavior }}{% endif %}</textarea>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputFunc" class="col-sm-2 col-form-label">Function</label>
+                        <div class="col-sm-10">
+                            <textarea name="function" class="form-control" id="inputFunc" rows="8" placeholder="Not set">{{ pattern.function }}</textarea>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputPass" class="col-sm-2 col-form-label">Confirm password</label>
+                        <div class="col-sm-10">
+                            <input name="conf_pass" class="form-control" id="inputPass">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <a href="{% url 'gadmin:guns' %}" class="btn btn-outline-danger">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Help</h6>
+                <p class="mb-1">Available variables in behavior function execution:</p>
+                <ul>
+                    <li><code>console</code>: javascript default console</li>
+                    <li><code>Math</code>: javascript math object</li>
+                    <li><code>this</code>: bullet object</li>
+                </ul>
+                <p class="mb-1">Available variables in pattern function execution:</p>
+                <ul class="mb-0">
+                    <li><code>console</code>: javascript default console</li>
+                    <li><code>Math</code>: javascript math object</li>
+                    <li><code>this</code>: bullet object</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

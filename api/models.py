@@ -10,6 +10,30 @@ from .classes import UserSkin, UserGun
 
 
 # GAME RELATED MODELS
+class BulletPattern(models.Model):
+    id = models.CharField(primary_key=True, max_length=4, editable=False, default=generate_short_id)
+    name = models.CharField(max_length=128)
+    function = models.CharField(max_length=1024)
+    behavior = models.CharField(max_length=1024, null=True, default=None)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
+
+    def to_safe_dict(self):
+        return {
+            'id': self.id,
+            'function': self.function,
+            'behavior': self.behavior,
+        }
+    
+    def to_dict(self):
+        return {
+            **self.to_safe_dict(),
+            'name': self.name,
+            'created_at': str(self.created_at),
+            'updated_at': str(self.updated_at),
+        }
+
+
 class Gun(models.Model):
     MAIN_GUN = 0
     SIDE_GUN = 1
@@ -27,6 +51,8 @@ class Gun(models.Model):
     description = models.CharField(max_length=256)
     cooldown = models.IntegerField()
     damage = models.IntegerField()
+    shoot = models.CharField(max_length=1024)
+    pattern = models.ForeignKey(BulletPattern, on_delete=models.SET_NULL, null=True)
 
     def get_displayable_id(self):
         return hashlib.md5(str(self.id).encode()).hexdigest()
@@ -37,15 +63,20 @@ class Gun(models.Model):
             'name': self.name,
             'cooldown': self.cooldown,
             'damage': self.damage,
+            'shoot': self.shoot,
+            'pattern': None if self.pattern is None else self.pattern.to_safe_dict(),
         }
 
     def to_dict(self):
-        return {
+        obj = {
             **self.to_safe_dict(),
             'type': self.type,
             'price': self.price,
             'description': self.description,
         }
+        if self.pattern is not None:
+            obj['pattern'] = self.pattern.to_dict()
+        return obj
 
     def __str__(self):
         return self.name

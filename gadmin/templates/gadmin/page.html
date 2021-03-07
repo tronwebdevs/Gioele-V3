@@ -84,10 +84,10 @@
                     </h6>
                     <ul class="nav flex-column mb-2">
                         <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == "gbuck" %}active{% endif %}"
-                                aria-current="page" href="{% url 'gadmin:gbuck' %}">
+                            <a class="nav-link {% if request.resolver_match.url_name == "gbucks" %}active{% endif %}"
+                                aria-current="page" href="{% url 'gadmin:gbucks' %}">
                                 <span data-feather="activity"></span>
-                                GBuck
+                                GBucks
                             </a>
                         </li>
                         <li class="nav-item">
@@ -126,6 +126,23 @@
                     <h4>{% block title %}{% endblock %}</h4>
                 </div>
 
+                {% if message or error %}
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            {% if error %}
+                                <div class="alert alert-danger py-2" role="alert">
+                                    {{ error }}
+                                </div>
+                            {% endif %}
+                            {% if message %}
+                                <div class="alert alert-success py-2" role="alert">
+                                    {{ message }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+                
                 {% block content %}{% endblock %}
             </main>
         </div>

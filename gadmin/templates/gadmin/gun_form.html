@@ -6,13 +6,9 @@
     <div class="col-12 col-lg-6 mb-3">
         <div class="card">
             <div class="card-body">
-                {% if message %}
-                    <div class="alert alert-danger py-2" role="alert">
-                        {{ message }}
-                    </div>
-                {% endif %}
                 <form action="{% url 'gadmin:gun' gun.id %}" method="POST">
                     {% csrf_token %}
+                    <input type="text" style="display:none" name="form_type" value="info" />
                     <div class="row mb-3">
                         <label for="inputName" class="col-sm-2 col-form-label">Name</label>
                         <div class="col-sm-10">
@@ -38,7 +34,7 @@
                     <div class="row mb-3">
                         <label for="inputPrice" class="col-sm-2 col-form-label">Price</label>
                         <div class="col-sm-10">
-                            <input name="price" min="0" type="number" class="form-control" id="inputPrice" value="{{ gun.price }}">
+                            <input name="price" min="0" step="0.01" type="number" class="form-control" id="inputPrice" value="{{ gun.price }}">
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -51,6 +47,57 @@
                         <label for="inputCooldown" class="col-sm-2 col-form-label">Cooldown</label>
                         <div class="col-sm-10">
                             <input name="cooldown" min="0" type="number" class="form-control" id="inputCooldown" value="{{ gun.cooldown }}">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <a href="{% url 'gadmin:guns' %}" class="btn btn-outline-danger">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <form action="{% url 'gadmin:gun' gun.id %}" method="POST">
+                    {% csrf_token %}
+                    <input type="text" style="display:none" name="form_type" value="bullets" />
+                    <div class="row mb-3">
+                        <label for="inputPattern" class="col-sm-2 col-form-label">Bullets pattern</label>
+                        <div class="col-sm-10">
+                            <select class="form-select" name="pattern" id="inputPattern">
+                                <option value="" {% if gun.pattern == None %}selected{% endif %}>-- No pattern selected --</option>
+                                {% for pattern in patterns %}
+                                <option value="{{ pattern.id }}" {% if gun.pattern != None and pattern.id == gun.pattern.id %}selected{% endif %}>{{ pattern.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputShoot" class="col-sm-2 col-form-label">Shoot function</label>
+                        <div class="col-sm-10">
+                            <textarea name="shoot" class="form-control" id="inputShoot" rows="8">{{ gun.shoot }}</textarea>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputHelp" class="col-sm-2 col-form-label">Available variables</label>
+                        <div class="col-sm-10">
+                            <ul class="mb-0" id="inputHelp">
+                                <li><code>console</code>: javascript default console</li>
+                                <li><code>Math</code>: javascript math object</li>
+                                <li><code>Bullet</code>: bullet class</li>
+                                <li><code>bullets</code>: bullets array</li>
+                                <li><code>player</code>: player object</li>
+                                <li><code>pattern</code>: pattern function</li>
+                                <li><code>behavior</code>: behavior object</li>
+                                <li><code>setInter</code>: window.setInterval (javascript function)</li>
+                                <li><code>clearInter</code>: window.clearInterval (javascript function)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputPass" class="col-sm-2 col-form-label">Confirm password</label>
+                        <div class="col-sm-10">
+                            <input type="password" name="conf_pass" class="form-control" id="inputPass">
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary">Save</button>
