@@ -1,13 +1,5 @@
 //  MAIN GUNS
 
-/*cooldown: 1200​​​
-damage: 100​​​
-description: "Nessuna descrizione"​​​
-id: "uLPa"​​​
-name: "Main gun 1"
-​price: 0​​
-type: 0*/
-
 class MainGun {
   constructor(id, name, cooldown, damage){
     this.id = id;

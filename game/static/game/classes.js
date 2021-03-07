@@ -38,7 +38,10 @@ class Player {
   }
   update() {
     let ctx = gameArea.context;
-    ctx.drawImage(skin, this.x, this.y)
+    ctx.save();
+    ctx.setTransform(1, 0, -Math.round(this.acc/FPS)/70, 1, this.x, this.y);
+    ctx.drawImage(skin, 0, 0)
+    ctx.restore();
   }
   changePos() {
     //accelerazione
