@@ -3,10 +3,58 @@
 {% block title %}GBucks{% endblock %}
 {% block content %}
 <div class="row">
-    <div class="col-12 col-lg-6 mb-3">
+    <div class="col-12 col-lg-6 mb-4">
         <div class="card">
             <div class="card-body">
-                <h1 class="display-4 text-muted text-center">Coming soon</h1>
+                <h6 class="card-title">Recent purchases</h6>
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>By</th>
+                                <th>Item ID</th>
+                                <th>Price</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for purchase in purchases %}
+                            <tr>
+                                <td>{{ purchase.id }}</td>
+                                <td>{{ purchase.user.id }}</td>
+                                <td>{{ purchase.item }}</td>
+                                <td>{{ purchase.price }}</td>
+                                <td>{{ purchase.datetime|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <!-- <a href="{% url 'gadmin:user' guser.user.id %}" class="action-link">
+                                        <span class="action-icon" data-feather="edit"></span>
+                                    </a>
+                                    <a href="{% url 'gadmin:ban_user' guser.user.id %}" class="action-link">
+                                        <span class="action-icon" data-feather="minus-circle"></span>
+                                    </a> -->
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Stats</h6>
+                <ul class="list-unstyled">
+                    <li>
+                        <b>Circulation: </b> {{ circulation }} gbucks
+                    </li>
+                    <li>
+                        <b>Tot transactions volume: </b> {{ trans_vol }} gbucks
+                    </li>
+                </ul>
             </div>
         </div>
     </div>

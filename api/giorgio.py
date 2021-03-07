@@ -14,10 +14,10 @@ from .models import GameLog
 
 
 class Giorgio:
-    def __init__(self, user, visit_id, abilities, main_gun_id, side_gun_id, skin_id):
+    def __init__(self, user, visit_id, abilities, main_gun, side_gun, skin):
         self.user = user
         self.visit_id = visit_id
-        self.player = Player(user.user.id, abilities, main_gun_id, side_gun_id, skin_id)
+        self.player = Player(user.id, abilities, main_gun, side_gun, skin)
         self.game_id = uuid4()
         self.running = False
         self.enemies = dict()
@@ -29,10 +29,10 @@ class Giorgio:
 
     def start_game(self):
 
-        DEBUG('Giorgio', 'Game started (%s)' % self.game_id, broadcast_id=self.user.user.id)
+        DEBUG('Giorgio', 'Game started (%s)' % self.game_id, broadcast_id=self.user.id)
 
         self.start_time = timezone.now()
-        redis_broadcast(self.user.user.id, {
+        redis_broadcast(self.user.id, {
             't': 4,
             'player': self.player.to_dict(),
         })
@@ -41,7 +41,7 @@ class Giorgio:
 
     def powerup_expired(self, powerup=None):
 
-        DEBUG('Giorgio', ('Expiring powerup #%i' % powerup.id), broadcast_id=self.user.user.id)
+        DEBUG('Giorgio', ('Expiring powerup #%i' % powerup.id), broadcast_id=self.user.id)
 
         # Remove powerup from player's active powerups list
         del self.player.active_powerups[powerup.id]
@@ -116,7 +116,7 @@ class Giorgio:
         k = self.round
         g = self._generation
         
-        DEBUG('Giorgio', 'Generating entities for round %i' % k, broadcast_id=self.user.user.id)
+        DEBUG('Giorgio', 'Generating entities for round %i' % k, broadcast_id=self.user.id)
 
 
         if k >= 20 and k % 10 == 0:
@@ -167,7 +167,7 @@ class Giorgio:
             self._generation = 0
             self.round += 1
 
-        redis_broadcast(self.user.user.id, {
+        redis_broadcast(self.user.id, {
             't': 1,
             'round': k,
             'enemies': list(map(lambda e: e.to_dict(), gen_enemies)),
@@ -202,15 +202,15 @@ class Giorgio:
             # Remove enemy from stack
             del self.enemies[enemy.id]
 
-            DEBUG('Giorgio', 'Player killed enemy #%i' % enemy.id, broadcast_id=self.user.user.id)
+            DEBUG('Giorgio', 'Player killed enemy #%i' % enemy.id, broadcast_id=self.user.id)
 
         else:
             # enemy has lost hp
             self.enemies[enemy.id].hp = temp
 
-            DEBUG('Giorgio', 'Player hit enemy #%i, hp remaining: %i' % (enemy.id, enemy.hp), broadcast_id=self.user.user.id)
+            DEBUG('Giorgio', 'Player hit enemy #%i, hp remaining: %i' % (enemy.id, enemy.hp), broadcast_id=self.user.id)
 
-        redis_broadcast(self.user.user.id, {
+        redis_broadcast(self.user.id, {
             't': 2,
             'gun': gun_type,
             'enemy': enemy.to_dict(),
@@ -227,7 +227,7 @@ class Giorgio:
     """
     def enemy_hit_player(self, enemy, directly):
 
-        DEBUG('Giorgio', 'Enemy #%i hit player (directly:%s)' % (enemy.id, directly), broadcast_id=self.user.user.id)
+        DEBUG('Giorgio', 'Enemy #%i hit player (directly:%s)' % (enemy.id, directly), broadcast_id=self.user.id)
 
         if directly:
             # If enemy has collide with player (kamikaze) remove enemy from the stack
@@ -236,7 +236,7 @@ class Giorgio:
         # Compute attack
         self.player.attacked(enemy.damage)
 
-        redis_broadcast(self.user.user.id, {
+        redis_broadcast(self.user.id, {
             't': 4,
             'player': self.player.to_dict(),
             'enemy': enemy.to_dict(),
@@ -252,7 +252,7 @@ class Giorgio:
     def enemy_hit_mship(self, enemy):
         enemy.hp = 0
 
-        DEBUG('Giorgio', 'Enemy #%i hit mother ship' % enemy.id, broadcast_id=self.user.user.id)
+        DEBUG('Giorgio', 'Enemy #%i hit mother ship' % enemy.id, broadcast_id=self.user.id)
 
         # Remove enemy from stack
         del self.enemies[enemy.id]
@@ -260,9 +260,9 @@ class Giorgio:
         if lifes <= 0:
             # Mother ship is dead, game ends
 
-            DEBUG('Giorgio', 'Mother ship dead, game end', broadcast_id=self.user.user.id)
+            DEBUG('Giorgio', 'Mother ship dead, game end', broadcast_id=self.user.id)
 
-            redis_broadcast(self.user.user.id, {
+            redis_broadcast(self.user.id, {
                 't': 3,
                 'lifes': 0,
                 'enemy': enemy.to_dict(),
@@ -275,7 +275,7 @@ class Giorgio:
             self.mship_lifes = lifes
         # Return updated mship's lifes
 
-        redis_broadcast(self.user.user.id, {
+        redis_broadcast(self.user.id, {
             't': 3,
             'lifes': self.mship_lifes,
             'enemy': enemy.to_dict(),
@@ -289,7 +289,7 @@ class Giorgio:
     """
     def player_gain_powerup(self, powerup):
 
-        DEBUG('Giorgio', 'Player gain powerup %i (#%i)' % (powerup.type, powerup.id), broadcast_id=self.user.user.id)
+        DEBUG('Giorgio', 'Player gain powerup %i (#%i)' % (powerup.type, powerup.id), broadcast_id=self.user.id)
 
         # Activate powerup
         powerup.activate(self.player)
@@ -310,7 +310,7 @@ class Giorgio:
     """
     def player_use_ability(self, ability):
 
-        DEBUG('Giorgio', 'Player used ability %i' % ability.type, broadcast_id=self.user.user.id)
+        DEBUG('Giorgio', 'Player used ability %i' % ability.type, broadcast_id=self.user.id)
 
         # Perform ability
         ability.run(self)
@@ -326,31 +326,10 @@ class Giorgio:
 
     def end_game(self, reason):
         self.running = False
-        redis_broadcast(self.user.user.id, {
+        # GameLog.objects.register_log(self, 0, 0)
+        redis_broadcast(self.user.id, {
             't': 5,
             'message': reason
         })
         # TODO: implement the method
         raise GameException('Not implemented yet')
-
-    def save(self, shooted_main, shooted_side):
-        game_log = GameLog(
-            id=self.game_id,
-            user=self.user,
-            time_start=self.start_time,
-            time_end=timezone.now(),
-            exp_gained=self.player.exp,
-            gbucks_earned=self.player.gbucks,
-            shooted_main=shooted_main,
-            shooted_main_hit=self.player.main_hit,
-            shooted_side=shooted_side,
-            shooted_side_hit=self.player.side_hit,
-            main_gun=self.player.main_gun.id,
-            side_gun=self.player.side_gun.id
-        )
-        game_log.visit = VisitLog.objects.get(pk=self.visit_id)
-        game_log.killed = parser.dict_to_string(self.player.killed)
-        game_log.powerups = parser.dict_to_string(self.player.expired_powerups)
-        game_log.abilities = parser.dict_to_string(self.player.used_abilities)
-        game_log.skin = game_log.user.skin
-        game_log.save()

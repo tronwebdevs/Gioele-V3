@@ -11,10 +11,11 @@ from django.utils import timezone
 from django.shortcuts import redirect
 from django.contrib.auth.forms import AuthenticationForm
 
-from gadmin.utils import valid_string, valid_number, raise_if_not_valid, get_percentage
+from gadmin.utils import valid_string, valid_email, valid_number, raise_if_not_valid, get_percentage
 from api.utils import generate_short_id
 from api.models import User, GUser, BannedUser, Gun, Skin, GameLog, \
-                        VisitLog, Stat, PurchaseLog, AdminLog, BulletPattern
+                        VisitLog, Stat, PurchaseLog, AdminLog, BulletPattern, \
+                        UserInventory
 
 
 def get_user(user_id):
@@ -46,34 +47,37 @@ def get_messages(request, key):
     
 
 
-def index(request):
-    visitors = VisitLog.objects.count()
-    users = GUser.objects.count()
-    matches = GameLog.objects.count()
-    purchases = PurchaseLog.objects.count()
-    context = {
-            'stats': {
-                'visitors': visitors,
-                'users': users,
-                'matches': matches,
-                'purchases': purchases,
+class IndexView(generic.TemplateView):
+    template_name = 'gadmin/index.html'
+
+    def get(self, request):
+        visitors = VisitLog.objects.count()
+        users = GUser.objects.count()
+        matches = GameLog.objects.count()
+        purchases = PurchaseLog.objects.count()
+        context = {
+                'stats': {
+                    'visitors': visitors,
+                    'users': users,
+                    'matches': matches,
+                    'purchases': purchases,
+                }
+        }
+        if Stat.objects.filter(key='users').count() > 0:
+            users_dataset = list(Stat.objects.filter(key='users'))[:16]
+            visitors_dataset = list(Stat.objects.filter(key='visitors'))[:16]
+            games_dataset = list(Stat.objects.filter(key='games'))[:16]
+            context['percentages'] = {
+                'users': get_percentage(users, users_dataset[-1].value),
+                'visitors': get_percentage(visitors, visitors_dataset[-1].value),
+                'matches': get_percentage(matches, games_dataset[-1].value),
             }
-    }
-    if Stat.objects.filter(key='users').count() > 0:
-        users_dataset = list(Stat.objects.filter(key='users'))[:16]
-        visitors_dataset = list(Stat.objects.filter(key='visitors'))[:16]
-        games_dataset = list(Stat.objects.filter(key='games'))[:16]
-        context['percentages'] = {
-            'users': get_percentage(users, users_dataset[-1].value),
-            'visitors': get_percentage(visitors, visitors_dataset[-1].value),
-            'matches': get_percentage(matches, games_dataset[-1].value),
-        }
-        context['charts_data'] = {
-            'users': users_dataset + [Stat(key='users',value=users)],
-            'visitors': visitors_dataset + [Stat(key='visitors',value=visitors)],
-            'games': games_dataset + [Stat(key='games',value=matches)],
-        }
-    return render(request, 'gadmin/index.html', context)
+            context['charts_data'] = {
+                'users': users_dataset + [Stat(key='users',value=users)],
+                'visitors': visitors_dataset + [Stat(key='visitors',value=visitors)],
+                'games': games_dataset + [Stat(key='games',value=matches)],
+            }
+        return self.render_to_response(context)
 
 
 class LoginView(generic.TemplateView):
@@ -90,20 +94,25 @@ class LoginView(generic.TemplateView):
             return self.render_to_response({ 'message': 'Dati non validi' })
 
 
-def users(request):
-    return render(request, 'gadmin/users.html', {
-        'users': GUser.objects.filter(user__is_active=True),
-        'banned': BannedUser.objects.all(),
-        **get_messages(request, 'users')
-    })
+class UsersView(generic.TemplateView):
+    template_name = 'gadmin/users.html'
+
+    def get(self, request):
+        return self.render_to_response({
+            'users': GUser.objects.filter(user__is_active=True),
+            'banned': BannedUser.objects.all(),
+            **get_messages(request, 'users')
+        })
 
 
-class UserBanView(generic.View):
+class UserBanView(generic.TemplateView):
+    template_name = 'gadmin/ban_user.html'
+
     def get(self, request, pk):
         user = get_user(pk)
         if user is None:
             return redirect('gadmin:users')
-        return render(request, 'gadmin/ban_user.html', {
+        return self.render_to_response({
             'user': user,
             **get_messages(request, 'banuser')
         })
@@ -115,18 +124,17 @@ class UserBanView(generic.View):
                 return redirect('gadmin:users')
             
             username = request.POST.get('username')
-            reason = raise_if_not_valid(request.POST.get('reason'), valid_string, 'Reason')
-            if user.user.username != username:
+            reason = raise_if_not_valid(request.POST.get('reason'), valid_string, 'reason')
+            if user.username != username:
                 raise Exception('Username validation failed')
 
             admin = User.objects.get(pk=request.session.get('admin_id'))
-            user_id = user.user.id
             BannedUser.objects.ban(
-                user_id=user_id,
+                user_id=user.id,
                 reason=reason,
                 by=admin
             )
-            AdminLog.objects.create(action=f'Banned user #{user_id}', by=admin)
+            AdminLog.objects.create(action=f'Banned user #{user.id}', by=admin)
         except Exception as e:
             request.session['banuser_error'] = str(e)
             return redirect('gadmin:user', pk=pk)
@@ -159,7 +167,7 @@ class UserInventoryView(generic.View):
                 user.inventory.add_skin(sid)
         user.inventory.save()
         AdminLog.objects.create(
-            action=f'Edited user #{user.user.id} inventory',
+            action=f'Edited user #{user.id} inventory',
             by=User.objects.get(pk=request.session.get('admin_id'))
         )
         request.session['user_message'] = 'Operation completed successfully'
@@ -176,7 +184,7 @@ class UserModelView(generic.TemplateView):
                 request.session['users_error'] = 'User not found'
                 return redirect('gadmin:users')
         else:
-            user = GUser(type=0, price=0, cooldown=0, damage=0)
+            user = GUser(balance=0, level=0.0, user=User(), inventory=UserInventory())
         
         user_games = GameLog.objects.filter(user=user).order_by('exp_gained')
         games = None
@@ -224,17 +232,28 @@ class UserModelView(generic.TemplateView):
         else:
             user = user_list[0]
         try:
-            user.user.username = raise_if_not_valid(request.POST.get('username'), valid_string, 'Username')
-            user.user.email = raise_if_not_valid(request.POST.get('email'), valid_string, 'Email')
+            user.user.username = raise_if_not_valid(request.POST.get('username'), valid_string, 'username')
+            user.user.email = raise_if_not_valid(request.POST.get('email'), valid_email, 'email')
             user.user.save()
             user.auth = request.POST.get('auth') == 'on'
             items = ('main_gun', 'side_gun', 'skin')
             for item in items:
+                if item == 'skin':
+                    ItemClass = Skin
+                else:
+                    ItemClass = Gun
+
                 val = request.POST.get(item)
+                comp_val = None
                 if not valid_string(val):
-                    val = None
-                setattr(user, item, val)
+                    if item != 'side_gun':
+                        raise Exception('%s is required' % item.replace('_', ' ').capitalize())
+                else:
+                    comp_val = ItemClass.objects.get(pk=val)
+                
+                setattr(user, item, comp_val)
             user.balance = float(request.POST.get('balance'))
+            user.inventory.save()
             user.save()
         except Exception as e:
             extra[0] = 'error'
@@ -243,35 +262,38 @@ class UserModelView(generic.TemplateView):
         request.session[f'user_{extra[0]}'] = extra[1]
 
         AdminLog.objects.create(
-            action=f'Edited user #{user.user.id} profile',
+            action=f'Edited user #{user.id} profile',
             by=User.objects.get(pk=request.session.get('admin_id'))
         )
 
         return redirect('gadmin:user', pk=pk)
 
 
-def hardware(request):
-    commit_hash = subprocess.check_output(
-        ['git', 'log', '-1', '--pretty=%H']).strip().decode()
-    commit_message = subprocess.check_output(
-        ['git', 'log', '-1', '--pretty=%B']).strip().decode()
-    commit_author = subprocess.check_output(
-        ['git', 'log', '-1', '--pretty=%an']).strip().decode()
-    context = {
-        'psutil': psutil,
-        'system': platform,
-        'git': {
-            'commit': commit_hash,
-            'message': commit_message,
-            'author': commit_author,
-        },
-    }
-    if Stat.objects.filter(key='cpu').count() > 0:
-        context['charts_data'] = {
-            'cpu': list(Stat.objects.filter(key='cpu'))[:10],
-            'mem': list(Stat.objects.filter(key='mem'))[:10],
+class HardwareView(generic.TemplateView):
+    template_name = 'gadmin/hardware.html'
+
+    def get(self, request):
+        commit_hash = subprocess.check_output(
+            ['git', 'log', '-1', '--pretty=%H']).strip().decode()
+        commit_message = subprocess.check_output(
+            ['git', 'log', '-1', '--pretty=%B']).strip().decode()
+        commit_author = subprocess.check_output(
+            ['git', 'log', '-1', '--pretty=%an']).strip().decode()
+        context = {
+            'psutil': psutil,
+            'system': platform,
+            'git': {
+                'commit': commit_hash,
+                'message': commit_message,
+                'author': commit_author,
+            },
         }
-    return render(request, 'gadmin/hardware.html', context)
+        if Stat.objects.filter(key='cpu').count() > 0:
+            context['charts_data'] = {
+                'cpu': list(Stat.objects.filter(key='cpu'))[:10],
+                'mem': list(Stat.objects.filter(key='mem'))[:10],
+            }
+        return self.render_to_response(context)
 
 
 class StatsView(generic.TemplateView):
@@ -280,6 +302,22 @@ class StatsView(generic.TemplateView):
 
 class GBucksView(generic.TemplateView):
     template_name = 'gadmin/gbucks.html'
+
+    def get(self, request):
+        all_purchases = PurchaseLog.objects.all()
+        circulation = 0
+        for guser in GUser.objects.all():
+            circulation += guser.balance
+
+        trans_vol = 0
+        for purchase in all_purchases:
+            trans_vol += purchase.price
+        
+        return self.render_to_response({
+            'purchases': list(all_purchases)[:20],
+            'circulation': circulation,
+            'trans_vol': trans_vol,
+        })
 
 
 class GunsView(generic.TemplateView):
@@ -301,7 +339,14 @@ class GunModelView(generic.TemplateView):
             try:
                 gun = Gun.objects.get(pk=pk)
             except Gun.DoesNotExist as e:
-                request.session['gun_error'] = str(e)
+                gerror = request.session.get('gun_error')
+                if gerror is None:
+                    gerror = str(e)
+                else:
+                    del request.session['gun_error']
+
+                request.session['guns_error'] = gerror
+                return redirect('gadmin:guns')
         else:
             gun = Gun(type=0, price=0, cooldown=0, damage=0)
         
@@ -319,21 +364,25 @@ class GunModelView(generic.TemplateView):
         if form_type != 'bullets' and form_type != 'info':
             return redirect('gadmin:guns')
 
+        gun = None
         if len(gun_list) == 0:
-            gun = Gun(id=pk)
+            gun = Gun(id=pk, created_at=timezone.now(), updated_at=timezone.now())
             action = 'Create'
         else:
             gun = gun_list[0]
             action = 'Edit'
         
         try:
+            if action == 'Create' and form_type == 'bullets':
+                raise Exception('You first need to create the gun (info) and then edit its functions')
+
             if form_type == 'info':
-                gun.name = raise_if_not_valid(request.POST.get('name'), valid_string, 'Name')
+                gun.name = raise_if_not_valid(request.POST.get('name'), valid_string, 'name')
                 gun_type = int(request.POST.get('type'))
                 if gun_type != 0 and gun_type != 1:
                     raise Exception('Type: Invalid value')
                 gun.type = gun_type
-                gun.description = raise_if_not_valid(request.POST.get('description'), valid_string, 'Description')
+                gun.description = raise_if_not_valid(request.POST.get('description'), valid_string, 'description')
                 gun.price = float(request.POST.get('price'))
                 gun.damage = int(request.POST.get('damage'))
                 gun.cooldown = int(request.POST.get('cooldown'))
@@ -346,7 +395,7 @@ class GunModelView(generic.TemplateView):
                 if auth_user is None or auth_user.id != request.session.get('admin_id'):
                     raise Exception('Authentication failed')
                 else:
-                    gun.shoot = raise_if_not_valid(request.POST.get('shoot'), valid_string, 'Shoot')
+                    gun.shoot = raise_if_not_valid(request.POST.get('shoot'), valid_string, 'shoot')
                     gun.pattern = BulletPattern.objects.get(pk=request.POST.get('pattern'))
             gun.save()
             AdminLog.objects.create(
@@ -388,7 +437,7 @@ class PatternModelView(generic.TemplateView):
         pattern_list = BulletPattern.objects.filter(pk=pk)
 
         if len(pattern_list) == 0:
-            pattern = BulletPattern(id=pk)
+            pattern = BulletPattern(id=pk, created_at=timezone.now(), updated_at=timezone.now())
             action = 'Create'
         else:
             pattern = pattern_list[0]
@@ -403,9 +452,9 @@ class PatternModelView(generic.TemplateView):
             if auth_user is None or auth_user.id != request.session.get('admin_id'):
                 raise Exception('Authentication failed')
 
-            pattern.name = raise_if_not_valid(request.POST.get('name'), valid_string, 'Name')
-            pattern.function = raise_if_not_valid(request.POST.get('function'), valid_string, 'Function')
-            pattern.behavior = raise_if_not_valid(request.POST.get('behavior'), valid_string, 'Function')
+            pattern.name = raise_if_not_valid(request.POST.get('name'), valid_string, 'name')
+            pattern.function = raise_if_not_valid(request.POST.get('function'), valid_string, 'function')
+            pattern.behavior = raise_if_not_valid(request.POST.get('behavior'), valid_string, 'behavior')
             pattern.updated_at = timezone.now()
             pattern.save()
             AdminLog.objects.create(
@@ -446,10 +495,11 @@ class SkinModelView(generic.TemplateView):
                 request.session['skins_error'] = skin_error
                 return redirect('gadmin:skins')
         else:
-            skin = Skin(price=0)
+            skin = Skin(price=0.0, created_at=timezone.now(), updated_at=timezone.now())
         
         return self.render_to_response({
             'skin': skin,
+            'users_count': len(GUser.objects.filter(skin=skin.id)),
             **get_messages(request, 'skin'),
         })
 
@@ -462,8 +512,8 @@ class SkinModelView(generic.TemplateView):
             skin = skin_list[0]
             action = 'Edit'
         try:
-            skin.name = raise_if_not_valid(request.POST.get('name'), valid_string, 'Name')
-            skin.description = raise_if_not_valid(request.POST.get('description'), valid_string, 'Description')
+            skin.name = raise_if_not_valid(request.POST.get('name'), valid_string, 'name')
+            skin.description = raise_if_not_valid(request.POST.get('description'), valid_string, 'description')
             skin.price = float(request.POST.get('price'))
             skin.save()
             AdminLog.objects.create(
@@ -477,8 +527,9 @@ class SkinModelView(generic.TemplateView):
         return redirect('gadmin:skin', pk=pk)
 
 
-def admin_logs(request):
-    return render(request, 'gadmin/admin_logs.html', { 'logs': AdminLog.objects.all() })
+class LogsView(generic.ListView):
+    template_name = 'gadmin/admin_logs.html'
+    model = AdminLog
 
 
 def logout(request):

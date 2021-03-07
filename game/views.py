@@ -32,7 +32,7 @@ class LoginView(generic.TemplateView):
         else:
             try:
                 guser = GUser.objects.get(user=user)
-                request.session['user_id'] = guser.user.id
+                request.session['user_id'] = guser.id
             except GUser.DoesNotExist:
                 error = {
                     'code': 3,

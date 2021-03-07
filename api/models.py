@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 from .utils import generate_short_id, parser
 from .exceptions import ParseException, AlreadyExist, NotEnoughtCoins
@@ -52,7 +53,9 @@ class Gun(models.Model):
     cooldown = models.IntegerField()
     damage = models.IntegerField()
     shoot = models.CharField(max_length=1024)
-    pattern = models.ForeignKey(BulletPattern, on_delete=models.SET_NULL, null=True)
+    pattern = models.ForeignKey(BulletPattern, on_delete=models.PROTECT, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
 
     def get_displayable_id(self):
         return hashlib.md5(str(self.id).encode()).hexdigest()
@@ -78,6 +81,10 @@ class Gun(models.Model):
             obj['pattern'] = self.pattern.to_dict()
         return obj
 
+    def save(self, *args, **kwargs):
+        self.updated_at = timezone.now()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.name
 
@@ -87,6 +94,8 @@ class Skin(models.Model):
     description = models.CharField(max_length=256)
     name = models.CharField(max_length=128)
     price = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
 
     def get_displayable_id(self):
         return hashlib.md5(str(self.id).encode()).hexdigest()
@@ -103,6 +112,10 @@ class Skin(models.Model):
             'price': self.price,
             'description': self.description,
         }
+    
+    def save(self, *args, **kwargs):
+        self.updated_at = timezone.now()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -242,9 +255,9 @@ class GUserManager(models.Manager):
         )
         guser = GUser(user=user, inventory=inventory)
         # Use the first skin (default) as user's first skin
-        guser.skin = db_skins[0].id
+        guser.skin = db_skins.first()
         # Get the first gun (main) as user's first gun
-        guser.main_gun = db_guns[0].id
+        guser.main_gun = db_guns.first()
         # Store user on database
         guser.save()
         return guser
@@ -255,15 +268,27 @@ class GUser(models.Model):
     auth = models.BooleanField(default=False, verbose_name='Email authentication completed')
     level = models.FloatField(default=0)
     balance = models.FloatField(default=0)
-    skin = models.CharField(max_length=4)
-    main_gun = models.CharField(max_length=4)
-    side_gun = models.CharField(max_length=4, null=True, default=None)
+    skin = models.ForeignKey(Skin, on_delete=models.PROTECT, related_name='+')
+    main_gun = models.ForeignKey(Gun, on_delete=models.PROTECT, related_name='+')
+    side_gun = models.ForeignKey(Gun, on_delete=models.PROTECT, null=True, default=None, related_name='+')
     inventory = models.OneToOneField(UserInventory, on_delete=models.CASCADE, related_name='inventory')
 
     objects = GUserManager()
 
     class Meta:
         verbose_name = 'Gioele User'
+
+    @property
+    def id(self):
+        return self.user.id
+
+    @property
+    def username(self):
+        return self.user.username
+
+    @property
+    def email(self):
+        return self.user.email
 
     def log_login(self, visit_id):
         visit_log = VisitLog.objects.get(pk=visit_id)
@@ -339,7 +364,7 @@ class BannedUser(models.Model):
     objects = BannedUserManager()
 
     def __str__(self):
-        return self.user.user.username + ': ' + self.reason
+        return self.user.username + ': ' + self.reason
 
 
 class VisitLog(models.Model):
@@ -356,6 +381,10 @@ class VisitLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
 
+    def save(self, *args, **kwargs):
+        self.updated_at = timezone.now()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return str(self.id)
 
@@ -370,8 +399,31 @@ class LoginLog(models.Model):
         return str(self.id)
 
 
+class GameLogManager(models.Manager):
+    def register_log(self, giorgio, shooted_main, shooted_side):
+        game_log = GameLog(id=giorgio.game_id)
+        game_log.user = giorgio.user
+        game_log.time_start = giorgio.start_time
+        game_log.time_end = timezone.now()
+        game_log.exp_gained = giorgio.player.exp
+        game_log.gbucks_earned = giorgio.player.gbucks
+        game_log.shooted_main = shooted_main
+        game_log.main_hit = giorgio.player.main_hit
+        game_log.shooted_side = shooted_side
+        game_log.side_hit = giorgio.player.side_hit
+        game_log.main_gun = giorgio.player.main_gun
+        game_log.side_gun = giorgio.player.side_gun
+        game_log.visit = VisitLog.objects.get(pk=giorgio.visit_id)
+        game_log.killed = parser.dict_to_string(giorgio.player.killed)
+        game_log.powerups = parser.dict_to_string(giorgio.player.expired_powerups)
+        game_log.abilities = parser.dict_to_string(giorgio.player.used_abilities)
+        game_log.skin = giorgio.user.skin
+        game_log.save()
+        return game_log
+
+
 class GameLog(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid4)
     user = models.ForeignKey(GUser, on_delete=models.CASCADE)
     visit = models.ForeignKey(VisitLog, on_delete=models.CASCADE)
     time_start = models.DateTimeField()
@@ -379,15 +431,17 @@ class GameLog(models.Model):
     exp_gained = models.IntegerField()
     gbucks_earned = models.IntegerField()
     shooted_main = models.IntegerField()
-    shooted_main_hit = models.IntegerField()
+    main_hit = models.IntegerField()
     shooted_side = models.IntegerField()
-    shooted_side_hit = models.IntegerField()
+    side_hit = models.IntegerField()
     killed = models.CharField(max_length=256)
     powerups = models.CharField(max_length=256)
     abilities = models.CharField(max_length=256)
-    skin = models.CharField(max_length=4)
-    main_gun = models.CharField(max_length=4)
-    side_gun = models.CharField(max_length=4, null=True, default=None)
+    skin = models.ForeignKey(Skin, on_delete=models.PROTECT, related_name='+')
+    main_gun = models.ForeignKey(Gun, on_delete=models.PROTECT, related_name='+')
+    side_gun = models.ForeignKey(Gun, on_delete=models.PROTECT, null=True, default=None, related_name='+')
+
+    objects = GameLogManager()
 
     def __str__(self):
         return str(self.id)

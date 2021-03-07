@@ -1,5 +1,10 @@
+from api.utils import SCHOOL_EMAIL_ADDRESS
+
 def valid_string(val):
     return val is not None and val.strip() != ''
+
+def valid_email(val):
+    return valid_string(val) and val.endswith(SCHOOL_EMAIL_ADDRESS) and ' ' not in val
 
 def valid_number(val):
     val_type = type(val)
@@ -9,7 +14,7 @@ def raise_if_not_valid(val, validator, field=None):
     if not validator(val):
         message = 'Invalid value'
         if field is not None:
-            message = field + ': ' + message
+            message += ' for field "%s"' % field
         raise Exception(message)
     return val
 

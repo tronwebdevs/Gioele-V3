@@ -11,9 +11,7 @@
                     <span class="icon" data-feather="cpu"></span>
                 </span>
                 <div class="h5 stamp-label">
-                    <a href="#">
-                        {{ psutil.cpu_percent }}% <small>CPU</small>
-                    </a>
+                    {{ psutil.cpu_percent }}% <small>CPU</small>
                 </div>
             </div>
         </div>
@@ -25,9 +23,7 @@
                     <span class="icon" data-feather="activity"></span>
                 </span>
                 <div class="h5 stamp-label">
-                    <a href="#">
-                        {{ psutil.virtual_memory.percent }}% <small>Memory</small>
-                    </a>
+                    {{ psutil.virtual_memory.percent }}% <small>Memory</small>
                 </div>
             </div>
         </div>

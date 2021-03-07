@@ -11,7 +11,7 @@
                     <span class="icon" data-feather="users"></span>
                 </span>
                 <div class="h5 stamp-label">
-                    <a href="#">
+                    <a href="{% url 'gadmin:stats' %}">
                         {{ stats.visitors }} <small>Visitors</small>
                         {% if percentages %}
                         <small class="subtitle">{{ percentages.visitors }}</small>
@@ -28,7 +28,7 @@
                     <span class="icon" data-feather="users"></span>
                 </span>
                 <div class="h5 stamp-label">
-                    <a href="#">
+                    <a href="{% url 'gadmin:users' %}">
                         {{ stats.users }} <small>Users</small>
                         {% if percentages %}
                         <small class="subtitle">{{ percentages.users }}</small>
@@ -45,7 +45,7 @@
                     <span class="icon" data-feather="play"></span>
                 </span>
                 <div class="h5 stamp-label">
-                    <a href="#">
+                    <a href="{% url 'gadmin:stats' %}">
                         {{ stats.matches }} <small>Matches played</small>
                         {% if percentages %}
                         <small class="subtitle">{{ percentages.matches }}</small>
@@ -62,7 +62,7 @@
                     <span class="icon" data-feather="help-circle"></span>
                 </span>
                 <div class="h5 stamp-label">
-                    <a href="#">
+                    <a href="{% url 'gadmin:gbucks' %}">
                         {{ stats.purchases }} <small>Purchases</small>
                         {% if percentages %}
                         <small class="subtitle">+0%</small>

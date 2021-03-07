@@ -92,10 +92,10 @@ class GameConsumer(WebsocketConsumer):
             self.close()
             return
 
-        self.delayed_channel_name = 'giorgio_%i' % user.user.id
+        self.delayed_channel_name = 'giorgio_%i' % user.id
         # if asyncio.run(user_is_playing(self.delayed_channel_name)):
             
-        #     DEBUG('WebSocket', '"%s" is already playing' % user.user.username)
+        #     DEBUG('WebSocket', '"%s" is already playing' % user.username)
 
         #     self.close()
         #     return
@@ -104,12 +104,12 @@ class GameConsumer(WebsocketConsumer):
             user=user,
             visit_id=self.scope['visit_id'],
             abilities=user.inventory.abilities,
-            main_gun_id=user.main_gun,
-            side_gun_id=user.side_gun,
-            skin_id=user.skin
+            main_gun=user.main_gun,
+            side_gun=user.side_gun,
+            skin=user.skin
         )
 
-        DEBUG('WebSocket', ('"%s" connected, giorgio started' % user.user.username))
+        DEBUG('WebSocket', ('"%s" connected, giorgio started' % user.username))
 
         # Generate channel name and add to Redis
         async_to_sync(self.channel_layer.group_add)(
@@ -137,7 +137,7 @@ class GameConsumer(WebsocketConsumer):
 
             if giorgio is not None and giorgio.running == True:
                 giorgio.end_game('connection closed')
-            DEBUG('WebSocket', ('"%s" disconnected' % user.user.username))
+            DEBUG('WebSocket', ('"%s" disconnected' % user.username))
 
     def validate_data(self, text_data):
         data = json.loads(text_data)

@@ -50,7 +50,7 @@ class AbilityManager(Manager):
 
 
 class Player:
-    def __init__(self, user_id, abilities, main_gun_id, side_gun_id, skin_id):
+    def __init__(self, user_id, abilities, main_gun, side_gun, skin):
         self.expired_powerups = PowerUpManager()
         self.active_powerups = dict()
         self.used_abilities = AbilityManager()
@@ -65,12 +65,9 @@ class Player:
         self.speed_modifier = PLAYER_BASE_MODIFIER
         self.user_id = user_id
         self.abilities = []
-        self.main_gun = Gun.objects.get(pk=main_gun_id)
-        if side_gun_id is not None:
-            self.side_gun = Gun.objects.get(pk=side_gun_id)
-        else:
-            self.side_gun = None
-        self.skin = Skin.objects.get(pk=skin_id)
+        self.main_gun = main_gun
+        self.side_gun = side_gun
+        self.skin = skin
 
     def bullet_hit(self, gun_type):
         if gun_type == 0:

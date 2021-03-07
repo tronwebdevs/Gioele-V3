@@ -17,18 +17,18 @@
     <div class="col-12 col-lg-6 mb-4">
         <div class="card">
             <div class="card-body">
-                <form action="{% url 'gadmin:user' user.user.id %}" method="POST">
+                <form action="{% url 'gadmin:user' user.id %}" method="POST">
                     {% csrf_token %}
                     <div class="row mb-3">
                         <label for="inputUsername" class="col-sm-2 col-form-label">Username</label>
                         <div class="col-sm-10">
-                            <input type="text" name="username" class="form-control" id="inputUsername" value="{{ user.user.username }}">
+                            <input type="text" name="username" class="form-control" id="inputUsername" value="{{ user.username }}"  placeholder="Not set">
                         </div>
                     </div>
                     <div class="row mb-3">
                         <label for="inputEmail" class="col-sm-2 col-form-label">Email</label>
                         <div class="col-sm-10">
-                            <input type="email" name="email" class="form-control" id="inputEmail" value="{{ user.user.email }}">
+                            <input type="email" name="email" class="form-control" id="inputEmail" value="{{ user.user.email }}"  placeholder="Not set">
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -66,7 +66,7 @@
                             <select class="form-select" name="main_gun" id="inputMainGun">
                                 <option value="" {% if user.main_gun == None %}selected{% endif %}>-- No gun selected --</option>
                                 {% for gun in main_guns %}
-                                <option value="{{ gun.id }}" {% if gun.id == user.main_gun %}selected{% endif %}>{{ gun.name }}</option>
+                                <option value="{{ gun.id }}" {% if gun.id == user.main_gun.id %}selected{% endif %}>{{ gun.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -77,7 +77,7 @@
                             <select class="form-select" name="side_gun" id="inputSideGun">
                                 <option value="" {% if user.side_gun == None %}selected{% endif %}>-- No gun selected --</option>
                                 {% for gun in side_guns %}
-                                <option value="{{ gun.id }}" {% if gun.id == user.side_gun %}selected{% endif %}>{{ gun.name }}</option>
+                                <option value="{{ gun.id }}" {% if gun.id == user.side_gun.id %}selected{% endif %}>{{ gun.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -88,7 +88,7 @@
                             <select class="form-select" name="skin" id="inputSkin">
                                 <option value="" {% if user.skin == None %}selected{% endif %}>-- No gun selected --</option>
                                 {% for skin in skins %}
-                                <option value="{{ skin.id }}" {% if skin.id == user.skin %}selected{% endif %}>{{ skin.name }}</option>
+                                <option value="{{ skin.id }}" {% if skin.id == user.skin.id %}selected{% endif %}>{{ skin.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -106,7 +106,7 @@
         <div class="card mb-4">
             <div class="card-body">
                 <h5>Inventory</h5>
-                <form action="{% url 'gadmin:user_inventory' user.user.id %}" method="POST">
+                <form action="{% url 'gadmin:user_inventory' user.id %}" method="POST">
                     {% csrf_token %}
                     <div class="row mb-3">
                         <div class="col-12 col-lg-4">
