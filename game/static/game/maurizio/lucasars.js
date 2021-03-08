@@ -39,6 +39,7 @@ gameSocket.onmessage = function (e) {
         console.log(data);
     }
     if (data.r === 1) {
+      console.log(data)
       setPlayer(data.player)
       console.log("---- PLAYER LOADED")
     }

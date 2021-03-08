@@ -15,11 +15,16 @@ function pauseGame() {
 }
 
 function setPlayer(obj) {
-  let mg = obj.main_gun;
-  let sg = obj.side_gun;
+  let mg, sg;
+  if (obj.main_gun){
+    mg = new MainGun(obj.main_gun.id, obj.main_gun.name, obj.main_gun.cooldown, obj.main_gun.damage)
+  }
+  if (obj.side_gun){
+    sg = new SideGun(obj.side_gun.id, obj.side_gun.name, obj.side_gun.cooldown, obj.side_gun.damage)
+  }
   player = new Player({
-    mainGun: new MainGun(mg.id, mg.name, mg.cooldown, mg.damage),
-    sideGun: new SideGun(sg.id, sg.name, sg.cooldown, sg.damage)
+    mainGun: mg,
+    sideGun: sg
   });
 }
 
