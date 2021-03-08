@@ -62,7 +62,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserInventorySerializer(serializers.ModelSerializer):
-    id = serializers.CharField(source='get_displayable_id', read_only=True)
     main_guns = serializers.ListField(source='get_main_guns_dict', read_only=True)
     side_guns = serializers.ListField(source='get_side_guns_dict', read_only=True)
     skins = serializers.ListField(source='get_skins_dict', read_only=True)
@@ -91,23 +90,8 @@ class ScoreboardUserSerializer(serializers.ModelSerializer):
         model = GUser
         fields = ['username', 'score']
 
+
 class VisitLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = VisitLog
-        fields = '__all__'
-
-
-class GunSerializer(serializers.ModelSerializer):
-    id = serializers.CharField(source='get_displayable_id')
-
-    class Meta:
-        model = Gun
-        fields = '__all__'
-
-
-class SkinSerializer(serializers.ModelSerializer):
-    id = serializers.CharField(source='get_displayable_id')
-
-    class Meta:
-        model = Skin
         fields = '__all__'

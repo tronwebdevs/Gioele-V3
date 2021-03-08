@@ -8,7 +8,7 @@ class GameMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if request.path.startswith('/admin/') or request.path == '/api/users/register':
+        if request.path.startswith('/admin/') or request.path.startswith('/api/'):
             return self.get_response(request)
 
         visit_id = request.session.get('visit_id')

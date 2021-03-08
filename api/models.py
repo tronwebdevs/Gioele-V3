@@ -81,6 +81,19 @@ class Gun(models.Model):
             obj['pattern'] = self.pattern.to_dict()
         return obj
 
+    def get_hashes(self):
+        shoot = hashlib.md5(self.shoot.encode()).hexdigest()
+        pattern = hashlib.md5(self.pattern.function.encode()).hexdigest()
+        behavior = None
+        if self.pattern.behavior is not None:
+            behavior = hashlib.md5(self.pattern.behavior.encode()).hexdigest()
+        return {
+            'shoot': shoot,
+            'pattern': pattern,
+            'behavior': behavior,
+        }
+        
+
     def save(self, *args, **kwargs):
         self.updated_at = timezone.now()
         super().save(*args, **kwargs)
@@ -152,12 +165,9 @@ class UserInventory(models.Model):
         result = []
         for gun in parser.string_to_dicts(field, 'id', 'level'):
             db_gun = Gun.objects.get(pk=gun['id'])
-            gun_id = gun['id']
-            if hash_id:
-                gun_id = hashlib.md5(gun['id'].encode()).hexdigest()
             result.append(
                 UserGun(
-                    id=gun_id,
+                    id=db_gun.id,
                     name=db_gun.name,
                     level=gun['level'],
                 )
@@ -170,11 +180,8 @@ class UserInventory(models.Model):
         obj_list = []
         for item in parser.string_to_list(field):
             db_item = Item.objects.get(pk=item)
-            skin_id = item
-            if hash_id:
-                skin_id = hashlib.md5(item.encode()).hexdigest()
             obj_list.append({
-                'id': skin_id,
+                'id': db_item.id,
                 'name': db_item.name,
             })
         return obj_list
@@ -294,16 +301,8 @@ class GUser(models.Model):
         visit_log = VisitLog.objects.get(pk=visit_id)
         LoginLog.objects.create(user=self, visit=visit_log)
 
-    def _get_item_from_shop(self, Item, hashed_item_id):
-        db_item = None
-        for item in Item.objects.all():
-            db_item_id = hashlib.md5(item.id.encode()).hexdigest()
-            if db_item_id == hashed_item_id:
-                db_item = item
-                break
-        if db_item is None:
-            raise Item.DoesNotExist()
-
+    def _get_item_from_shop(self, Item, item_id):
+        db_item = Item.objects.get(pk=item_id)
         rest = self.balance - db_item.price
         if rest < 0:
             raise NotEnoughtCoins()
@@ -316,14 +315,15 @@ class GUser(models.Model):
 
         return db_item
 
-    def buy_gun(self, hashed_gun_id):
+    def buy_gun(self, gun_id):
         all_guns = parser.string_to_dicts(self.inventory.main_guns, 'id', 'name') 
         all_guns += parser.string_to_dicts(self.inventory.side_guns, 'id', 'name')
-        for gun in all_guns:
-            if hashlib.md5(gun['id'].encode()).hexdigest() == hashed_gun_id:
-                raise AlreadyExist()
 
-        gun = self._get_item_from_shop(Gun, hashed_gun_id)
+        dupes = [i for i in range(len(all_guns)) if all_guns[i]['id'] == gun_id]
+        if len(dupes) > 0:
+            raise AlreadyExist()
+
+        gun = self._get_item_from_shop(Gun, gun_id)
 
         if gun.type == 0:
             self.inventory.add_main_gun(gun.id)
@@ -332,13 +332,21 @@ class GUser(models.Model):
 
         self.inventory.save()
 
-    def buy_skin(self, hashed_skin_id):
-        for s in parser.string_to_list(self.inventory.skins):
-            if hashlib.md5(s.encode()).hexdigest() == hashed_skin_id:
-                raise AlreadyExist()
-        skin = self._get_item_from_shop(Skin, hashed_skin_id)
+        return gun
+
+    def buy_skin(self, skin_id):
+        all_skins = parser.string_to_list(self.inventory.skins)
+        
+        dupes = [i for i in range(len(all_skins)) if all_skins[i] == skin_id]
+        if len(dupes) > 0:
+            raise AlreadyExist()
+
+        skin = self._get_item_from_shop(Skin, skin_id)
+
         self.inventory.add_skin(skin.id)
         self.inventory.save()
+
+        return skin
     
     # def get_visits(self):
     #     return Visitor.objects.filter(user_id=self.id)
@@ -448,7 +456,7 @@ class GameLog(models.Model):
 
 
 class PurchaseLog(models.Model):
-    by = models.OneToOneField(GUser, on_delete=models.CASCADE)
+    by = models.ForeignKey(GUser, on_delete=models.CASCADE)
     item = models.CharField(max_length=4)
     price = models.FloatField()
     datetime = models.DateTimeField(auto_now_add=True)

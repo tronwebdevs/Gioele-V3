@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import viewsets, permissions, status, exceptions
 
-from .serializers import UserRegistrationSerializer, UserSerializer, VisitLogSerializer, ScoreboardUserSerializer, DisplayUserSerializer, GunSerializer, SkinSerializer
+from .serializers import UserRegistrationSerializer, UserSerializer, VisitLogSerializer, ScoreboardUserSerializer, DisplayUserSerializer
 from .models import GUser, VisitLog, UserInventory, Gun, Skin
 from .utils import forge_auth_token
 from .exceptions import AlreadyExist, NotEnoughtCoins
@@ -105,59 +105,65 @@ class UserDetail(APIView):
 @api_view(['GET'])
 def shop_list_items(reqeust, format=None):
     def to_display(item):
-        return {
-            'id': item.get_displayable_id(),
-            'name': item.name,
-            'price': item.price,
-        }
+        obj = item.to_dict()
+        hashes = item.get_hashes()
+        obj['shoot'] = hashes['shoot']
+        obj['pattern'] = hashes['pattern']
+        obj['behavior'] = hashes['behavior']
+        return obj
+
+    def get_gun_list(type):
+        return list(
+            map(
+                to_display,
+                filter(lambda g: g.pattern is not None, Gun.objects.filter(type=type))
+            )
+        )
     
-    data = dict()
-    guns = Gun.objects.all()
-    main_guns = filter(lambda g: g.type == 0, guns)
-    data['main_guns'] = list(map(to_display, main_guns))
-    side_guns = filter(lambda g: g.type == 1, guns)
-    data['side_guns'] = list(map(to_display, side_guns))
-    data['skins'] = list(map(to_display, Skin.objects.all()))
-    return Response(data=data)
+    return Response(data={
+        'main_guns': get_gun_list(0),
+        'side_guns': get_gun_list(1),
+        'skins': list(map(lambda s: s.to_dict(), Skin.objects.all()))
+    })
 
 
 class ShopItemDetail(APIView):
     """
     Buy an item in the shop
     """
-    def _get_item(self, Item, hashed_id):
+    def _get_item(self, Item, pk):
         item = None
-        for i in Item.objects.all():
-            if hashlib.md5(i.id.encode()).hexdigest() == hashed_id:
-                item = i
-        if item is None:
+        try:
+            item = Item.objects.get(pk=pk)
+        except Item.DoesNotExist:
             raise exceptions.NotFound('Oggetto non trovato')
         return item
 
-    def _get_item_serializer(self, path, pk):
-        item_type = path.split('/')[-2]
-        serializer = None
+    def get(self, request, pk, format=None):
+        item_type = request.path.split('/')[-2]
+        data = None
         if item_type == 'guns':
-            serializer = GunSerializer(self._get_item(Gun, pk))
+            data = self._get_item(Gun, pk).to_dict()
+            data['behavior'] = data['pattern']['behavior']
+            data['pattern'] = data['pattern']['function']
         elif item_type == 'skins':
-            serializer = SkinSerializer(self._get_item(Skin, pk))
+            data = self._get_item(Skin, pk).to_dict()
         else:
             raise exceptions.NotFound("Item type doesn't exists")
-        return serializer
-
-    def get(self, request, pk, format=None):
-        serializer = self._get_item_serializer(request.path, pk)
-        return Response(serializer.data)
+        return Response(data=data)
     
     def post(self, request, pk, format=None):
-        serializer = self._get_item_serializer(request.path, pk)
-        user = GUser.objects.get(pk=request.user_id)
-        item_type = request.path.split('/')[-2]
         try:
+            user = GUser.objects.get(user_id=request.user_id)
+            item_type = request.path.split('/')[-2]
             if item_type == 'guns':
-                user.buy_gun(pk)
+                item = user.buy_gun(pk)
             else:
-                user.buy_skin(pk)
+                item = user.buy_skin(pk)
+        except (Gun.DoesNotExist, Skin.DoesNotExist):
+            raise exceptions.NotFound('Oggetto non trovato')
+        except GUser.DoesNotExist:
+            raise exceptions.NotFound('Utente non trovato')
         except AlreadyExist:
             excp = exceptions.APIException('Possiedi già questo oggetto')
             excp.status_code = status.HTTP_409_CONFLICT
@@ -166,9 +172,12 @@ class ShopItemDetail(APIView):
             excp = exceptions.APIException('Non hai abbastanza gbucks')
             excp.status_code = status.HTTP_402_PAYMENT_REQUIRED
             raise excp
-        duser = DisplayUserSerializer(user)
-        data = {'user': duser.data, 'item': serializer.data}
-        return Response(data=data)
+        else:
+            return Response(data={
+                'user': DisplayUserSerializer(user).data,
+                'item': item.to_safe_dict()
+            })
+
 
 @api_view(['POST'])
 def visit(request):

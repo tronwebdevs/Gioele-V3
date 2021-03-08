@@ -40,6 +40,8 @@ def authenticator(headers, key):
 
 
 class AuthTokenMiddleware:
+    _paths_blacklist = ('/api/users/auth', '/api/users/register', '/api/vl')
+
     def __init__(self, get_response):
         self.get_response = get_response
 
@@ -48,10 +50,7 @@ class AuthTokenMiddleware:
         response = None
         
         # Check if request is for API and isn't to authenticate
-        if request.path.startswith('/api/') \
-            and request.path != '/api/users/auth' \
-            and (request.path != '/api/users/register' and request.method != 'PUT') \
-            and (request.path != '/api/vl' and request.method != 'POST'):
+        if request.path.startswith('/api/') and request.path not in self._paths_blacklist:
             try:
                 data = authenticator(headers=request.headers, key='Authorization')
                 request.user_id = data['id']
