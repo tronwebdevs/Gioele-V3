@@ -157,6 +157,8 @@
                         <ul class="list-unstyled mb-0">
                             <li>
                                 <b>Played:</b> {{ games.count }}
+                            </li>
+                            <li>
                                 <b>Best:</b> {{ games.best.exp_earned }}
                             </li>
                         </ul>
@@ -174,7 +176,9 @@
                         <ul class="list-unstyled mb-0">
                             <li>
                                 <b>Total:</b> {{ purchases.count }}
-                                <b>Highest:</b> {{ purchases.highest.price }}
+                            </li>
+                            <li>
+                                <b>Highest:</b> {{ purchases.highest.price }} gbucks ({{ purchases.highest.item }})
                             </li>
                         </ul>
                         {% else %}

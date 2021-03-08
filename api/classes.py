@@ -1,4 +1,5 @@
 import hashlib
+import inspect
 
 from .exceptions import ParseException
 
@@ -7,9 +8,6 @@ class UserItem(object):
     def __init__(self, id, name):
         self.id = id
         self.name = name
-
-    def get_displayable_id(self):
-        return hashlib.md5(self.id.encode()).hexdigest()
 
     def __str__(self):
         return f'{self.id}-{self.name}'
@@ -26,6 +24,44 @@ class UserGun(UserItem):
 
 class UserSkin(UserItem):
     pass
+
+
+class Displayable:
+    def to_safe_dict(self, remove_fields=()):
+        if not hasattr(self, '_meta'):
+            return None
+
+        data = self.to_dict(safe=True)
+        for field in remove_fields:
+            data.pop(field, None)
+        return data
+
+    def to_dict(self, safe=False):
+        if not hasattr(self, '_meta'):
+            return None
+        
+        data = {}
+        for field in self._meta.get_fields():
+            fname = field.name
+            if fname.startswith('_'):
+                continue
+
+            if safe and (fname == 'created_at' or fname == 'updated_at'):
+                continue
+
+            if field.get_internal_type() == 'DateTimeField':
+                data[fname] = str(getattr(self, fname))
+            else:
+                if hasattr(self, fname):
+                    attr = getattr(self, fname)
+                    if issubclass(attr.__class__, Displayable):
+                        if safe:
+                            attr = attr.to_safe_dict()
+                        else:
+                            attr = attr.to_dict()
+                    data[fname] = attr
+        return data
+
 
 
 """

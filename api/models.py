@@ -7,11 +7,11 @@ from django.utils import timezone
 
 from .utils import generate_short_id, parser
 from .exceptions import ParseException, AlreadyExist, NotEnoughtCoins
-from .classes import UserSkin, UserGun
+from .classes import UserSkin, UserGun, Displayable
 
 
 # GAME RELATED MODELS
-class BulletPattern(models.Model):
+class BulletPattern(models.Model, Displayable):
     id = models.CharField(primary_key=True, max_length=4, editable=False, default=generate_short_id)
     name = models.CharField(max_length=128)
     function = models.CharField(max_length=1024)
@@ -19,33 +19,18 @@ class BulletPattern(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
 
-    def to_safe_dict(self):
-        return {
-            'id': self.id,
-            'function': self.function,
-            'behavior': self.behavior,
-        }
-    
-    def to_dict(self):
-        return {
-            **self.to_safe_dict(),
-            'name': self.name,
-            'created_at': str(self.created_at),
-            'updated_at': str(self.updated_at),
-        }
 
-
-class Gun(models.Model):
-    MAIN_GUN = 0
-    SIDE_GUN = 1
-    GUN_TYPES = [
-        (MAIN_GUN, 'main'),
-        (SIDE_GUN, 'side'),
+class Gun(models.Model, Displayable):
+    _MAIN_GUN = 0
+    _SIDE_GUN = 1
+    _GUN_TYPES = [
+        (_MAIN_GUN, 'main'),
+        (_SIDE_GUN, 'side'),
     ]
 
     id = models.CharField(primary_key=True, max_length=4, editable=False, default=generate_short_id)
     type = models.SmallIntegerField(
-        choices=GUN_TYPES,
+        choices=_GUN_TYPES,
     )
     price = models.FloatField()
     name = models.CharField(max_length=128)
@@ -57,29 +42,14 @@ class Gun(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
 
-    def get_displayable_id(self):
-        return hashlib.md5(str(self.id).encode()).hexdigest()
-
-    def to_safe_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'cooldown': self.cooldown,
-            'damage': self.damage,
-            'shoot': self.shoot,
-            'pattern': None if self.pattern is None else self.pattern.to_safe_dict(),
-        }
-
-    def to_dict(self):
-        obj = {
-            **self.to_safe_dict(),
-            'type': self.type,
-            'price': self.price,
-            'description': self.description,
-        }
-        if self.pattern is not None:
-            obj['pattern'] = self.pattern.to_dict()
-        return obj
+    def to_safe_dict(self, hash_funcs=False):
+        data = super().to_safe_dict(('type', 'price', 'description'))
+        if hash_funcs:
+            hashes = self.get_hashes()
+            data['shoot'] = hashes['shoot']
+            data['pattern'] = hashes['pattern']
+            data['behavior'] = hashes['behavior']
+        return data
 
     def get_hashes(self):
         shoot = hashlib.md5(self.shoot.encode()).hexdigest()
@@ -102,7 +72,7 @@ class Gun(models.Model):
         return self.name
 
 
-class Skin(models.Model):
+class Skin(models.Model, Displayable):
     id = models.CharField(primary_key=True, max_length=4, editable=False, default=generate_short_id)
     description = models.CharField(max_length=256)
     name = models.CharField(max_length=128)
@@ -110,21 +80,8 @@ class Skin(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
 
-    def get_displayable_id(self):
-        return hashlib.md5(str(self.id).encode()).hexdigest()
-
     def to_safe_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-        }
-
-    def to_dict(self):
-        return {
-            **self.to_safe_dict(),
-            'price': self.price,
-            'description': self.description,
-        }
+        return super().to_safe_dict(('price', 'description'))
     
     def save(self, *args, **kwargs):
         self.updated_at = timezone.now()
@@ -134,21 +91,21 @@ class Skin(models.Model):
         return self.name
 
 
-class Ability(models.Model):
+class Ability(models.Model, Displayable):
     id = models.CharField(primary_key=True, max_length=4, editable=False, default=generate_short_id)
     description = models.CharField(max_length=256)
     name = models.CharField(max_length=128)
     price = models.FloatField()
 
-    def get_displayable_id(self):
-        return hashlib.md5(str(self.id).encode()).hexdigest()
+    def to_safe_dict(self):
+        return super().to_safe_dict(('price', 'description'))
 
     def __str__(self):
         return self.name
 
 
 # USER RELATED MODELS
-class UserInventory(models.Model):
+class UserInventory(models.Model, Displayable):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     main_guns = models.CharField(max_length=256, null=True, default=None)
     side_guns = models.CharField(max_length=256, null=True, default=None)
@@ -233,8 +190,14 @@ class UserInventory(models.Model):
     def get_abilities_dict(self):
         return self.get_abilities()
 
-    def get_displayable_id(self):
-        return hashlib.md5(str(self.id).encode()).hexdigest()
+    def to_dict(self, safe=False):
+        return {
+            'id': str(self.id),
+            'main_guns': self.get_main_guns_dict(),
+            'side_guns': self.get_side_guns_dict(),
+            'skins': self.get_skins_dict(),
+            'abilities': self.get_abilities_dict(),
+        }
 
     def __str__(self):
         return str(self.id)
@@ -243,7 +206,7 @@ class UserInventory(models.Model):
 class GUserManager(models.Manager):
     def create_user(self, username, email, password, **extra_fields):
         db_skins = Skin.objects.all()
-        db_guns = Gun.objects.filter(type=Gun.MAIN_GUN)
+        db_guns = Gun.objects.filter(type=Gun._MAIN_GUN)
         # This two checks should never fail as the first thing to do in production should be
         # creating a default skin and gun for every user. This should be achieved by creating
         # them directly in the database or by django shell
@@ -270,7 +233,7 @@ class GUserManager(models.Manager):
         return guser
 
 
-class GUser(models.Model):
+class GUser(models.Model, Displayable):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name='user')
     auth = models.BooleanField(default=False, verbose_name='Email authentication completed')
     level = models.FloatField(default=0)
@@ -350,6 +313,28 @@ class GUser(models.Model):
     
     # def get_visits(self):
     #     return Visitor.objects.filter(user_id=self.id)
+
+    def to_dict(self, safe=False):
+        data = super().to_dict(safe)
+        data['id'] = self.user.id
+        data['username'] = self.user.username
+        data['email'] = self.user.email
+        del data['user']
+        return data
+
+    def to_safe_dict(self):
+        data = super().to_safe_dict(('user', 'inventory'))
+        data['id'] = self.user.id
+        data['username'] = self.user.username
+        data['email'] = self.user.email
+        return data
+
+    def to_simple_dict(self):
+        data = self.to_dict(True)
+        data['main_gun'] = data['main_gun']['id']
+        data['side_gun'] = data['side_gun']['id']
+        data['skin'] = data['skin']['id']
+        return data
 
     def __str__(self):
         return self.user.username

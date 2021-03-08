@@ -1,5 +1,4 @@
-from django.http import HttpResponseRedirect
-from django.urls import reverse
+from django.shortcuts import redirect
 
 
 class AdminAuthMiddleware:
@@ -11,6 +10,6 @@ class AdminAuthMiddleware:
         admin_name = request.session.get('admin_name', None)
         if request.path.startswith('/admin/') and request.path != '/admin/login/' \
             and (admin_id is None or admin_name is None):
-            return HttpResponseRedirect(reverse('gadmin:login'))
+            return redirect('gadmin:login')
 
         return self.get_response(request)

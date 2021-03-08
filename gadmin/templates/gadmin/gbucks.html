@@ -28,12 +28,9 @@
                                 <td>{{ purchase.price }}</td>
                                 <td>{{ purchase.datetime|date:"d/m/Y H:i" }}</td>
                                 <td>
-                                    <!-- <a href="{% url 'gadmin:user' guser.user.id %}" class="action-link">
-                                        <span class="action-icon" data-feather="edit"></span>
+                                    <a href="{% url 'gadmin:gbucks' %}" class="action-link">
+                                        <span class="action-icon" data-feather="eye"></span>
                                     </a>
-                                    <a href="{% url 'gadmin:ban_user' guser.user.id %}" class="action-link">
-                                        <span class="action-icon" data-feather="minus-circle"></span>
-                                    </a> -->
                                 </td>
                             </tr>
                             {% endfor %}

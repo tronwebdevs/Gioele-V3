@@ -12,29 +12,17 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import viewsets, permissions, status, exceptions
 
-from .serializers import UserRegistrationSerializer, UserSerializer, VisitLogSerializer, ScoreboardUserSerializer, DisplayUserSerializer
+from .serializers import UserRegistrationSerializer
 from .models import GUser, VisitLog, UserInventory, Gun, Skin
 from .utils import forge_auth_token
 from .exceptions import AlreadyExist, NotEnoughtCoins
 
+
 @api_view(['GET'])
 def api_root(request, format=True):
-    base_url = 'http://127.0.0.1:8000/api/'
-    paths = (
-        'users/',
-        'users/register/',
-        'users/0/',
-        'visitors/',
-    )
-    if settings.DEBUG:
-        resp_data = {
-            'name': 'Gioele V3 API',
-            'version': '0.0.1',
-            'paths': [base_url + p for p in paths],
-        }
-    else:
-        resp_data = { 'name': 'Gioele V3 API', }
-    return Response(resp_data)
+    return Response(data={
+        'name': 'Gioele V3 API',
+    })
 
 @api_view(['PUT'])
 def user_registration(request, format=True):
@@ -51,8 +39,7 @@ def user_registration(request, format=True):
 
     # TODO: send confirm email
 
-    user_serializer = DisplayUserSerializer(guser)
-    return Response(user_serializer.data, status=status.HTTP_200_OK)
+    return Response(data=guser.to_simple_dict())
 
 @api_view(['POST'])
 def user_authentication(request, format=True):
@@ -63,44 +50,33 @@ def user_authentication(request, format=True):
             guser = GUser.objects.get(pk=user.id)
         except GUser.DoesNotExist:
             guser = GUser(user=user, auth=1, score=0)
-        serializer = DisplayUserSerializer(guser)
         token = forge_auth_token(user.id, user.get_username())
-        return Response(data=serializer.data, headers={ 'Token': token })
+        return Response(data=guser.to_simple_dict(), headers={ 'Token': token })
     else:
         raise exceptions.NotAuthenticated(detail='Dati non validi')
 
 @api_view(['GET'])
 def get_scoreboard(request, format=True):
-    # Get best 10 users on database based on (best) score
-    queryset = GUser.objects.filter(auth=True).order_by('-score')[:10]
-    serializer = ScoreboardUserSerializer(queryset, many=True)
-    return Response(serializer.data)
+    # Get best 10 users on database based on (higher) level
+    data = list(
+        map(
+            lambda u: ({ 'id': u.id, 'username': u.username, 'level': u.level }),
+            list(GUser.objects.filter(auth=True).order_by('-level'))[:10]
+        )
+    )
+    return Response(data=data)
+
+@api_view(['GET'])
+def user_get(request, pk, format=True):
+    try:
+        user = GUser.objects.get(pk=pk)
+    except GUser.DoesNotExist:
+        raise Http404()
+    return Response(data=user.to_simple_dict())
 
 @api_view(['GET'])
 def user_get_me(request, format=True):
-    return UserDetail().get(request, request.user_id, format)
-
-
-class UserDetail(APIView):
-    """
-    Retrieve, update or delete a user instance
-    """
-    def get_object(self, pk):
-        try:
-            return GUser.objects.get(pk=pk)
-        except GUser.DoesNotExist:
-            raise Http404
-
-    def get(self, request, pk, format=None):
-        user = self.get_object(pk)
-        serializer = DisplayUserSerializer(user)
-        return Response(serializer.data)
-
-    def put(self, request, pk, format=None):
-        return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
-
-    def delete(self, request, pk, format=None):
-        return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
+    return user_get(request._request, request.user_id, format)
 
 @api_view(['GET'])
 def shop_list_items(reqeust, format=None):
@@ -154,12 +130,12 @@ class ShopItemDetail(APIView):
     
     def post(self, request, pk, format=None):
         try:
-            user = GUser.objects.get(user_id=request.user_id)
+            guser = GUser.objects.get(user_id=request.user_id)
             item_type = request.path.split('/')[-2]
             if item_type == 'guns':
-                item = user.buy_gun(pk)
+                item = guser.buy_gun(pk)
             else:
-                item = user.buy_skin(pk)
+                item = guser.buy_skin(pk)
         except (Gun.DoesNotExist, Skin.DoesNotExist):
             raise exceptions.NotFound('Oggetto non trovato')
         except GUser.DoesNotExist:
@@ -174,7 +150,7 @@ class ShopItemDetail(APIView):
             raise excp
         else:
             return Response(data={
-                'user': DisplayUserSerializer(user).data,
+                'user': guser.to_simple_dict(),
                 'item': item.to_safe_dict()
             })
 

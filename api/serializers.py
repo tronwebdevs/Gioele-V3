@@ -1,14 +1,7 @@
-from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import GUser, GameLog, VisitLog, UserInventory, Gun, Skin
+from .models import GUser
 from .utils import is_valid_word, SCHOOL_EMAIL_ADDRESS
-
-
-class GameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GameLog
-        fields = '__all__'
 
 
 class UserRegistrationSerializer(serializers.Serializer):
@@ -40,58 +33,7 @@ class UserRegistrationSerializer(serializers.Serializer):
         return value
 
     def validate(self, data):
-        """
-        Validate input data
-        """
-
         if data['password'] != data['rpassword']:
             raise serializers.ValidationError(detail='Password non uguali', code='password')
 
         return data
-
-
-class UserSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source='user.id')
-    username = serializers.CharField(source='user.username')
-    email = serializers.CharField(source='user.email')
-    matches = GameSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = GUser
-        fields = ['id', 'username', 'email', 'auth', 'level', 'inventory', 'matches']
-
-
-class UserInventorySerializer(serializers.ModelSerializer):
-    main_guns = serializers.ListField(source='get_main_guns_dict', read_only=True)
-    side_guns = serializers.ListField(source='get_side_guns_dict', read_only=True)
-    skins = serializers.ListField(source='get_skins_dict', read_only=True)
-    abilities = serializers.ListField(source='get_abilities_dict', read_only=True)
-
-    class Meta:
-        model = UserInventory
-        fields = '__all__'
-
-
-class DisplayUserSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source='user.id')
-    username = serializers.CharField(source='user.username')
-    email = serializers.CharField(source='user.email')
-    inventory = UserInventorySerializer(read_only=True)
-
-    class Meta:
-        model = GUser
-        fields = ['id', 'username', 'email', 'level', 'balance', 'inventory']
-
-
-class ScoreboardUserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username')
-
-    class Meta:
-        model = GUser
-        fields = ['username', 'score']
-
-
-class VisitLogSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = VisitLog
-        fields = '__all__'
