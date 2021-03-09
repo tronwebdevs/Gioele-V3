@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from api.models import GUser, Gun, Skin, BulletPattern
 from api.utils import SCHOOL_EMAIL_ADDRESS
+from gioele_v3.settings import DEBUG
 
 class Command(BaseCommand):
     help = 'Auto-generate default guns and skins'
@@ -19,6 +20,10 @@ class Command(BaseCommand):
         )
     
     def handle(self, *args, **options):
+        if not DEBUG:
+            self.stderr.write('[ERROR] Cannot run this command in production')
+            return
+
         username = 'user_0'
         if 'username' in options:
             username = options['username']

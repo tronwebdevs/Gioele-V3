@@ -1,5 +1,5 @@
 import hashlib
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from .utils import generate_short_id, parser
 from .exceptions import ParseException, AlreadyExist, NotEnoughtCoins
-from .classes import UserSkin, UserGun, Displayable
+from .classes import Displayable
 
 
 # GAME RELATED MODELS
@@ -17,7 +17,9 @@ class BulletPattern(models.Model, Displayable):
     function = models.CharField(max_length=1024)
     behavior = models.CharField(max_length=1024, null=True, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = models.Manager()
 
 
 class Gun(models.Model, Displayable):
@@ -40,7 +42,9 @@ class Gun(models.Model, Displayable):
     shoot = models.CharField(max_length=1024)
     pattern = models.ForeignKey(BulletPattern, on_delete=models.PROTECT, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = models.Manager()
 
     def to_safe_dict(self, hash_funcs=False):
         data = super().to_safe_dict(('type', 'price', 'description'))
@@ -62,14 +66,6 @@ class Gun(models.Model, Displayable):
             'pattern': pattern,
             'behavior': behavior,
         }
-        
-
-    def save(self, *args, **kwargs):
-        self.updated_at = timezone.now()
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
 
 
 class Skin(models.Model, Displayable):
@@ -78,17 +74,12 @@ class Skin(models.Model, Displayable):
     name = models.CharField(max_length=128)
     price = models.FloatField()
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = models.Manager()
 
     def to_safe_dict(self):
         return super().to_safe_dict(('price', 'description'))
-    
-    def save(self, *args, **kwargs):
-        self.updated_at = timezone.now()
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
 
 
 class Ability(models.Model, Displayable):
@@ -96,12 +87,11 @@ class Ability(models.Model, Displayable):
     description = models.CharField(max_length=256)
     name = models.CharField(max_length=128)
     price = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def to_safe_dict(self):
         return super().to_safe_dict(('price', 'description'))
-
-    def __str__(self):
-        return self.name
 
 
 # USER RELATED MODELS
@@ -112,23 +102,22 @@ class UserInventory(models.Model, Displayable):
     skins = models.CharField(max_length=256, null=True, default=None)
     abilities = models.CharField(max_length=256, null=True, default=None)
 
+    objects = models.Manager()
+
     """
     Get guns of supplied type from user inventory database table and joins results
     with the guns database table (to retrieve the guns' names).
-    IMPORTANT: Guns' ID are hashed (md5) when sent to the frontend.
     """
     def _get_guns(self, g_type, hash_id=True):
         field = self.main_guns if g_type == 'main' else self.side_guns
         result = []
         for gun in parser.string_to_dicts(field, 'id', 'level'):
             db_gun = Gun.objects.get(pk=gun['id'])
-            result.append(
-                UserGun(
-                    id=db_gun.id,
-                    name=db_gun.name,
-                    level=gun['level'],
-                )
-            )
+            result.append({
+                'id': db_gun.id,
+                'name': db_gun.name,
+                'level': gun['level'],
+            })
         return result
 
     def _get_listed_items(self, Item, field, hash_id=True):
@@ -199,9 +188,6 @@ class UserInventory(models.Model, Displayable):
             'abilities': self.get_abilities_dict(),
         }
 
-    def __str__(self):
-        return str(self.id)
-
 
 class GUserManager(models.Manager):
     def create_user(self, username, email, password, **extra_fields):
@@ -261,7 +247,7 @@ class GUser(models.Model, Displayable):
         return self.user.email
 
     def log_login(self, visit_id):
-        visit_log = VisitLog.objects.get(pk=visit_id)
+        visit_log = VisitLog.objects.get(pk=UUID(visit_id))
         LoginLog.objects.create(user=self, visit=visit_log)
 
     def _get_item_from_shop(self, Item, item_id):
@@ -311,33 +297,27 @@ class GUser(models.Model, Displayable):
 
         return skin
     
-    # def get_visits(self):
-    #     return Visitor.objects.filter(user_id=self.id)
+    def get_visits(self):
+        return VisitLog.objects.filter(user_id=self.id)
+
+    def _fix_dict_conv(self, data):
+        data['id'] = self.user.id
+        data['username'] = self.user.username
+        data['email'] = self.user.email
+        data.pop('user')
+        return data
 
     def to_dict(self, safe=False):
         data = super().to_dict(safe)
-        data['id'] = self.user.id
-        data['username'] = self.user.username
-        data['email'] = self.user.email
-        del data['user']
-        return data
+        return self._fix_dict_conv(data)
 
     def to_safe_dict(self):
         data = super().to_safe_dict(('user', 'inventory'))
-        data['id'] = self.user.id
-        data['username'] = self.user.username
-        data['email'] = self.user.email
-        return data
+        return self._fix_dict_conv(data)
 
     def to_simple_dict(self):
         data = self.to_dict(True)
-        data['main_gun'] = data['main_gun']['id']
-        data['side_gun'] = data['side_gun']['id']
-        data['skin'] = data['skin']['id']
-        return data
-
-    def __str__(self):
-        return self.user.username
+        return self._fix_dict_conv(data)
 
 
 class BannedUserManager(models.Manager):
@@ -356,12 +336,10 @@ class BannedUser(models.Model):
 
     objects = BannedUserManager()
 
-    def __str__(self):
-        return self.user.username + ': ' + self.reason
-
 
 class VisitLog(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    user = models.ForeignKey(GUser, on_delete=models.SET_NULL, null=True, default=None)
     ip = models.CharField(max_length=16)
     platform = models.CharField(max_length=128)
     lang = models.CharField(max_length=6)
@@ -372,14 +350,9 @@ class VisitLog(models.Model):
     has_touchscreen = models.BooleanField(default=False)
     has_ad_blocker = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-    def save(self, *args, **kwargs):
-        self.updated_at = timezone.now()
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return str(self.id)
+    objects = models.Manager()
 
 
 class LoginLog(models.Model):
@@ -388,8 +361,7 @@ class LoginLog(models.Model):
     visit = models.ForeignKey(VisitLog, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return str(self.id)
+    objects = models.Manager()
 
 
 class GameLogManager(models.Manager):
@@ -436,9 +408,6 @@ class GameLog(models.Model):
 
     objects = GameLogManager()
 
-    def __str__(self):
-        return str(self.id)
-
 
 class PurchaseLog(models.Model):
     by = models.ForeignKey(GUser, on_delete=models.CASCADE)
@@ -446,14 +415,20 @@ class PurchaseLog(models.Model):
     price = models.FloatField()
     datetime = models.DateTimeField(auto_now_add=True)
 
+    objects = models.Manager()
+
 
 class Stat(models.Model):
     key = models.CharField(max_length=16)
     value = models.FloatField()
     at = models.DateTimeField(auto_now_add=True, editable=False)
 
+    objects = models.Manager()
+
 
 class AdminLog(models.Model):
     action = models.CharField(max_length=256)
     by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     datetime = models.DateTimeField(auto_now_add=True)
+
+    objects = models.Manager()

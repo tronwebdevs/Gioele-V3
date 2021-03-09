@@ -1,8 +1,7 @@
 from django.shortcuts import render
 from django.views import generic
-from django.urls import reverse
+from django.shortcuts import redirect
 from django.contrib.auth import authenticate
-from django.http import HttpResponseRedirect
 
 from api.models import BannedUser, GUser
 
@@ -10,8 +9,15 @@ from api.models import BannedUser, GUser
 class LoginView(generic.TemplateView):
     template_name = 'game/login.html'
 
+    def get(self, request, *args, **kwargs):
+        if request.session.get('user_id') is not None:
+            return redirect('game:index')
+
+        return super().get(request, *args, **kwargs)
+
     def post(self, request):
         error = None
+        guser = None
         user = authenticate(username=request.POST.get('username'), password=request.POST.get('password'))
         if user is None:
             error = {
@@ -39,8 +45,9 @@ class LoginView(generic.TemplateView):
                     'message': 'Giocatore non trovato (utente valido)',
                 }
 
-        if error is None:
-            return HttpResponseRedirect(reverse('game:index'))
+        if error is None and guser is not None:
+            guser.log_login(request.session['visit_id'])
+            return redirect('game:index')
         else:
             return self.render_to_response({ 'error': error }, status=403)
 
@@ -52,4 +59,4 @@ def game(request):
 def logout(request):
     del request.session['user_id']
 
-    return HttpResponseRedirect(reverse('game:login'))
+    return redirect('game:login')
