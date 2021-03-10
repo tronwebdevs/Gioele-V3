@@ -10,7 +10,7 @@ class GameMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if request.path.startswith('/admin/'):# or request.path.startswith('/api/'):
+        if request.path.startswith('/admin/'):
             return self.get_response(request)
 
         visit_id = request.session.get('visit_id')
@@ -37,7 +37,7 @@ class GameMiddleware:
             if user_id is None:
                 if request.path.startswith('/api/'):
                     return HttpResponseForbidden(
-                        json.dumps({ 'detail': 'Token richiesto' }),
+                        json.dumps({ 'detail': 'Login richiesto' }),
                         content_type='application/json'
                     )
                 else:
