@@ -46,13 +46,13 @@ class Gun(models.Model, Displayable):
 
     objects = models.Manager()
 
-    def to_safe_dict(self, hash_funcs=False):
-        data = super().to_safe_dict(('type', 'price', 'description'))
+    def to_safe_dict(self, exclude=('type'), hash_funcs=False):
+        data = super().to_safe_dict(exclude)
         if hash_funcs:
             hashes = self.get_hashes()
             data['shoot'] = hashes['shoot']
-            data['pattern'] = hashes['pattern']
-            data['behavior'] = hashes['behavior']
+            data['pattern']['function'] = hashes['pattern']
+            data['pattern']['behavior'] = hashes['behavior']
         return data
 
     def get_hashes(self):
@@ -78,8 +78,8 @@ class Skin(models.Model, Displayable):
 
     objects = models.Manager()
 
-    def to_safe_dict(self):
-        return super().to_safe_dict(('price', 'description'))
+    def to_safe_dict(self, exclude=()):
+        return super().to_safe_dict(exclude)
 
 
 class Ability(models.Model, Displayable):
@@ -108,7 +108,7 @@ class UserInventory(models.Model, Displayable):
     Get guns of supplied type from user inventory database table and joins results
     with the guns database table (to retrieve the guns' names).
     """
-    def _get_guns(self, g_type, hash_id=True):
+    def _get_guns(self, g_type):
         field = self.main_guns if g_type == 'main' else self.side_guns
         result = []
         for gun in parser.string_to_dicts(field, 'id', 'level'):
@@ -120,7 +120,7 @@ class UserInventory(models.Model, Displayable):
             })
         return result
 
-    def _get_listed_items(self, Item, field, hash_id=True):
+    def _get_listed_items(self, Item, field):
         if field is None:
             return list()
         obj_list = []
@@ -144,29 +144,20 @@ class UserInventory(models.Model, Displayable):
         else:
             self.side_guns = parser.dicts_to_string(guns)
 
-    def get_main_guns(self, hash_id=True):
-        return self._get_guns('main', hash_id)
-
-    def get_main_guns_dict(self, hash_id=True):
-        return list(map(vars, self.get_main_guns(hash_id)))
+    def get_main_guns(self):
+        return self._get_guns('main')
 
     def add_main_gun(self, gun_id):
         self._add_gun(gun_id, 'main')
 
-    def get_side_guns(self, hash_id=True):
-        return self._get_guns('side', hash_id)
-
-    def get_side_guns_dict(self, hash_id=True):
-        return list(map(vars, self.get_side_guns(hash_id)))
+    def get_side_guns(self):
+        return self._get_guns('side')
 
     def add_side_gun(self, gun_id):
         self._add_gun(gun_id, 'side')
 
-    def get_skins(self, hash_id=True):
-        return self._get_listed_items(Skin, self.skins, hash_id)
-
-    def get_skins_dict(self, hash_id=True):
-        return self.get_skins(hash_id)
+    def get_skins(self):
+        return self._get_listed_items(Skin, self.skins)
 
     def add_skin(self, skin_id):
         skins = parser.string_to_list(self.skins)
@@ -176,16 +167,13 @@ class UserInventory(models.Model, Displayable):
     def get_abilities(self):
         return self._get_listed_items(Ability, self.abilities)
 
-    def get_abilities_dict(self):
-        return self.get_abilities()
-
     def to_dict(self, safe=False):
         return {
             'id': str(self.id),
-            'main_guns': self.get_main_guns_dict(),
-            'side_guns': self.get_side_guns_dict(),
-            'skins': self.get_skins_dict(),
-            'abilities': self.get_abilities_dict(),
+            'main_guns': self.get_main_guns(),
+            'side_guns': self.get_side_guns(),
+            'skins': self.get_skins(),
+            'abilities': self.get_abilities(),
         }
 
 
@@ -246,6 +234,10 @@ class GUser(models.Model, Displayable):
     def email(self):
         return self.user.email
 
+    @property
+    def is_active(self):
+        return self.user.is_active
+
     def log_login(self, visit_id):
         visit_log = VisitLog.objects.get(pk=UUID(visit_id))
         LoginLog.objects.create(user=self, visit=visit_log)
@@ -304,7 +296,12 @@ class GUser(models.Model, Displayable):
         data['id'] = self.user.id
         data['username'] = self.user.username
         data['email'] = self.user.email
-        data.pop('user')
+        data['main_gun'] = self.main_gun.id
+        data['side_gun'] = None
+        if self.side_gun is not None:
+            data['side_gun'] = self.side_gun.id
+        data['skin'] = self.skin.id
+        data.pop('user', None)
         return data
 
     def to_dict(self, safe=False):

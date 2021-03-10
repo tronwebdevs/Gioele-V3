@@ -1,0 +1,14 @@
+ENDPOINTS:
+ - [GET] /api/: API's info
+ - [GET] /api/shop/[?functions=plain]: all available items (guns and skins). If the 'functions' 
+                                       GET parameter is set to `plain` the guns' functions will be in 
+                                       plain javascript
+ - [GET] /api/users/: scoreboard
+ - [GET] /api/users/me: logged in user's details (info + inventory)
+ - [GET] /api/shop/skins/<skin_id>: info about requested skin
+ - [POST] /api/shop/skins/<skin_id>: buy specified skin
+ - [GET] /api/shop/guns/<gun_id>: reutrn info about requested gun
+ - [POST] /api/shop/guns/<gun_id>: buy specified gun
+ - [POST] /api/vl: register user's visit (browser's info)
+
+No extra headers are required (other than the default generated ones)

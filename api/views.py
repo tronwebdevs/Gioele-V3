@@ -22,6 +22,7 @@ from .exceptions import AlreadyExist, NotEnoughtCoins
 def api_root(request, format=True):
     return Response(data={
         'name': 'Gioele V3 API',
+        'status': 200,
     })
 
 @api_view(['PUT'])
@@ -79,19 +80,19 @@ def user_get_me(request, format=True):
     return user_get(request._request, request.user_id, format)
 
 @api_view(['GET'])
-def shop_list_items(reqeust, format=None):
-    def to_display(item):
-        obj = item.to_dict()
-        hashes = item.get_hashes()
-        obj['shoot'] = hashes['shoot']
-        obj['pattern'] = hashes['pattern']
-        obj['behavior'] = hashes['behavior']
-        return obj
+def shop_list_items(request):
+    items_format = request.GET.get('functions')
+    def to_display(items):
+        return list(
+            map(
+                lambda s: s.to_safe_dict(), items
+            )
+        )
 
     def get_gun_list(type):
         return list(
             map(
-                to_display,
+                lambda g: g.to_safe_dict(hash_funcs=(items_format != 'plain')),
                 filter(lambda g: g.pattern is not None, Gun.objects.filter(type=type))
             )
         )
@@ -99,7 +100,7 @@ def shop_list_items(reqeust, format=None):
     return Response(data={
         'main_guns': get_gun_list(0),
         'side_guns': get_gun_list(1),
-        'skins': list(map(lambda s: s.to_dict(), Skin.objects.all()))
+        'skins': to_display(Skin.objects.all()),
     })
 
 
@@ -119,11 +120,9 @@ class ShopItemDetail(APIView):
         item_type = request.path.split('/')[-2]
         data = None
         if item_type == 'guns':
-            data = self._get_item(Gun, pk).to_dict()
-            data['behavior'] = data['pattern']['behavior']
-            data['pattern'] = data['pattern']['function']
+            data = self._get_item(Gun, pk).to_safe_dict()
         elif item_type == 'skins':
-            data = self._get_item(Skin, pk).to_dict()
+            data = self._get_item(Skin, pk).to_safe_dict()
         else:
             raise exceptions.NotFound("Item type doesn't exists")
         return Response(data=data)

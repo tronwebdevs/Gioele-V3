@@ -6,8 +6,8 @@ from api import views
 urlpatterns = [
     path('', views.api_root, name='index'),
     path('users/', views.get_scoreboard, name='scoreboard'),
-    path('users/register', views.user_registration, name='registration'),
-    path('users/auth', views.user_authentication, name='login'),
+    # path('users/register', views.user_registration, name='registration'),
+    # path('users/auth', views.user_authentication, name='login'),
     path('users/me', views.user_get_me, name='user_me'),
     path('users/<int:pk>', views.user_get, name='user'),
     path('shop/', views.shop_list_items, name='shop'),

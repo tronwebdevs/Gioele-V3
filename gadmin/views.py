@@ -208,15 +208,15 @@ class UserModelView(generic.TemplateView):
             'user': user,
             'main_guns': get_selected_items(
                 Gun.objects.filter(type=0),
-                user.inventory.get_main_guns_dict(hash_id=False)
+                user.inventory.get_main_guns()
             ),
             'side_guns': get_selected_items(
                 Gun.objects.filter(type=1),
-                user.inventory.get_side_guns_dict(hash_id=False)
+                user.inventory.get_side_guns()
             ),
             'skins': get_selected_items(
                 Skin.objects.all(),
-                user.inventory.get_skins_dict(hash_id=False)
+                user.inventory.get_skins()
             ),
             'games': games,
             'purchases': purchases,

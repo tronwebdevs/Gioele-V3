@@ -1,4 +1,6 @@
-from django.http import HttpResponseRedirect, HttpResponseServerError
+import json
+
+from django.http import HttpResponseRedirect, HttpResponseServerError, HttpResponseForbidden
 
 from api.models import VisitLog, GUser
 
@@ -8,7 +10,7 @@ class GameMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if request.path.startswith('/admin/') or request.path.startswith('/api/'):
+        if request.path.startswith('/admin/'):# or request.path.startswith('/api/'):
             return self.get_response(request)
 
         visit_id = request.session.get('visit_id')
@@ -33,7 +35,13 @@ class GameMiddleware:
         user_id = request.session.get('user_id')
         if request.path != '/login/':
             if user_id is None:
-                return HttpResponseRedirect('/login')
+                if request.path.startswith('/api/'):
+                    return HttpResponseForbidden(
+                        json.dumps({ 'detail': 'Token richiesto' }),
+                        content_type='application/json'
+                    )
+                else:
+                    return HttpResponseRedirect('/login')
             
             try:
                 user = GUser.objects.get(pk=user_id)
