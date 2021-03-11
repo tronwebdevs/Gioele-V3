@@ -1,10 +1,10 @@
 function update() {
-  if (gameArea.isPaused){
-    return;
-  }
-
   gameArea.clear();
   gameArea.updateBG();
+
+  if (Object.keys(player).length == 0){
+    return;
+  }
 
   player.changePos();
   player.update();
@@ -36,10 +36,43 @@ function update() {
   }
 
   showRound()
-
   displayOptions();
 }
 
+//default canvas
+(function (){
+    let ctx = gameArea.canvas.getContext('2d');
+    gameArea.canvas.width = 800;
+    gameArea.canvas.height = 600;
+    ctx.fillStyle = "black";
+    ctx.textAlign = "center";
+    ctx.font = "bold 100px Audiowide";
+    ctx.fillText("GIOELE V3", gameArea.canvas.width/2, gameArea.canvas.height/2);
+    ctx.font = "bold 50px Audiowide";
+    ctx.fillText("clicca per giocare", gameArea.canvas.width/2, gameArea.canvas.height/1.5);
+})();
+
+//animation at game start
+function startAnim(callback){
+  let ctx = gameArea.canvas.getContext('2d');
+  ctx.font = "bold 100px Audiowide";
+  ctx.fillStyle = "black";
+  ctx.textAlign = "center";
+  let temp = 0;
+  let tempInt = setInterval(function(){
+    ctx.globalAlpha = 0+temp;
+    ctx.drawImage(background,0,0);
+    ctx.globalAlpha = 1-temp;
+    ctx.fillStyle = 'rgb('+temp*255+','+temp*255+','+temp*255+')';
+    ctx.fillText("GIOELE V3", 400, 300);
+    temp+=0.02;
+    if (temp >= 1){
+      ctx.globalAlpha = 1;
+      clearInterval(tempInt);
+      callback();
+    }
+  }, Math.round(1000/FPS))
+}
 
 //GRAPHICS
 function checkRound(x){
@@ -53,7 +86,7 @@ function checkRound(x){
 }
 function showRound(){
   if (canvasround){
-    let ctx = gameArea.canvas.getContext("2d");
+    let ctx = gameArea.context;
     ctx.font = "30px Audiowide";
     ctx.fillStyle = "red";
     ctx.textAlign = "center";
@@ -64,7 +97,7 @@ function showRound(){
 function displayOptions(){
   if (document.getElementById("opt_1").checked){
     for (i = 0; i < enemies.length; i++) {
-      let ctx = gameArea.canvas.getContext("2d");
+      let ctx = gameArea.context;
       ctx.beginPath();
       ctx.lineWidth = "4";
       ctx.strokeStyle = "rgb("+ 255/enemies[i].tothp*(enemies[i].tothp-enemies[i].hp) + ","+ 255/enemies[i].tothp*enemies[i].hp +",0)";
@@ -75,7 +108,7 @@ function displayOptions(){
   }
   if (document.getElementById("opt_2").checked){
     for (i = 0; i < enemies.length; i++) {
-      let ctx = gameArea.canvas.getContext("2d");
+      let ctx = gameArea.context;
       ctx.beginPath();
       ctx.lineWidth = enemies[i].radius + "";
       ctx.strokeStyle = "rgba(255,0,0,0.5)";
@@ -84,7 +117,7 @@ function displayOptions(){
     }
   }
   if (document.getElementById("opt_3").checked){
-    let ctx = gameArea.canvas.getContext("2d");
+    let ctx = gameArea.context;
     ctx.beginPath();
     ctx.lineWidth = "2";
     ctx.strokeStyle = "rgba(255,0,0,0.5)";

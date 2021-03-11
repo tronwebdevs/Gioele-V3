@@ -22,8 +22,6 @@
 
   <canvas id="gameCanvas" width="0" height="0"> </canvas>
   <br>
-  <button id="gameStartButton" onClick="startGame()"> start game </button>
-  <br>
 
   <button id="shootMainGun" onClick="shootMainGun()"> main gun </button>
   <progress id="mainGunReady" value="1"> </progress>
@@ -64,14 +62,14 @@
 
   <a href="{% url 'game:logout' %}">Logout</a>
 
+  <script src="{% static 'game/main.js' %}"></script>
   <script src="{% static 'game/maurizio/lucasars.js' %}"></script>
   <script src="{% static 'game/maurizio/maurizio.js' %}"></script>
+  <script src="{% static 'game/classes.js' %}"></script>
   <script src="{% static 'game/maurizio/martino.js' %}"></script>
   <script src="{% static 'game/functions.js' %}"></script>
   <script src="{% static 'game/patterns.js' %}"></script>
-  <script src="{% static 'game/classes.js' %}"></script>
   <script src="{% static 'game/guns.js' %}"></script>
-  <script src="{% static 'game/main.js' %}"></script>
 
 </body>
 </html>

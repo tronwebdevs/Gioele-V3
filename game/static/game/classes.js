@@ -1,11 +1,9 @@
 let gameArea = {
   canvas: document.getElementById("gameCanvas"),
-  bgy : 0, //background Y
+  bgy : 0, //background Y pos
 
   start : function(){
     this.context = this.canvas.getContext("2d");
-    this.canvas.width = 800;
-    this.canvas.height = 600;
     //richiama la funzione update
     this.interval = setInterval(update, Math.round(1000/FPS));
   },
@@ -26,7 +24,7 @@ class Player {
   constructor(equip){
     this.width = 60,
     this.height = 60,
-    this.x = 400;
+    this.x = 400 - this.width/2;
     this.y = 530;
 
     this.isMoving = false;
@@ -87,7 +85,7 @@ class Bullet {
     this.behavior()
   }
   update() {
-    let ctx = gameArea.canvas.getContext("2d");
+    let ctx = gameArea.context;
     ctx.fillStyle = "white";
     ctx.lineWidth = 5;
     ctx.beginPath();
@@ -106,21 +104,33 @@ class Bullet {
 }
 
 class Enemy {
-  constructor(id, type, x, y, hp, radius){
+  constructor(id, type, x, y, hp, damage, rarity, radius){
     this.id = id;
     this.type = type;
-    this.pattern = getPattern(this.type);
+    let temp = getPattern(this.type);
+    this.pattern = temp.pattern;
+    this.behavior = temp.behavior;
+    this.behavior();
     this.x = x;
     this.y = y;
     this.hp = hp;
     this.tothp = hp;
+    this.damage = damage;
+    this.rarity = rarity;
     this.radius = radius;
-    /*  TEMP  */this.p_y = Math.floor(Math.random()*(gameArea.canvas.height/2));
-                this.hasShot = false;
   }
   update() {
     let ctx = gameArea.context;
-    ctx.drawImage(enemyskin, this.x - 15, this.y - 15)
+    ctx.drawImage(enemyskin, this.x - this.radius, this.y - this.radius)
+    for (let i = 0; i < this.rarity; i++){
+      ctx.beginPath();
+      ctx.filter = "blur(5px)";
+      ctx.lineWidth = enemies[i].radius + "";
+      ctx.strokeStyle = "rgba(255,255,0,0.3)";
+      ctx.arc(this.x, this.y, this.radius/2, 0, 2*Math.PI);
+      ctx.stroke();
+      ctx.filter = "blur(0px)";
+    }
   }
   move() {
     this.pattern();

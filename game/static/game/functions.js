@@ -1,26 +1,35 @@
 function startGame() {
-  gameSocket.send(JSON.stringify({a:0}));
-  console.log("---- GAME STARTED")
-
-  //while (Object.keys(player).length != 0) {
-  //  console.log("---- CANVAS CREATED")
+  document.getElementById("gameCanvas").onclick = function() {}
+  startAnim(function(){
+    //setTimeout(function(){
+      gameSocket.send(JSON.stringify({a:0}));
+    //},2000);
+    console.log("---- GAME STARTED")
     gameArea.start();
-  //}
-
-  document.getElementById("gameStartButton").disabled = true;
+  });
 }
-function pauseGame() {
-  //gameArea.pause();
-  console.log("WIP")
+
+document.getElementById("gameCanvas").onclick = function() {
+  startGame();
 }
 
 function setPlayer(obj) {
   let mg, sg;
   if (obj.main_gun){
-    mg = new MainGun(obj.main_gun.id, obj.main_gun.name, obj.main_gun.cooldown, obj.main_gun.damage)
+    mg = new MainGun(
+      obj.main_gun.id,
+      obj.main_gun.name,
+      obj.main_gun.cooldown,
+      obj.main_gun.damage
+    )
   }
   if (obj.side_gun){
-    sg = new SideGun(obj.side_gun.id, obj.side_gun.name, obj.side_gun.cooldown, obj.side_gun.damage)
+    sg = new SideGun(
+      obj.side_gun.id,
+      obj.side_gun.name,
+      obj.side_gun.cooldown,
+      obj.side_gun.damage
+    )
   }
   player = new Player({
     mainGun: mg,
@@ -70,10 +79,14 @@ function stopPlayer() {
 }
 
 function shootMainGun() {
-  player.equip.mainGun.shoot();
+  if (player.equip.mainGun){
+    player.equip.mainGun.shoot();
+  }
 }
 function shootSideGun() {
-  player.equip.sideGun.shoot();
+  if (player.equip.sideGun){
+    player.equip.sideGun.shoot();
+  }
 }
 
 

@@ -13,6 +13,18 @@ let sideGunBullets = [];
 let enemies = [];
 let enemiesBullets = [];
 
+let MOTHERLIVES = 3;
+function TEMP_SHIT(){
+  MOTHERLIVES --;
+  if (MOTHERLIVES == 0) {
+    clearInterval(gameArea.interval);
+    let ctx = gameArea.canvas.getContext('2d');
+    ctx.fillStyle = "red";
+    ctx.textAlign = "center";
+    ctx.font = "bold 30px Audiowide";
+    ctx.fillText("Nave Madre distrutta", gameArea.canvas.width/2, gameArea.canvas.height/2);
+  }
+}
 
 document.body.onkeydown = function (e){
   if (e.keyCode === 37){

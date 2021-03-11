@@ -24,11 +24,16 @@ console.log("Expect Me")
 //garbage collection
 function e_maurizio(_enemy, i){
   if (_enemy.y > gameArea.canvas.height + _enemy.radius){
-    gameSocket.send(JSON.stringify({
-      a: 5, // Action type
-      i: _enemy.id // enemy id
-    }));
     enemies.splice(i,1);
+    if (_enemy.type != 1){
+      gameSocket.send(JSON.stringify({
+        a: 5, // Action type
+        i: _enemy.id // enemy id
+      }));
+
+
+                  TEMP_SHIT();
+    }
   }
 }
 
@@ -75,14 +80,21 @@ function collision(x,i,g){
 
 //patterns based on enemy type (x)
 function getPattern(x){
-  if (x === 0){
+  if (x == 0){
     switch (Math.floor(Math.random() * 2)) {
       case 0:
-        return e_pattern_0;
+        return {pattern: e0_pattern_0, behavior: e0_behavior_0};
         break;
       case 1:
-        return e_pattern_1;
+        return {pattern: e0_pattern_1, behavior: e0_behavior_1};
         break;
     }
+  }
+  if (x == 1){
+    return {pattern: e1_pattern_0, behavior: e1_behavior_0};
+  }
+  if (x == 2){
+    console.log("WORK IN PROGRESS")
+    return {pattern: e0_pattern_0, behavior: e0_behavior_0};
   }
 }
