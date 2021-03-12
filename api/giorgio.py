@@ -55,7 +55,7 @@ class Giorgio:
             # Generate pseudo-random to choose enemy's type (based on given percentages)
             rnd = random.random()
 
-            DEBUG('Giorgio', 'DEBUG ENEMIES GEN: g=%i, k=%i, p1=%f, p2=%f, rand:%f' % (self._generation, self.round, p1 / 100, (p1 + p2) / 100, rnd))
+            # DEBUG('Giorgio', 'DEBUG ENEMIES GEN: g=%i, k=%i, p1=%f, p2=%f, rand:%f' % (self._generation, self.round, p1 / 100, (p1 + p2) / 100, rnd))
 
             # Choose enemy's type based on given percentages
             if rnd <= p1 / 100:
@@ -81,7 +81,7 @@ class Giorgio:
         # Generate pseudo-random to choose powerup's type (based on given percentages)
         rnd = random.random()
         
-        DEBUG('Giorgio', 'DEBUG POWERUPS GEN: g=%i, k=%i, p0=%f, p1=%f, p2=%f, rand:%f' % (self._generation, self.round, p0 / 100, (p0 + p1) / 100, (p0 + p1 + p2) / 100, rnd))
+        # DEBUG('Giorgio', 'DEBUG POWERUPS GEN: g=%i, k=%i, p0=%f, p1=%f, p2=%f, rand:%f' % (self._generation, self.round, p0 / 100, (p0 + p1) / 100, (p0 + p1 + p2) / 100, rnd))
 
         # Choose powerup's type based on given percentages
         if rnd <= p0 / 100:

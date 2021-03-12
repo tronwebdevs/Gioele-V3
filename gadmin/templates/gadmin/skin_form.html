@@ -27,9 +27,20 @@
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <label for="inputImage" class="col-sm-2 col-form-label">Image</label>
+                        <label for="inputImage" class="col-sm-2 col-form-label">Image file</label>
                         <div class="col-sm-10">
-                            <input name="image" class="form-control" type="file" id="inputImage" disabled>
+                            <select class="form-select" aria-label="Image file" id="inputImage" name="image" onchange="image_change(event)">
+                                <option selected disabled>Select image file</option>
+                                {% for f in files %}
+                                <option value="{{ f }}" {% if skin.filename == f %}selected{% endif %}>{{ f }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputPreview" class="col-sm-2 col-form-label">Preview</label>
+                        <div class="col-sm-10">
+                            <img src="/static/game/images/{{ skin.filename }}" id="preview" style="max-width:100px;max-height:100px;" />
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary">Save</button>
@@ -58,3 +69,10 @@
     </div>
 </div>
 {% endblock content %}
+{% block scripts %}
+<script>
+    function image_change(event) {
+        document.getElementById('preview').src = '/static/game/images/' + event.target.value;
+    }
+</script>
+{% endblock scripts %}

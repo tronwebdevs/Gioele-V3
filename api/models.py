@@ -1,4 +1,5 @@
 import hashlib
+import base64
 from uuid import uuid4, UUID
 
 from django.db import models
@@ -53,6 +54,11 @@ class Gun(models.Model, Displayable):
             data['shoot'] = hashes['shoot']
             data['pattern']['function'] = hashes['pattern']
             data['pattern']['behavior'] = hashes['behavior']
+        else:
+            data['shoot'] = base64.b64encode(self.shoot.encode('ascii'))
+            data['pattern']['function'] = base64.b64encode(self.pattern.function.encode('ascii'))
+            if self.pattern.behavior is not None:
+                data['pattern']['behavior'] = base64.b64encode(self.pattern.behavior.encode('ascii'))
         return data
 
     def get_hashes(self):
@@ -73,6 +79,7 @@ class Skin(models.Model, Displayable):
     description = models.CharField(max_length=256)
     name = models.CharField(max_length=128)
     price = models.FloatField()
+    filename = models.CharField(max_length=64)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -197,7 +204,7 @@ class GUserManager(models.Manager):
             side_guns=None,
             skins=parser.list_to_string([ db_skins[0].id ])
         )
-        guser = GUser(user=user, inventory=inventory)
+        guser = GUser(user=user, inventory=inventory, **extra_fields)
         # Use the first skin (default) as user's first skin
         guser.skin = db_skins.first()
         # Get the first gun (main) as user's first gun

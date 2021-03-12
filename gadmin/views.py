@@ -1,6 +1,9 @@
 import platform
 import subprocess
 import hashlib
+import sys
+from os import listdir
+from os.path import isfile, isdir, join
 
 import psutil
 from django.shortcuts import render
@@ -496,9 +499,12 @@ class SkinModelView(generic.TemplateView):
                 return redirect('gadmin:skins')
         else:
             skin = Skin(price=0.0, created_at=timezone.now(), updated_at=timezone.now())
+
+        files_path = join(sys.path[0], 'game/static/game/images')
         
         return self.render_to_response({
             'skin': skin,
+            'files': listdir(files_path),
             'users_count': len(GUser.objects.filter(skin=skin.id)),
             **get_messages(request, 'skin'),
         })
@@ -514,6 +520,11 @@ class SkinModelView(generic.TemplateView):
         try:
             skin.name = raise_if_not_valid(request.POST.get('name'), valid_string, 'name')
             skin.description = raise_if_not_valid(request.POST.get('description'), valid_string, 'description')
+            skin.filename = raise_if_not_valid(
+                request.POST.get('image'),
+                lambda val: valid_string(val) and '../' not in val and val[0] != '/',
+                'image'
+            )
             skin.price = float(request.POST.get('price'))
             skin.save()
             AdminLog.objects.create(

@@ -38,7 +38,13 @@ class LoginView(generic.TemplateView):
         else:
             try:
                 guser = GUser.objects.get(user=user)
-                request.session['user_id'] = guser.id
+                if not guser.auth:
+                    error = {
+                        'code': 4,
+                        'message': 'Devi completare l\'autenticazione via email, controlla la tua casella di posta della scuola',
+                    }
+                else:
+                    request.session['user_id'] = guser.id
             except GUser.DoesNotExist:
                 error = {
                     'code': 3,

@@ -1,0 +1,34 @@
+{
+    "guns": [
+        {
+            "name": "Default main gun",
+            "type": 0,
+            "description": "No description",
+            "damage": 100,
+            "cooldown": 1200,
+            "price": 0,
+            "shoot": "mainGunBullets.push(new Bullet(player.x+player.width/2,player.y,8,pattern_0));mainGunBullets[mainGunBullets.length-1].behavior();",
+            "pattern": "this.y-=this.speedY;",
+            "behavior": null
+        },
+        {
+            "name": "Default side gun",
+            "type": 1,
+            "description": "No description",
+            "damage": 200,
+            "cooldown": 1600,
+            "price": 0,
+            "shoot": "let tempx=player.x+player.width/2;sideGunBullets.push(new Bullet(tempx,player.y,3,pattern,behavior));let tempvar=0;let tempint=setInterval(function(){if(tempvar>=5){clearInterval(tempint);}sideGunBullets.push(new Bullet(tempx,player.y,3,pattern,behavior));tempvar++;},50);",
+            "pattern": "this.y-=this.speedY;this.x=this.constX+this.mult*Math.cos(this.arg*3.14/180);this.arg+=7;this.mult+=0.5;",
+            "behavior": "this.constX=this.x;this.arg=90;this.mult=0;"
+        }
+    ],
+    "skins": [
+        {
+            "name": "Default skin",
+            "description": "No description",
+            "price": 0,
+            "filename": "skin_01.png"
+        }
+    ]
+}
