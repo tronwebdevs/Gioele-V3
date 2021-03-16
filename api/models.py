@@ -55,10 +55,10 @@ class Gun(models.Model, Displayable):
             data['pattern']['function'] = hashes['pattern']
             data['pattern']['behavior'] = hashes['behavior']
         else:
-            data['shoot'] = base64.b64encode(self.shoot.encode('ascii'))
-            data['pattern']['function'] = base64.b64encode(self.pattern.function.encode('ascii'))
+            data['shoot'] = base64.b64encode(self.shoot.encode('ascii')).decode()
+            data['pattern']['function'] = base64.b64encode(self.pattern.function.encode('ascii')).decode()
             if self.pattern.behavior is not None:
-                data['pattern']['behavior'] = base64.b64encode(self.pattern.behavior.encode('ascii'))
+                data['pattern']['behavior'] = base64.b64encode(self.pattern.behavior.encode('ascii')).decode()
         return data
 
     def get_hashes(self):
