@@ -4,6 +4,19 @@ from django.shortcuts import redirect
 from django.contrib.auth import authenticate
 
 from api.models import BannedUser, GUser
+from gioele_v3.settings import DEBUG
+
+
+def get_messages(request, key):
+    err_key = 'u_' + key + '_error'
+    error = request.session.get(err_key)
+    if error is not None:
+        del request.session[err_key]
+    mess_key = 'u_' + key + '_message'
+    message = request.session.get(mess_key)
+    if message is not None:
+        del request.session[mess_key]
+    return { 'error': error, 'message': message }
 
 
 class LoginView(generic.TemplateView):
@@ -12,54 +25,68 @@ class LoginView(generic.TemplateView):
     def get(self, request, *args, **kwargs):
         if request.session.get('user_id') is not None:
             return redirect('game:index')
+        messages = get_messages(request, 'login')
+        if messages.get('error') is not None:
+            code, mess = messages['error'].split('|')
+            messages['code'] = code
+            messages['error'] = mess
 
-        return super().get(request, *args, **kwargs)
+        return self.render_to_response(messages)
 
     def post(self, request):
         error = None
         guser = None
         user = authenticate(username=request.POST.get('username'), password=request.POST.get('password'))
         if user is None:
-            error = {
-                'code': 1,
-                'message': 'Username o password errati',
-            }
+            error = '1|Username o password errati'
         elif not user.is_active:
             banned = BannedUser.objects.get(user__user=user)
-            error = {
-                'code': 2,
-                'message': 'Sei stato bannato per: "%s"' % banned.reason,
-            }
+            error = '2|Sei stato bannato per: "%s"' % banned.reason
         elif user.is_staff:
-            error = {
-                'code': 3,
-                'message': 'Gli admin non possono giocare',
-            }
+            if DEBUG:
+                error = '3|Gli admin non possono giocare'
+            else:
+                error = '1|Username o password errati'
         else:
             try:
                 guser = GUser.objects.get(user=user)
                 if not guser.auth:
-                    error = {
-                        'code': 4,
-                        'message': 'Devi completare l\'autenticazione via email, controlla la tua casella di posta della scuola',
-                    }
+                    error = '4|Devi completare l\'autenticazione via email, controlla la tua casella di posta della scuola'
                 else:
                     request.session['user_id'] = guser.id
             except GUser.DoesNotExist:
-                error = {
-                    'code': 3,
-                    'message': 'Giocatore non trovato (utente valido)',
-                }
+                error = 'Giocatore non trovato (utente valido)'
 
         if error is None and guser is not None:
             guser.log_login(request.session['visit_id'])
-            return redirect('game:index')
+            redirect_to = 'game:index'
         else:
-            return self.render_to_response({ 'error': error }, status=403)
+            request.session['u_login_error'] = error
+            redirect_to = 'game:login'
+        return redirect(redirect_to)
+
+
+class RegistrationView(generic.TemplateView):
+    template_name = 'game/registration.html'
+
+    def get(self, request, *args, **kwargs):
+        if request.session.get('user_id') is not None:
+            return redirect('game:index')
+
+        return self.render_to_response(get_messages(request, 'register'))
+
+    def post(self, request):
+        request.session['u_register_error'] = 'Not implemented yet'
+
+        redirect_to = 'game:registration'
+        return redirect(redirect_to)
 
 
 def game(request):
-    return render(request, 'game/index.html', { 'user': request.user })
+    return render(request, 'game/game.html', {
+        'user': request.user,
+        'debug': DEBUG,
+    })
 
 
 def logout(request):

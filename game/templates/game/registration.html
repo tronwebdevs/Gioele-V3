@@ -11,12 +11,10 @@
     </div>
 
     <div class="body">
-        <h4 class="title">Login</h4>
+        <h4 class="title">Registrazione</h4>
 
         <p>
-            Benvenuto viaggiatore,<br/>
-            completa il login o registrati per<br/>
-            iniziare a giocare
+            Ricorda di utilizzare l'email d'istituto
         </p>
         
         {% if error %}
@@ -27,13 +25,14 @@
         
         
         {% if code != 2 %}
-        <form method="POST" action="{% url 'game:login' %}" class="login-form">
+        <form method="POST" action="{% url 'game:registration' %}" class="login-form">
             {% csrf_token %}
             <input type="text" name="username" placeholder="Username" class="login-input" />
+            <input type="email" name="email" placeholder="Email" class="login-input" />
             <input type="password" name="password" placeholder="Password" class="login-input" />
-            <div class="login-buttons">
-                <a href="{% url 'game:registration' %}" class="btn-register">Registrati</a>
-                <button type="submit" class="btn-login">Entra</button>
+            <input type="password" name="cpassword" placeholder="Conferma password" class="login-input" />
+            <div class="register-buttons">
+                <button type="submit" class="btn-login">Conferma</button>
             </div>
         </form>
         {% endif %}

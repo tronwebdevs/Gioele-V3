@@ -44,18 +44,18 @@ function update() {
     let ctx = gameArea.canvas.getContext('2d');
     gameArea.canvas.width = 800;
     gameArea.canvas.height = 600;
-    ctx.fillStyle = "black";
+    ctx.fillStyle = "white";
     ctx.textAlign = "center";
-    ctx.font = "bold 100px Audiowide";
+    ctx.font = "bold 100px RetroGaming";
     ctx.fillText("GIOELE V3", gameArea.canvas.width/2, gameArea.canvas.height/2);
-    ctx.font = "bold 50px Audiowide";
+    ctx.font = "bold 50px RetroGaming";
     ctx.fillText("clicca per giocare", gameArea.canvas.width/2, gameArea.canvas.height/1.5);
 })();
 
 //animation at game start
 function startAnim(callback){
   let ctx = gameArea.canvas.getContext('2d');
-  ctx.font = "bold 100px Audiowide";
+  ctx.font = "bold 100px RetroGaming";
   ctx.fillStyle = "black";
   ctx.textAlign = "center";
   let temp = 0;
@@ -87,7 +87,7 @@ function checkRound(x){
 function showRound(){
   if (canvasround){
     let ctx = gameArea.context;
-    ctx.font = "30px Audiowide";
+    ctx.font = "30px RetroGaming";
     ctx.fillStyle = "red";
     ctx.textAlign = "center";
     ctx.fillText("Ondata " + currentround, gameArea.canvas.width/2, gameArea.canvas.height/4);

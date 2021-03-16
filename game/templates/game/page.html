@@ -1,0 +1,24 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" />
+    <meta name="color-scheme" content="dark">
+    <title> Gioele V3 </title>
+    <link rel="icon" href="{% static 'game/images/logo.png' %}" />
+    <!-- TODO: replace remote font with local -->
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Ubuntu:regular,bold&subset=Latin">
+    <link type="text/css" rel="stylesheet" href="{% static 'game/style.css' %}">
+    <link type="text/css" rel="stylesheet" href="{% static 'game/flexboxgrid/flexboxgrid.min.css' %}">
+    {% block stylesheets %}{% endblock %}
+</head>
+
+<body>
+    {% block content %}{% endblock %}
+    
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

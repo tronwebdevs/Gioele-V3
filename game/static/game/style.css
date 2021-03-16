@@ -1,0 +1,14 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    background-image: url('images/stars.png');
+    background-color: #111111;
+    background-position: center;
+    color: #F0F0F0;
+    font-family: Ubuntu;
+}

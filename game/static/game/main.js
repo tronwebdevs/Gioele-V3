@@ -21,7 +21,7 @@ function TEMP_SHIT(){
     let ctx = gameArea.canvas.getContext('2d');
     ctx.fillStyle = "red";
     ctx.textAlign = "center";
-    ctx.font = "bold 30px Audiowide";
+    ctx.font = "bold 30px RetroGaming";
     ctx.fillText("Nave Madre distrutta", gameArea.canvas.width/2, gameArea.canvas.height/2);
   }
 }

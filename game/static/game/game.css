@@ -1,0 +1,72 @@
+@font-face {
+    font-family: RetroGaming;
+    src: url(fonts/RetroGaming.ttf);
+}
+
+.main {
+    max-width: 1200px;
+    width: 100%;
+    margin: auto;
+}
+
+.body {
+    margin: 0 1rem;
+}
+
+.header {
+    text-align: center;
+    margin: 30px 0;
+}
+.header h1.title {
+    margin: 0;
+    color: #EEC015;
+    font-size: 40px;
+    padding: 10px 0;
+}
+.header span.subtitle {
+    margin: 0;
+    color: #FFFFFF;
+    font-size: 16px;
+}
+
+.card {
+    padding: 20px;
+    margin: 1rem 0;
+    background-color: #202020;
+}
+.card .title {
+    text-align: center;
+    margin: 0 0 10px 0;
+}
+
+#gameCanvas {
+    border: 3px solid #111111;
+    background-color: #111111;
+}
+.controls {
+    position: relative;
+    margin-top: 10px;
+}
+
+.player-info {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+.player-info li {
+    padding: 4px 0;
+}
+
+.btn-logout {
+    display: block;
+    padding: 8px;
+    text-decoration: none;
+    border: 1px solid #2196F3;
+    background-color: rgba(33, 150, 243, 0.2);
+    text-align: center;
+    border-radius: 4px;
+    color: #F0F0F0;
+}
+.btn-logout:hover {
+    background-color: rgba(33, 150, 243, 1);
+}
