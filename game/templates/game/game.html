@@ -5,7 +5,7 @@
 <link type="text/css" rel="stylesheet" href="{% static 'game/game.css' %}">
 {% endblock stylesheets %}
 {% block content %}
-<div class="main">
+<div class="main page">
     <div class="body">
         <div class="row">
             <div class="col-lg-9 col-xs-12">
@@ -34,7 +34,7 @@
                 <div class="card">
                     <h4 class="title">Debug</h4>
                     <span>Connection state: <span id="ws-conn">closed</span></span>
-                    <form style="margin-top:10px">
+                    <form class="debug-form">
                         <div>
                             <input type="checkbox" id="opt_1">
                             <label for="opt_1">show enemy health</label>
@@ -50,27 +50,28 @@
                     </form>
                 </div>
                 {% endif %}
-                <div class="card">
-                    <ul class="player-info">
-                        <li>
-                            <b>Username:</b> {{ user.username }}
-                        </li>
-                        <li>
-                            <b>Livello:</b> {{ user.level|rounddown }}
-                        </li>
-                        <li>
-                            <b>Soldi:</b> {{ user.balance }} gbucks
-                        </li>
-                    </ul>
+                <div class="card player-card">
+                    <div class="pinfo">
+                        <span>{{ user.username }}</span>
+                        <span>{{ user.level|rounddown }}</span>
+                    </div>
+                    <div class="level-bar">
+                        <progress value="{{ user.level|levelbar }}" max="100"> </progress>
+                    </div>
+                    <div class="pinfo-footer">
+                        <a href="{% url 'game:profile' %}">Profilo</a>
+                        <small>{{ user.balance }} gbucks</small>
+                    </div>
                 </div>
                 <div class="card">
                     <ul style="margin:0;padding-left:15px;">
                         <li><code>left arrow</code> move left </li>
                         <li><code>right arrow</code> move right </li>
                         <li><code>q</code> shoot with main gun </li>
-                        <li><code>e</code> shoot with side gun </li>
+                        <li><code>w</code> shoot with side gun </li>
                     </ul>
                 </div>
+                <a href="{% url 'game:leaderboard' %}" class="btn-alt">Classifica</a>
                 <a href="{% url 'game:logout' %}" class="btn-logout">Logout</a>
             </div>
 

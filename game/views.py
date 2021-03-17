@@ -82,11 +82,34 @@ class RegistrationView(generic.TemplateView):
         return redirect(redirect_to)
 
 
-def game(request):
-    return render(request, 'game/game.html', {
-        'user': request.user,
-        'debug': DEBUG,
-    })
+class LeaderboardView(generic.TemplateView):
+    template_name = 'game/leaderboard.html'
+
+    def get(self, request):
+        return self.render_to_response({
+            'users': list(GUser.objects.order_by('level'))[0:10],
+        })
+
+
+class ProfileView(generic.TemplateView):
+    template_name = 'game/profile.html'
+
+    def get(self, request):
+        return self.render_to_response({
+            'user': request.user,
+            'user_skins': request.user.inventory.get_skins(),
+            'user_guns': request.user.inventory.get_main_guns(),
+        })
+
+
+class GameView(generic.TemplateView):
+    template_name = 'game/game.html'
+
+    def get(self, request):
+        return self.render_to_response({
+            'user': request.user,
+            'debug': DEBUG,
+        })
 
 
 def logout(request):

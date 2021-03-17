@@ -1,0 +1,68 @@
+form.profile-form .row {
+    margin: 0.5rem 0;
+}
+
+form.profile-form input {
+    display: block;
+    width: calc(100% - 24px);
+    background-color: #303030;
+    border-radius: 4px;
+    padding: 12px;
+    color: #888888;
+    border: none;
+}
+
+form.profile-form .row > div {
+    text-align: right;
+}
+
+form.profile-form input:disabled {
+    background-color: #3F3F3F;
+}
+
+form.profile-form .btn-save {
+    border: none;
+    background-color: green;
+    color: #F0F0F0;
+    padding: 8px 32px;
+    border-radius: 4px;
+}
+.form-buttons {
+    text-align: right;
+    margin-top: 1rem;
+    margin-right: 1rem;
+}
+
+.inventory-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+.inventory-table td {
+    padding: 10px;
+    color: #F0F0F0;
+}
+.inventory-table td.center {
+    text-align: center;
+}
+.inventory-table td {
+    border: 1px solid #4d4d4d;
+}
+.inventory-table td > button {
+    padding: 2px 8px;
+    border: none;
+    background-color: #2196F3;
+    color: #F0F0F0;
+    border-radius: 4px;
+}
+.inventory-table td > img {
+    width: 100%;
+    max-width: 30px;
+    max-height: 30px;
+}
+
+.form-buttons .btn-buy {
+    display: inline-block;
+    border: none;
+    color: #F0F0F0;
+    border-radius: 4px;
+}

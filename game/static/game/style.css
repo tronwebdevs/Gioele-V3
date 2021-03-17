@@ -12,3 +12,124 @@ body {
     color: #F0F0F0;
     font-family: Ubuntu;
 }
+
+.main.page {
+    max-width: 1200px;
+    width: 100%;
+    height: calc(100% - 60px);
+    margin: auto;
+}
+
+.main.page .body {
+    margin: 0 1rem;
+}
+
+.body .header {
+    text-align: center;
+    margin: 30px 0;
+}
+.body .header h1.title {
+    margin: 0;
+    color: #EEC015;
+    font-size: 40px;
+    padding: 10px 0;
+}
+.body .header span.subtitle {
+    margin: 0;
+    color: #FFFFFF;
+    font-size: 16px;
+}
+
+.card {
+    padding: 1.5rem;
+    margin: 1rem 0;
+    background-color: #202020;
+}
+.card .title {
+    text-align: center;
+    margin: 0 0 10px 0;
+}
+
+.btn-logout {
+    display: block;
+    padding: 8px;
+    text-decoration: none;
+    border: 1px solid #2196F3;
+    background-color: rgba(33, 150, 243, 0.2);
+    text-align: center;
+    border-radius: 4px;
+    color: #F0F0F0;
+}
+.btn-logout:hover {
+    background-color: rgba(33, 150, 243, 1);
+}
+
+.btn-alt {
+    display: block;
+    padding: 8px;
+    text-align: center;
+    border-radius: 4px;
+    color: #F0F0F0;
+    margin-bottom: 0.5rem;
+}
+.btn-alt:hover {
+    color: #FFFFFF;
+}
+
+.player-card .pinfo {
+    margin-bottom: 5px;
+}
+.player-card .pinfo span:first-of-type {
+    font-size: 1.1rem;
+}
+
+.player-card .pinfo span:last-of-type {
+    font-size: 0.9rem;
+    float: right;
+}
+.player-card .pinfo-footer > a {
+    font-size: 0.9rem;
+    color: #F0F0F0;
+}
+
+.player-card .pinfo-footer > small {
+    float: right;
+}
+
+.player-card .btn-alt {
+    margin-top: 15px;
+    margin-bottom: 0;
+    padding: 0
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+footer.footer {
+    padding: 20px 0;
+    text-align: center;
+}
+
+footer.footer span {
+    color: #888888;
+    font-size: 14px;
+}
+
+.player-card .level-bar {
+    margin-bottom: 0.5rem;
+}
+.player-card progress {
+    width: 100%;
+    height: 0.8rem;
+    background-color: #303030;
+    border: none;
+    border-radius: 4px;
+}
+.player-card progress::-webkit-progress-bar,
+.player-card progress::-webkit-progress-value,
+.player-card progress::-moz-progress-bar {
+    background-color: #2196F3;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}

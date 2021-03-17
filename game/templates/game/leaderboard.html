@@ -1,0 +1,62 @@
+{% extends 'game/page.html' %}
+{% load static %}
+{% load gadmin_extras %}
+{% block stylesheets %}
+<link type="text/css" rel="stylesheet" href="{% static 'game/leaderboard.css' %}">
+{% endblock stylesheets %}
+{% block content %}
+<div class="main page">
+    <div class="body">
+        <div class="row">
+            <div class="col-lg-9 col-xs-12">
+                <div class="card">
+                    <table class="scoreboard-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Username</th>
+                                <th>Livello</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for guser in users %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ guser.username }}</td>
+                                <td>{{ guser.level|rounddown }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="ld-controls">
+                        <a href="{% url 'game:index' %}" class="btn-game">Torna a giocare</a>
+                    </div>
+                </div>
+            </div>
+    
+            <div class="col-lg-3 col-xs-12">
+                <div class="header">
+                    <h1 class="title">Gioele V3</h1>
+                    <span class="subtitle">Conquista l'universo</span>
+                </div>
+                <div class="card player-card">
+                    <div class="pinfo">
+                        <span>{{ user.username }}</span>
+                        <span>{{ user.level|rounddown }}</span>
+                    </div>
+                    <div class="level-bar">
+                        <progress value="{{ user.level|levelbar }}" max="100"> </progress>
+                    </div>
+                    <div class="pinfo-footer">
+                        <a href="{% url 'game:profile' %}">Profilo</a>
+                        <small>{{ user.balance }} gbucks</small>
+                    </div>
+                </div>
+                <a href="{% url 'game:index' %}" class="btn-alt">Gioca</a>
+                <a href="{% url 'game:logout' %}" class="btn-logout">Logout</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,131 @@
+{% extends 'game/page.html' %}
+{% load static %}
+{% load gadmin_extras %}
+{% block stylesheets %}
+<link type="text/css" rel="stylesheet" href="{% static 'game/profile.css' %}">
+{% endblock stylesheets %}
+{% block content %}
+<div class="main page">
+    <div class="body">
+        <div class="row">
+            <div class="col-lg-9 col-xs-12">
+                <div class="card">
+                    <h4 class="title">Profilo</h4>
+                    <form action="{% url 'game:profile' %}" method="POST" class="profile-form">
+                        {% csrf_token %}
+                        <input type="text" name="form_type" value="profile" style="display:none" />
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <label for="username">Username:</label>
+                            </div>
+                            <div class="col-lg-9">
+                                <input type="text" id="username" name="username" value="{{ user.username }}" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <label for="email">Email:</label>
+                            </div>
+                            <div class="col-lg-9">
+                                <input type="email" id="email" name="email" value="{{ user.email }}" disabled />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <label for="password">Password:</label>
+                            </div>
+                            <div class="col-lg-9">
+                                <input type="password" id="password" name="password" placeholder="Password" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <label for="npassword">Nuova password:</label>
+                            </div>
+                            <div class="col-lg-9">
+                                <input type="password" id="npassword" name="npassword" placeholder="Nuova password" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <label for="cnpassword">Conferma nuova password:</label>
+                            </div>
+                            <div class="col-lg-9">
+                                <input type="password" id="cnpassword" name="cnpassword" placeholder="Conferma nuova password" />
+                            </div>
+                        </div>
+                        <div class="form-buttons">
+                            <button type="submit" class="btn-save">Salva</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-12 col-lg-6">
+                        <div class="card">
+                            <h4 class="title">Armi</h4>
+                            <table class="inventory-table">
+                                <tbody>
+                                    {% for gun in user_guns %}
+                                    <tr>
+                                        <td>{{ gun.name }}</td>
+                                        <td>{{ gun.type|yesno:"secondaria,primaria" }}</td>
+                                        <td class="center">{{ gun.level }}</td>
+                                        <td><button type="button">+</button></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <div class="form-buttons">
+                                <a href="{% url 'game:index' %}" class="btn-buy">Compra</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-lg-6">
+                        <div class="card">
+                            <h4 class="title">Skin</h4>
+                            <table class="inventory-table">
+                                <tbody>
+                                    {% for skin in user_skins %}
+                                    <tr>
+                                        <td class="center">
+                                            <img src="/static/game/images/{{ skin.filename }}"/></td>
+                                        <td>{{ skin.name }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <div class="form-buttons">
+                                <a href="{% url 'game:index' %}" class="btn-buy">Compra</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    
+            <div class="col-lg-3 col-xs-12">
+                <div class="header">
+                    <h1 class="title">Gioele V3</h1>
+                    <span class="subtitle">Conquista l'universo</span>
+                </div>
+                <div class="card player-card">
+                    <div class="pinfo">
+                        <span>{{ user.username }}</span>
+                        <span>{{ user.level|rounddown }}</span>
+                    </div>
+                    <div class="level-bar">
+                        <progress value="{{ user.level|levelbar }}" max="100"> </progress>
+                    </div>
+                    <div class="pinfo-footer">
+                        <a href="{% url 'game:profile' %}">Profilo</a>
+                        <small>{{ user.balance }} gbucks</small>
+                    </div>
+                </div>
+                <a href="{% url 'game:index' %}" class="btn-alt">Gioca</a>
+                <a href="{% url 'game:logout' %}" class="btn-logout">Logout</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock content %}

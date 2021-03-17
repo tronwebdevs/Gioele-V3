@@ -1,0 +1,36 @@
+.scoreboard-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.scoreboard-table td,
+.scoreboard-table th {
+    border: 1px solid #2196F3;
+    padding: 10px;
+    color: #F0F0F0;
+}
+
+.scoreboard-table td:first-of-type,
+.scoreboard-table td:last-of-type {
+    text-align: center;
+}
+
+.scoreboard-table th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    background-color: #2196F3;
+}
+
+.scoreboard-table td {
+    border-color: #4d4d4d;
+}
+
+.ld-controls {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.btn-game {
+    display: inline-block;
+    color: #AAAAAA;
+}

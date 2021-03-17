@@ -136,6 +136,7 @@ class UserInventory(models.Model, Displayable):
             obj_list.append({
                 'id': db_item.id,
                 'name': db_item.name,
+                'filename': db_item.filename,
             })
         return obj_list
 
@@ -171,8 +172,8 @@ class UserInventory(models.Model, Displayable):
         skins.append(skin_id)
         self.skins = parser.list_to_string(skins)
 
-    def get_abilities(self):
-        return self._get_listed_items(Ability, self.abilities)
+    # def get_abilities(self):
+    #     return self._get_listed_items(Ability, self.abilities)
 
     def to_dict(self, safe=False):
         return {

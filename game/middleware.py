@@ -33,7 +33,7 @@ class GameMiddleware:
         request.visit = visit
 
         user_id = request.session.get('user_id')
-        if request.path != '/login/' and request.path != '/registrati/':
+        if request.path != '/login/' and request.path != '/registrazione/':
             if user_id is None:
                 if request.path.startswith('/api/'):
                     return HttpResponseForbidden(
