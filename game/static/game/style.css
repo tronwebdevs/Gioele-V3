@@ -102,6 +102,9 @@ body {
     padding: 0
 }
 
+button {
+    color: #F0F0F0;
+}
 button:hover {
     cursor: pointer;
 }
@@ -132,4 +135,26 @@ footer.footer span {
     background-color: #2196F3;
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;
+}
+
+@media screen and (max-width: 1200px) {
+    footer {
+        display: none;
+    }
+
+    .action-buttons {
+        text-align: center;
+    }
+    .btn-alt, .btn-logout {
+        display: inline-block;
+    }
+
+    .btn-logout {
+        text-decoration: underline;
+        border: none;
+        background-color: transparent;
+    }
+    .btn-logout:hover {
+        background-color: transparent;
+    }
 }

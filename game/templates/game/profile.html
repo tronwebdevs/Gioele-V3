@@ -9,48 +9,50 @@
     <div class="body">
         <div class="row">
             <div class="col-lg-9 col-xs-12">
+                <div>
+                    <h4 style="text-align:center;">Profilo</h4>
+                </div>
                 <div class="card">
-                    <h4 class="title">Profilo</h4>
                     <form action="{% url 'game:profile' %}" method="POST" class="profile-form">
                         {% csrf_token %}
                         <input type="text" name="form_type" value="profile" style="display:none" />
                         <div class="row">
-                            <div class="col-lg-3">
+                            <div class="col-sm-3 col-xs-12">
                                 <label for="username">Username:</label>
                             </div>
-                            <div class="col-lg-9">
+                            <div class="col-sm-9 col-xs-12">
                                 <input type="text" id="username" name="username" value="{{ user.username }}" />
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-lg-3">
+                            <div class="col-sm-3 col-xs-12">
                                 <label for="email">Email:</label>
                             </div>
-                            <div class="col-lg-9">
+                            <div class="col-sm-9 col-xs-12">
                                 <input type="email" id="email" name="email" value="{{ user.email }}" disabled />
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-lg-3">
+                            <div class="col-sm-3 col-xs-12">
                                 <label for="password">Password:</label>
                             </div>
-                            <div class="col-lg-9">
+                            <div class="col-sm-9 col-xs-12">
                                 <input type="password" id="password" name="password" placeholder="Password" />
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-lg-3">
+                            <div class="col-sm-3 col-xs-12">
                                 <label for="npassword">Nuova password:</label>
                             </div>
-                            <div class="col-lg-9">
+                            <div class="col-sm-9 col-xs-12">
                                 <input type="password" id="npassword" name="npassword" placeholder="Nuova password" />
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-lg-3">
+                            <div class="col-sm-3 col-xs-12">
                                 <label for="cnpassword">Conferma nuova password:</label>
                             </div>
-                            <div class="col-lg-9">
+                            <div class="col-sm-9 col-xs-12">
                                 <input type="password" id="cnpassword" name="cnpassword" placeholder="Conferma nuova password" />
                             </div>
                         </div>
@@ -77,7 +79,7 @@
                                 </tbody>
                             </table>
                             <div class="form-buttons">
-                                <a href="{% url 'game:index' %}" class="btn-buy">Compra</a>
+                                <a href="{% url 'game:shop' %}" class="btn-buy">Compra</a>
                             </div>
                         </div>
                     </div>
@@ -96,14 +98,14 @@
                                 </tbody>
                             </table>
                             <div class="form-buttons">
-                                <a href="{% url 'game:index' %}" class="btn-buy">Compra</a>
+                                <a href="{% url 'game:shop' %}" class="btn-buy">Compra</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
     
-            <div class="col-lg-3 col-xs-12">
+            <div class="col-lg-3 col-xs-12 last-lg first-xs">
                 <div class="header">
                     <h1 class="title">Gioele V3</h1>
                     <span class="subtitle">Conquista l'universo</span>
@@ -118,11 +120,13 @@
                     </div>
                     <div class="pinfo-footer">
                         <a href="{% url 'game:profile' %}">Profilo</a>
-                        <small>{{ user.balance }} gbucks</small>
+                        <small>{{ user.balance|formatgbucks }}</small>
                     </div>
                 </div>
-                <a href="{% url 'game:index' %}" class="btn-alt">Gioca</a>
-                <a href="{% url 'game:logout' %}" class="btn-logout">Logout</a>
+                <div class="action-buttons">
+                    <a href="{% url 'game:index' %}" class="btn-alt">Gioca</a>
+                    <a href="{% url 'game:logout' %}" class="btn-logout">Logout</a>
+                </div>
             </div>
 
         </div>

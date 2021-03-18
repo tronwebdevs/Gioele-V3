@@ -3,7 +3,7 @@ from django.views import generic
 from django.shortcuts import redirect
 from django.contrib.auth import authenticate
 
-from api.models import BannedUser, GUser
+from api.models import BannedUser, GUser, Gun, Skin
 from gioele_v3.settings import DEBUG
 
 
@@ -99,6 +99,23 @@ class ProfileView(generic.TemplateView):
             'user': request.user,
             'user_skins': request.user.inventory.get_skins(),
             'user_guns': request.user.inventory.get_main_guns(),
+        })
+
+
+class ShopView(generic.TemplateView):
+    template_name = 'game/shop.html'
+
+    def get(self, request):
+        uinv = request.user.inventory
+        user_guns = list(map(lambda g: g['id'], uinv.get_main_guns() + uinv.get_side_guns()))
+        user_skins = list(map(lambda s: s['id'], uinv.get_skins()))
+        return self.render_to_response({
+            'user': request.user,
+            'main_guns': list(Gun.objects.filter(type=0)),
+            'side_guns': list(Gun.objects.filter(type=1)),
+            'skins': list(Skin.objects.all()),
+            'user_guns': user_guns,
+            'user_skins': user_skins,
         })
 
 

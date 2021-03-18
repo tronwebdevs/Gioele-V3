@@ -25,7 +25,7 @@
                 </div>
             </div>
     
-            <div class="col-lg-3 col-xs-12">
+            <div class="col-lg-3 col-xs-12 last-lg first-xs">
                 <div class="header">
                     <h1 class="title">Gioele V3</h1>
                     <span class="subtitle">Conquista l'universo</span>
@@ -60,7 +60,7 @@
                     </div>
                     <div class="pinfo-footer">
                         <a href="{% url 'game:profile' %}">Profilo</a>
-                        <small>{{ user.balance }} gbucks</small>
+                        <small>{{ user.balance|formatgbucks }}</small>
                     </div>
                 </div>
                 <div class="card">
@@ -71,8 +71,10 @@
                         <li><code>w</code> shoot with side gun </li>
                     </ul>
                 </div>
-                <a href="{% url 'game:leaderboard' %}" class="btn-alt">Classifica</a>
-                <a href="{% url 'game:logout' %}" class="btn-logout">Logout</a>
+                <div class="action-buttons">
+                    <a href="{% url 'game:leaderboard' %}" class="btn-alt">Classifica</a>
+                    <a href="{% url 'game:logout' %}" class="btn-logout">Logout</a>
+                </div>
             </div>
 
         </div>

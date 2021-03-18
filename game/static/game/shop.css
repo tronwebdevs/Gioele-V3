@@ -1,0 +1,132 @@
+.card.shop {
+    padding: 0;
+}
+
+.card.shop, .card.shop .row {
+    max-height: 500px;
+    height: 500px;
+}
+
+.tabsc-wrapper {
+    height: 100%;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    padding: 0;
+}
+.tab {
+    background-color: #2c2c2c;
+    height: 100%;
+}
+.tab button {
+    background-color: inherit;
+    width: 100%;
+    display: block;
+    border: none;
+    outline: none;
+    padding: 14px 16px;
+}
+.tab button:hover {
+    color: #ffffff;
+}
+.tab button.active {
+    background-color: #202020;
+}
+.tabcontent {
+    display: none;
+    padding: 0.5rem 0;
+    border-top: none;
+}
+.tabcontent:first-of-type {
+    display: block;
+}
+
+.shop-cards {
+    display: flex;
+    flex-wrap: wrap;
+}
+.shop-card {
+    flex: 0 1 12rem;
+    margin: 0.5rem;
+    background-color: #2c2c2c;
+    height: 18rem;
+}
+
+.shop-card .card-header, .shop-card .card-footer {
+    text-align: center;
+    padding: 0.5rem 0;
+    color: #F0F0F0;
+}
+.shop-card.card-maing .card-header {
+    background-color: #3e4756;
+}
+.shop-card.card-sideg .card-header {
+    background-color: #313844;
+}
+.shop-card.card-skin .card-header {
+    background-color: #515966;
+}
+.shop-card .card-footer {
+    background-color: #1769AA;
+}
+.shop-card button.card-footer:hover {
+    background-color: #145e99;
+}
+.shop-card .card-footer.own-text {
+    background-color: #0D3C61;
+}
+
+.shop-card .card-body {
+    padding: 1rem;
+}
+.shop-card .card-body > span {
+    display: block;
+    margin: 5px 0;
+}
+.shop-card .card-body > p {
+    font-size: 0.85rem;
+    margin: 10px 0;
+}
+
+.shop-card .card-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.shop-card .card-header,
+.shop-card .card-footer {
+    flex-basis: calc(30px - 0.5rem);
+}
+.shop-card .card-body {
+    flex-basis: calc(100% - 60px - 1rem);
+}
+.shop-card button.card-footer {
+    border: none;
+}
+.shop-card button.card-footer:focus {
+    outline: none;
+}
+
+@media screen and (max-width: 768px) {
+
+    .tab button {
+        width: auto;
+        display: inline-block;
+        padding: 8px 12px;
+    }
+
+    .card.shop, .card.shop .row {
+        max-height: unset;
+        height: auto;
+    }
+
+    .tabsc-wrapper {
+        height: auto;
+        padding: 0 1rem;
+    }
+    .shop-cards {
+        display: block;
+    }
+    .shop-card {
+        display: block;
+    }
+}
