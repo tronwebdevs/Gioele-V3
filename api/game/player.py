@@ -1,6 +1,6 @@
 from api.models import Gun, Skin
 from api.utils import parser
-from api.exceptions import GameException
+from api.exceptions import GameEndException
 from api.game.enemies import ENEMY_TYPES
 from api.game.powerups import POWERUP_TYPES
 from api.game.abilities import ABILITY_TYPES
@@ -84,7 +84,7 @@ class Player:
             damage = 0
         temp = self.hp - damage
         if temp < 0:
-            raise GameException('Player killed')
+            raise GameEndException('Giocatore ucciso')
         self.hp = temp
 
     def reload_shield(self):

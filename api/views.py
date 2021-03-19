@@ -129,7 +129,7 @@ class ShopItemDetail(APIView):
     
     def post(self, request, pk, format=None):
         try:
-            guser = GUser.objects.get(user_id=request.user_id)
+            guser = GUser.objects.get(user_id=request.user.id)
             item_type = request.path.split('/')[-2]
             if item_type == 'guns':
                 item = guser.buy_gun(pk)

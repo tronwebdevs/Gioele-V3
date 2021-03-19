@@ -181,7 +181,7 @@ class UserInventory(models.Model, Displayable):
             'main_guns': self.get_main_guns(),
             'side_guns': self.get_side_guns(),
             'skins': self.get_skins(),
-            'abilities': self.get_abilities(),
+            # 'abilities': self.get_abilities(),
         }
 
 
@@ -384,9 +384,9 @@ class GameLogManager(models.Manager):
         game_log.main_gun = giorgio.player.main_gun
         game_log.side_gun = giorgio.player.side_gun
         game_log.visit = VisitLog.objects.get(pk=giorgio.visit_id)
-        game_log.killed = parser.dict_to_string(giorgio.player.killed)
-        game_log.powerups = parser.dict_to_string(giorgio.player.expired_powerups)
-        game_log.abilities = parser.dict_to_string(giorgio.player.used_abilities)
+        game_log.killed = str(giorgio.player.killed)
+        game_log.powerups = str(giorgio.player.expired_powerups)
+        game_log.abilities = str(giorgio.player.used_abilities)
         game_log.skin = giorgio.user.skin
         game_log.save()
         return game_log

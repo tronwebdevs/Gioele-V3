@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from django.utils import timezone
 
-from .exceptions import GameException
+from .exceptions import GameException, GameEndException
 from .utils import parser, redis_broadcast, log as DEBUG
 from .game.constants import MAX_MSHIP_LIFES, ENEMIES_PER_GENERATION
 from .game.player import Player
@@ -233,7 +233,7 @@ class Giorgio:
             # If enemy has collide with player (kamikaze) remove enemy from the stack
             enemy.hp = 0
             del self.enemies[enemy.id]
-        # Compute attack
+        # Compute attack and raise exception to quit if play is dead
         self.player.attacked(enemy.damage)
 
         redis_broadcast(self.user.id, {
@@ -268,8 +268,8 @@ class Giorgio:
                 'enemy': enemy.to_dict(),
             })
 
-            self.end_game('MShip is dead')
-            raise GameException('Game ended', 0)
+            # Save games and raise exception to quit
+            self.end_game('Nave Madre distrutta')
         else:
             # Mother ship lost a life
             self.mship_lifes = lifes
@@ -326,10 +326,16 @@ class Giorgio:
 
     def end_game(self, reason):
         self.running = False
-        # GameLog.objects.register_log(self, 0, 0)
+
+        # TODO: recevice from Maurizio shooted bullets
+        shooted_main = 0
+        shooted_side = 0
+        GameLog.objects.register_log(self, shooted_main, shooted_side)
+
         redis_broadcast(self.user.id, {
             't': 5,
             'message': reason
         })
-        # TODO: implement the method
-        raise GameException('Not implemented yet')
+
+        # Raise exception to quit as quickly as possible
+        raise GameEndException(reason)

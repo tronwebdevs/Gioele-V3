@@ -21,16 +21,23 @@ class AlreadyExist(Exception):
 class GameException(Exception):
     GENERIC = 0
     INVALID_ACTION = 1
-    GAME_NOT_STARTED = 2
-    GAME_ALREADY_STARTED = 3
-    ENTITY_NOT_FOUND = 4
-    INVALID_DATA = 5
-    CHEAT_DETECTED = 6
+    GAME_END = 2
+    GAME_NOT_STARTED = 3
+    GAME_ALREADY_STARTED = 4
+    ENTITY_NOT_FOUND = 5
+    INVALID_DATA = 6
+    CHEAT_DETECTED = 7
 
     def __init__(self, message, code=GENERIC):
         self.message = message
         self.code = code
         super().__init__(self.message)
+
+
+class GameEndException(GameException):
+    def __init__(self, reason):
+        super().__init__(reason, code=GameException.GAME_END)
+
 
 class GameDataException(GameException):
     def __init__(self, param):

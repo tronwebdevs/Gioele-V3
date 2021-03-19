@@ -12,7 +12,7 @@ from channels.layers import get_channel_layer
 from django.contrib.auth.models import AnonymousUser
 
 from gioele_v3.settings import CHANNEL_LAYERS
-from .exceptions import GameDataException, GameException
+from .exceptions import GameDataException, GameException, GameEndException
 from .game.constants import POWERUPS_LAST_TIME, DELAY_BETWEEN_ENEMIES_GENERATIONS
 from .game.powerups import POWERUP_TYPES
 from .giorgio import Giorgio
@@ -34,6 +34,7 @@ RESPONSE_PLAYER_OBJECT = 1
 RESPONSE_MSHIP_LIFES = 2
 RESPONSE_GENERATED_ENTITIES = 3
 RESPONSE_ENEMY_OBJECT = 4
+RESPONSE_GAME_ENDED = 5
 
 redis_settings = CHANNEL_LAYERS['default']['CONFIG']['hosts'][0]
 
@@ -264,9 +265,13 @@ class GameConsumer(WebsocketConsumer):
         try:
             data, action, entity_id = self.validate_data(text_data)
             self.execute(action, data, self.scope['giorgio'], self.scope['user'], entity_id)
+        except GameEndException as e:
+            self.send_dict({
+                'r': RESPONSE_GAME_ENDED,
+                'm': e.message,
+            })
         except Exception as e:
             self.send_error(e)
-            return
 
     def run_generation(self, event):
         giorgio = self.scope['giorgio']
