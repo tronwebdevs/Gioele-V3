@@ -36,17 +36,6 @@
 .body p {
     font-size: 14px;
 }
-.body .alert-error {
-    width: calc(100% - 24px);
-    color: #FFFFFF;
-    background-color: rgb(143, 0, 0);
-    padding: 12px;
-    margin: 10px 0;
-    border-radius: 4px;
-}
-.alert-error span {
-    font-size: 14px;
-}
 
 .login-form {
     display: block;

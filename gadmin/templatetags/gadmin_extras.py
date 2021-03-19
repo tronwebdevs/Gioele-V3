@@ -25,9 +25,9 @@ def rounddown(val):
 def contained(val, dataset):
     return len(dataset.filter(pk=val)) > 0
 
-def formatgbucks(val):
+def formatgbucks(val, zero_label=None):
     if val == 0:
-        text = '0 @'
+        text = '0 @' if zero_label is None else zero_label
     elif val < 1000:
         text = '%d @' % val
     elif val < 1000000:

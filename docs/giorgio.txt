@@ -82,6 +82,8 @@ On the other hand, the payload of server responses follows the format:
         - 'powerups': generated powerups (array)
     - 4: enemy object
         - 'enemy': enemy object (other)
+    - 5: game ended:
+        - 'm': reason message (str)
 e.g.
 Server send updated player object
 +-----------------------------------+

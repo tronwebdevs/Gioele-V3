@@ -1,3 +1,7 @@
+body {
+    overflow-x: hidden;
+}
+
 .card.shop {
     padding: 0;
 }
@@ -9,9 +13,6 @@
 
 .tabsc-wrapper {
     height: 100%;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    padding: 0;
 }
 .tab {
     background-color: #2c2c2c;
@@ -32,8 +33,10 @@
     background-color: #202020;
 }
 .tabcontent {
+    height: 100%;
+    overflow-y: scroll;
+    overflow-x: hidden;
     display: none;
-    padding: 0.5rem 0;
     border-top: none;
 }
 .tabcontent:first-of-type {
@@ -106,6 +109,58 @@
     outline: none;
 }
 
+div {
+    scrollbar-color: #888 #2c2c2c;
+}
+/* Track */
+div::-webkit-scrollbar-track {
+    background: #2c2c2c;
+}
+/* Handle */
+div::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+/* MODAL */
+.modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(10, 10, 10, 0.6);
+    display: none;
+}
+.modal.active {
+    display: block;
+}
+.modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #2c2c2c;
+    padding: 1.5rem;
+    border-radius: 4px;
+    min-width: 20rem;
+}
+.modal-content .title {
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+.modal-content .modal-buttons {
+    text-align: right;
+}
+.modal-content .modal-buttons > button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 4px;
+}
+.modal-content p {
+    margin-bottom: 1.5rem;
+}
+
 @media screen and (max-width: 768px) {
 
     .tab button {
@@ -128,5 +183,18 @@
     }
     .shop-card {
         display: block;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .modal-content {
+        position: relative;
+        top: unset;
+        left: unset;
+        transform: none;
+        min-width: auto;
+        margin: 10px;
+        margin-top: 30%;
+        width: calc(100% - 3rem - 20px);
     }
 }
