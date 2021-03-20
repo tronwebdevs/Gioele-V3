@@ -6,6 +6,9 @@ function update() {
     return;
   }
 
+  GUI.update(0);
+  GUI.update(1);
+
   player.changePos();
   player.update();
 
@@ -33,6 +36,7 @@ function update() {
   for (i = 0; i < enemiesBullets.length; i++) {
     enemiesBullets[i].move();
     enemiesBullets[i].update();
+    b_maurizio(enemiesBullets[i], i, 2);
   }
 
   showRound()
@@ -75,6 +79,7 @@ function startAnim(callback){
 }
 
 //GRAPHICS
+
 function checkRound(x){
   if (currentround != x){
     currentround = x;
@@ -100,7 +105,7 @@ function displayOptions(){
       let ctx = gameArea.context;
       ctx.beginPath();
       ctx.lineWidth = "4";
-      ctx.strokeStyle = "rgb("+ 255/enemies[i].tothp*(enemies[i].tothp-enemies[i].hp) + ","+ 255/enemies[i].tothp*enemies[i].hp +",0)";
+      ctx.strokeStyle = getRGB(enemies[i].hp, enemies[i].tothp);
       ctx.moveTo(enemies[i].x - enemies[i].radius, enemies[i].y - 2*enemies[i].radius);
       ctx.lineTo(enemies[i].x + enemies[i].radius, enemies[i].y - 2*enemies[i].radius);
       ctx.stroke();
@@ -121,8 +126,8 @@ function displayOptions(){
     ctx.beginPath();
     ctx.lineWidth = "2";
     ctx.strokeStyle = "rgba(255,0,0,0.5)";
-    ctx.moveTo(player.x + player.width/2, player.y);
-    ctx.lineTo(player.x + player.width/2, 0);
+    ctx.moveTo(player.x + player.radius, player.y);
+    ctx.lineTo(player.x + player.radius, 0);
     ctx.stroke();
   }
 

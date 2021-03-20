@@ -37,34 +37,6 @@ function setPlayer(obj) {
   });
 }
 
-
-//CONTROLS
-/*
-function moveLeft(){
-  clearInterval(accInterval);
-  player.speedX = -speed;
-  accInterval = setInterval(function(){
-    player.speedX -= 1;
-    if (player.speedX <= -maxSpeed){
-      clearInterval(accInterval);
-    }
-  },200);
-}
-function moveRight(){
-  clearInterval(accInterval);
-  player.speedX = speed;
-  accInterval = setInterval(function(){
-    player.speedX += 1;
-    if (player.speedX >= maxSpeed){
-      clearInterval(accInterval);
-    }
-  },200);
-}
-function stopPlayer() {
-  player.speedX = 0;
-  clearInterval(accInterval);
-}
-*/
 function moveLeft(){
   player.isMoving = true;
   player.direction = -1;
@@ -88,18 +60,3 @@ function shootSideGun() {
     player.equip.sideGun.shoot();
   }
 }
-
-
-//INTERFACE
-function reloadGun(gunType, cooldown){
-  let bar = document.getElementById(gunType+"GunReady");
-  bar.max = 100;
-  bar.value = 0;
-
-  let interval = setInterval(function(){
-    bar.value ++;
-    if (bar.value >= bar.max){
-      clearInterval(interval);
-    }
-  }, cooldown/100)
-};

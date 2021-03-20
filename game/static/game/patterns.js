@@ -29,11 +29,11 @@ function e0_pattern_0() {
   this.y += 0.7;
   if (Math.floor(this.y) == this.p_y && !this.hasShot){
     this.hasShot = true;
-    enemiesBullets.push(new Bullet(this.x, this.y, 4, function(){
+    enemiesBullets.push(new E_Bullet(this.x, this.y, 10, 4, function(){
       this.y += this.speedY;
       this.x -= this.speedY * Math.tan(this.ang);
     }, function() {
-      this.ang = Math.atan((this.x - player.x - player.width/2)/Math.abs(this.y - player.y - player.height/2));
+      this.ang = Math.atan((this.x - player.x - player.radius)/Math.abs(this.y - player.y - player.radius));
     }));
   }
 }
@@ -47,13 +47,13 @@ function e0_pattern_1() {
   if (Math.floor(this.y) == this.p_y && !this.hasShot){
     this.speed = 0;
     this.shotInterval++;
-    if (Number.isInteger(this.shotInterval/FPS)){
+    if (this.shotInterval%FPS == 0){
       this.shotCounter++;
-      enemiesBullets.push(new Bullet(this.x, this.y, 4, function(){
+      enemiesBullets.push(new E_Bullet(this.x, this.y, 10, 4, function(){
         this.y += this.speedY;
         this.x -= this.speedY * Math.tan(this.ang);
       }, function() {
-        this.ang = Math.atan((this.x - player.x - player.width/2)/Math.abs(this.y - player.y - player.height/2));
+        this.ang = Math.atan((this.x - player.x - player.radius)/Math.abs(this.y - player.y - player.radius));
       }));
     }
     if (this.shotCounter>=3){
@@ -72,12 +72,18 @@ function e0_behavior_1(){
 
 //kamikaze 0
 function e1_pattern_0() {
-  this.y += this.speedY;
+  if (this.y <= 0){
+    this.speedY = 0.5;
+    this.y += this.speedY;
+    this.speedY = 0.2;
+  } else {
+    this.y += this.speedY;
+  }
   if (this.speedY <= 1){
     this.speedY += 0.01
   }
-  if (this.y <= gameArea.canvas.height/2){  
-    this.ang = Math.atan((this.x - player.x - player.width/2)/Math.abs(this.y - player.y - player.height/2));
+  if (this.y <= gameArea.canvas.height/2){
+    this.ang = Math.atan((this.x - player.x - player.radius)/Math.abs(this.y - player.y - player.radius));
   }
   this.x -= 1 * Math.tan(this.ang);
 }

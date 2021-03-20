@@ -25,15 +25,12 @@ console.log("Expect Me")
 function e_maurizio(_enemy, i){
   if (_enemy.y > gameArea.canvas.height + _enemy.radius){
     enemies.splice(i,1);
-    if (_enemy.type != 1){
-      gameSocket.send(JSON.stringify({
-        a: 5, // Action type
-        i: _enemy.id // enemy id
-      }));
+    gameSocket.send(JSON.stringify({
+      a: 5, // Action type
+      i: _enemy.id // enemy id
+    }));
 
-
-                  TEMP_SHIT();
-    }
+      TEMP_SHIT();
   }
 }
 
@@ -41,22 +38,24 @@ function b_maurizio(_bullet, i, gunType){
   if (_bullet.y <= 0){
     if (gunType == 0){
       mainGunBullets.splice(i,1);
-      console.log("cancelled main bullet")
     }
     if (gunType == 1){
       sideGunBullets.splice(i,1);
-      console.log("cancelled side bullet")
     }
-    // gunType 2 come nemico ????
+  }
+  if (_bullet.y >= gameArea.canvas.height){
+    if (gunType == 2){
+      enemiesBullets.splice(i,1);
+    }
   }
 }
 
-function collision(x,i,g){
-  if (x === undefined){
+function collision(bullet,i,g){
+  if (bullet === undefined){
     return;
   }
   for (k = 0; k < enemies.length; k++) {
-    if (x.collide(enemies[k])) {
+    if (bullet.collide(enemies[k])) {
       gameSocket.send(JSON.stringify({
           a: 6, // Action type
           g: g, // gun type (0:main, 1:side)
@@ -78,6 +77,11 @@ function collision(x,i,g){
   }
 }
 
+function e_collision(bullet){
+
+
+}
+
 //patterns based on enemy type (x)
 function getPattern(x){
   if (x == 0){
@@ -96,5 +100,17 @@ function getPattern(x){
   if (x == 2){
     console.log("WORK IN PROGRESS")
     return {pattern: e0_pattern_0, behavior: e0_behavior_0};
+  }
+}
+
+
+//returns rbg value based on hp
+function getRGB(hp, maxhp){
+  if (hp >= maxhp/2){
+    let R = Math.floor(255*maxhp/hp-255);
+    return "rgb("+R+",255,0)";
+  } else  {
+    let G = Math.floor(255*hp/(maxhp/2));
+    return "rgb(255,"+G+",0)";
   }
 }
