@@ -29,8 +29,6 @@ function e_maurizio(_enemy, i){
       a: 5, // Action type
       i: _enemy.id // enemy id
     }));
-
-      TEMP_SHIT();
   }
 }
 
@@ -50,7 +48,7 @@ function b_maurizio(_bullet, i, gunType){
   }
 }
 
-function collision(bullet,i,g){
+function collision(bullet, i, g){
   if (bullet === undefined){
     return;
   }
@@ -77,8 +75,18 @@ function collision(bullet,i,g){
   }
 }
 
-function e_collision(bullet){
-
+function e_collision(bullet, i){
+  if (bullet === undefined){
+    return;
+  }
+  if (bullet.collide()){
+    enemiesBullets.splice(i,1);
+    gameSocket.send(JSON.stringify({
+        a: 4, // Action type
+        i: bullet.e_id // enemy id
+    }));
+    player.hp -= bullet.damage;
+  }
 
 }
 

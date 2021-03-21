@@ -29,11 +29,11 @@ function e0_pattern_0() {
   this.y += 0.7;
   if (Math.floor(this.y) == this.p_y && !this.hasShot){
     this.hasShot = true;
-    enemiesBullets.push(new E_Bullet(this.x, this.y, 10, 4, function(){
+    enemiesBullets.push(new E_Bullet(this.id, this.x, this.y, this.damage, 4, function(){
       this.y += this.speedY;
       this.x -= this.speedY * Math.tan(this.ang);
     }, function() {
-      this.ang = Math.atan((this.x - player.x - player.radius)/Math.abs(this.y - player.y - player.radius));
+      this.ang = Math.atan((this.x - player.x)/Math.abs(this.y - player.y));
     }));
   }
 }
@@ -49,11 +49,11 @@ function e0_pattern_1() {
     this.shotInterval++;
     if (this.shotInterval%FPS == 0){
       this.shotCounter++;
-      enemiesBullets.push(new E_Bullet(this.x, this.y, 10, 4, function(){
+      enemiesBullets.push(new E_Bullet(this.id, this.x, this.y, this.damage, 4, function(){
         this.y += this.speedY;
         this.x -= this.speedY * Math.tan(this.ang);
       }, function() {
-        this.ang = Math.atan((this.x - player.x - player.radius)/Math.abs(this.y - player.y - player.radius));
+        this.ang = Math.atan((this.x - player.x)/Math.abs(this.y - player.y));
       }));
     }
     if (this.shotCounter>=3){

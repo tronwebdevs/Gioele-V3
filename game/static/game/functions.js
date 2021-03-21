@@ -31,7 +31,10 @@ function setPlayer(obj) {
       obj.side_gun.damage
     )
   }
-  player = new Player({
+  player = new Player(
+    obj.hp,
+    obj.shield,
+    {
     mainGun: mg,
     sideGun: sg
   });

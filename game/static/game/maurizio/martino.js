@@ -6,9 +6,6 @@ function update() {
     return;
   }
 
-  GUI.update(0);
-  GUI.update(1);
-
   player.changePos();
   player.update();
 
@@ -37,10 +34,14 @@ function update() {
     enemiesBullets[i].move();
     enemiesBullets[i].update();
     b_maurizio(enemiesBullets[i], i, 2);
+    e_collision(enemiesBullets[i], i);
   }
 
   showRound()
   displayOptions();
+
+  GUI.update(0);
+  GUI.update(1);
 }
 
 //default canvas
@@ -112,22 +113,33 @@ function displayOptions(){
     }
   }
   if (document.getElementById("opt_2").checked){
+    let ctx = gameArea.context;
     for (i = 0; i < enemies.length; i++) {
-      let ctx = gameArea.context;
       ctx.beginPath();
       ctx.lineWidth = enemies[i].radius + "";
       ctx.strokeStyle = "rgba(255,0,0,0.5)";
       ctx.arc(enemies[i].x, enemies[i].y, enemies[i].radius/2, 0, 2*Math.PI);
       ctx.stroke();
     }
+    ctx.beginPath();
+    ctx.lineWidth = player.radius + "";
+    ctx.strokeStyle = "rgba(255,0,0,0.5)";
+    ctx.arc(player.x, player.y, player.radius/2, 0, 2*Math.PI);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.lineWidth = "2";
+    ctx.strokeStyle = "white";
+    ctx.arc(player.x, player.y, 2, 0, 2*Math.PI);
+    ctx.stroke();
   }
   if (document.getElementById("opt_3").checked){
     let ctx = gameArea.context;
     ctx.beginPath();
     ctx.lineWidth = "2";
     ctx.strokeStyle = "rgba(255,0,0,0.5)";
-    ctx.moveTo(player.x + player.radius, player.y);
-    ctx.lineTo(player.x + player.radius, 0);
+    ctx.moveTo(player.x, player.y);
+    ctx.lineTo(player.x, 0);
     ctx.stroke();
   }
 

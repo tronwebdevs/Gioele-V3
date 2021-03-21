@@ -41,26 +41,31 @@ wsConnEl.style.color = 'green';
 gameSocket.onmessage = function (e) {
     const data = JSON.parse(e.data);
     if (data.r === 1) {
-      console.log(data)
-      setPlayer(data.player)
-      console.log("---- PLAYER LOADED")
+      if (Object.keys(player).length == 0){
+        console.log(data)
+        setPlayer(data.player)
+        console.log("---- PLAYER LOADED")
+      } else {
+        player.updateStats(data.player.hp, data.player.shield)
+      }
     }
     if (data.r === 2 && data.lifes == 0) {
-      /*
+      /// TODO: VITE NAVE MADRE E GUI
+    }
+    if (data.r === 3) {
+      for (let enemy of data.enemies) {
+        enemies.push(new Enemy(enemy.id, enemy.type, enemy.pos.x, enemy.pos.y, enemy.hp, enemy.damage, enemy.rarity, 15));
+      }
+      checkRound(data.round)
+    }
+    if (data.r == 5) {
       clearInterval(gameArea.interval);
       let ctx = gameArea.canvas.getContext('2d');
       ctx.fillStyle = "red";
       ctx.textAlign = "center";
       ctx.font = "bold 30px RetroGaming";
-      ctx.fillText("Nave Madre distrutta", gameArea.canvas.width/2, gameArea.canvas.height/2);*/
-    }
-    if (data.r === 3) {
-      for (let enemy of data.enemies) {
-        // FIXED ?
-        enemies.push(new Enemy(enemy.id, enemy.type, enemy.pos.x, enemy.pos.y, enemy.hp, enemy.damage, enemy.rarity, 15));
-      }
-      checkRound(data.round)
-      console.log(data);
+      ctx.fillText(data.m, gameArea.canvas.width/2, gameArea.canvas.height/2);
+      gameSocket.close();
     }
 };
 

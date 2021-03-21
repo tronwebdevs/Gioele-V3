@@ -48,7 +48,7 @@ let GUI = {
     ctx.moveTo(x1, y);
     ctx.lineTo(x2, y);
     ctx.stroke();
-  },
+  },/*
   updateCooldown : function(x){
     let cooldown = 0;
     let val = 0;
@@ -74,15 +74,15 @@ let GUI = {
       }
     }, cooldown/100)
 
-  }
+  }*/
 };
 
 class Player {
-  constructor(equip){
-    this.hp = 100;
-    this.shield = 0;
+  constructor(hp, shield, equip){
+    this.hp = hp;
+    this.shield = shield;
     this.radius = 30,
-    this.x = 400 - this.radius;
+    this.x = 400;
     this.y = 530;
 
     this.isMoving = false;
@@ -92,10 +92,14 @@ class Player {
 
     this.equip = equip;
   }
+  updateStats(hp, shield){
+    this.hp = hp;
+    this.shield = shield;
+  }
   update() {
     let ctx = gameArea.context;
     ctx.save();
-    ctx.setTransform(1, 0, -Math.round(this.acc/FPS)/70, 1, this.x, this.y);
+    ctx.setTransform(1, 0, -Math.round(this.acc/FPS)/70, 1, this.x-this.radius, this.y-this.radius);
     ctx.drawImage(skin, 0, 0)
     ctx.restore();
   }
@@ -125,8 +129,8 @@ class Player {
       this.x = 0;
       this.acc = 0;
     }
-    if (this.x > gameArea.canvas.width - this.radius*2){
-      this.x = gameArea.canvas.width - this.radius*2;
+    if (this.x > gameArea.canvas.width){
+      this.x = gameArea.canvas.width;
       this.acc = 0;
     }
   }
@@ -162,14 +166,16 @@ class Bullet {
 }
 
 class E_Bullet extends Bullet {
-  constructor(x, y, damage, speedY, pattern, behavior = function(){}){
+  constructor(e_id, x, y, damage, speedY, pattern, behavior = function(){}){
     super(x, y, speedY, pattern, behavior);
     this.damage = damage;
+    this.e_id = e_id;
   }
   collide(){
-    if (Math.sqrt( (this.x-player.x)*(this.x-player.x) + (this.y-player.y)*(this.y-player.y) ) < player.radius ){
-      console.log("PLAYER HIT")
-      return true;
+    if (this.y >= gameArea.canvas.height - player.y - player.radius){
+      if (Math.sqrt( (this.x-player.x)*(this.x-player.x) + (this.y-player.y)*(this.y-player.y) ) < player.radius ){
+        return true;
+      }
     }
   }
 }

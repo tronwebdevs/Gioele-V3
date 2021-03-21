@@ -10,7 +10,7 @@ class MainGun {
   }
   shoot() {
     if (this.isReady) {
-      mainGunBullets.push(new Bullet(player.x + player.radius, player.y, 8, pattern_0));
+      mainGunBullets.push(new Bullet(player.x , player.y, 8, pattern_0));
       mainGunBullets[mainGunBullets.length-1].behavior();
       this.isReady = false;
 
@@ -32,7 +32,7 @@ class SideGun {
   }
   shoot() {
     if (this.isReady) {
-      let tempx = player.x + player.radius;
+      let tempx = player.x;
       sideGunBullets.push(new Bullet(tempx, player.y, 3, pattern_1, behavior_0));
       let tempvar = 0;
       let tempint = setInterval(function(){
