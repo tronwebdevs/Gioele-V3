@@ -351,7 +351,12 @@ class Giorgio:
             if save:
                 shooted_main = 0
                 shooted_side = 0
+                # Register game on database
                 GameLog.objects.register_log(self, shooted_main, shooted_side)
+                # Update user's level and balance
+                self.user.update_level(self.player.exp, save=False)
+                self.user.balance += self.player.gbucks
+                self.user.save()
 
             redis_broadcast(self.user.id, {
                 't': 5,

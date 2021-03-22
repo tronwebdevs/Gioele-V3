@@ -1,13 +1,14 @@
 import hashlib
 import base64
+import math
 from uuid import uuid4, UUID
 
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from .utils import generate_short_id, parser
-from .exceptions import ParseException, AlreadyExist, NotEnoughtCoins
+from .utils import generate_short_id, parser, log as DEBUG
+from .exceptions import ParseException, AlreadyExist, NotEnoughtCoins, GameDataException
 from .classes import Displayable
 
 
@@ -245,6 +246,67 @@ class GUser(models.Model, Displayable):
     @property
     def is_active(self):
         return self.user.is_active
+
+    # Implementation of ELISABETTA (user's level)
+    def update_level(self, xp, save=True):
+        if xp == 0:
+            return
+
+        #
+        # WARNING: ELISABETTA
+        #
+        # source: https://gamedev.stackexchange.com/a/8967
+        DEBUG('Elisabetta', 'Starting computation')
+        base_xp = 10
+        factor = 2.8
+        cycle = True
+        while cycle:
+            level_to_get = math.floor(self.level) + 1
+            xp_to_next_level = base_xp * (level_to_get ** factor)
+
+            DEBUG('Elisabetta', '%d %d %f' % (xp, level_to_get, xp_to_next_level))
+
+            if xp >= xp_to_next_level:
+                # Player has earned more experience than required for the next level.
+                # Increment level by 1 and subtract the overflow ammount
+                xp -= xp_to_next_level
+
+                DEBUG('Elisabetta', 'if 1: A, %f' % xp)
+
+                self.level += 1
+                # Set flag to run all algorithm again
+                cycle = True
+            else:
+                DEBUG('Elisabetta', 'if 1: B')
+                # xp : xp_to_next_level = earned_xp : 1
+                current_level_exp = (self.level - math.floor(self.level)) # 0 < x < 1
+                current_level_xp = current_level_exp * xp_to_next_level # 0 < x < xp_to_next_level
+
+                DEBUG('Elisabetta', '%f %f' % (current_level_exp, current_level_xp))
+
+                if current_level_xp + xp >= xp_to_next_level:
+                    xp -= xp_to_next_level - current_level_xp
+
+                    DEBUG('Elisabetta', 'if 2: A, %f' % xp)
+
+                    self.level += 1
+                    # Set flag to run all algorithm again
+                    cycle = True
+                else:
+                    earned_exp = xp / xp_to_next_level # always < 0
+
+                    DEBUG('Elisabetta', 'if 2: B, %f' % earned_exp)
+
+                    self.level += earned_exp
+                    # Set flag to quit the cycle
+                    cycle = False
+        #
+        # END OF ELISABETTA
+        #
+        DEBUG('Elisabetta', 'Process completed')
+
+        if save:
+            self.save()
 
     def log_login(self, visit_id):
         visit_log = VisitLog.objects.get(pk=UUID(visit_id))

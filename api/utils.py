@@ -66,6 +66,7 @@ class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKCYAN = '\033[96m'
+    MAGENTA = '\033[35m'
     OKGREEN = '\033[92m'
     WARNING = '\033[93m'
     FAIL = '\033[91m'
@@ -135,6 +136,8 @@ def log(who, message, ltype='INFO', force_color=None, broadcast_id=None):
     color = bcolors.OKBLUE
     if who == 'Giorgio':
         color = bcolors.OKGREEN
+    elif who == 'Elisabetta':
+        color = bcolors.MAGENTA
     
     if ltype == 'WARNING':
         color = bcolors.WARNING

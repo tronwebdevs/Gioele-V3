@@ -7,17 +7,12 @@ register = template.Library()
 def model_to_jsarray(val):
     return str(list(map(lambda s: s.value, val)))
 
-def levelbarwitdth(val):
-    rounded = math.ceil(val)
-    if rounded == val:
-        rounded = val + 1
-    return str(round(val * 100 / rounded)) + '%'
-
 def levelbar(val):
-    rounded = math.ceil(val)
-    if rounded == val:
-        rounded = val + 1
-    return round(val * 100 / rounded)
+    val -= math.floor(val)
+    return round(val * 100)
+
+def levelbarwitdth(val):
+    return str(levelbar(val)) + '%'
 
 def rounddown(val):
     return math.floor(val)
