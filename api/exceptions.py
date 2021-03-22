@@ -27,6 +27,7 @@ class GameException(Exception):
     ENTITY_NOT_FOUND = 5
     INVALID_DATA = 6
     CHEAT_DETECTED = 7
+    PLAYER_DEAD = 8
 
     def __init__(self, message, code=GENERIC):
         self.message = message
@@ -48,3 +49,8 @@ class GameDataException(GameException):
 class GameCheatDetectedException(GameException):
     def __init__(self, message):
         super().__init__('[Giovanni] ' + message, GameException.CHEAT_DETECTED)
+
+
+class PlayerDead(GameException):
+    def __init__(self, message):
+        super().__init__(message, GameException.PLAYER_DEAD)

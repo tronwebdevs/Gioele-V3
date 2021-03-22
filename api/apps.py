@@ -1,9 +1,15 @@
 import sys
+import asyncio
 
+import aioredis
+from asgiref.sync import async_to_sync
 from django.apps import AppConfig
 from django.db.utils import OperationalError
+from gioele_v3.settings import CHANNEL_LAYERS
 from .utils import log
 
+
+redis_settings = CHANNEL_LAYERS['default']['CONFIG']['hosts'][0]
 
 def log_fatal(*lines):
     log('root', '--------------------------------------------------', 'ERROR')
@@ -20,6 +26,12 @@ class ApiConfig(AppConfig):
     def ready(self):
         if sys.argv[1] != 'runserver':
             return
+
+        redis = async_to_sync(aioredis.create_redis_pool)('redis://%s:%i' % (redis_settings[0], redis_settings[1]))
+        # async_to_sync(redis.delete)('asgi:group:*')
+        # TODO: fix this to only delete `asgi:group:*` keys
+        async_to_sync(redis.flushdb)()
+        log('root', 'Flushed database', 'SUCCESS')
         
         from .models import Gun, Skin
 

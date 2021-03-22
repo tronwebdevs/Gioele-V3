@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from django.utils import timezone
 
-from .exceptions import GameException, GameEndException
+from .exceptions import GameException, GameEndException, PlayerDead
 from .utils import parser, redis_broadcast, log as DEBUG
 from .game.constants import MAX_MSHIP_LIFES, ENEMIES_PER_GENERATION
 from .game.player import Player
@@ -14,6 +14,13 @@ from .models import GameLog
 
 
 class Giorgio:
+    GENERATION_STATES = {
+        'dead': 0,
+        'waiting': 1,
+        'generating': 2,
+        'finished': 3,
+    }
+
     def __init__(self, user, visit_id, abilities, main_gun, side_gun, skin):
         self.user = user
         self.visit_id = visit_id
@@ -26,6 +33,7 @@ class Giorgio:
         self._last_entity_id = 0
         self._generation = 0
         self.round = 1
+        self.gen_status = Giorgio.GENERATION_STATES['dead']
 
     def start_game(self):
 
@@ -108,7 +116,10 @@ class Giorgio:
 
         # Return if enemies from previous round are still alive
         if self._generation == 0 and len(self.enemies) > 0:
+            self.gen_status = Giorgio.GENERATION_STATES['waiting']
             return gen_powerups, gen_enemies, self.round - 1
+
+        self.gen_status = Giorgio.GENERATION_STATES['generating']
 
         # Increment generations counter
         self._generation += 1
@@ -174,6 +185,8 @@ class Giorgio:
             'powerups': list(map(lambda pu: pu.to_dict(), gen_powerups)),
         })
 
+        self.gen_status = Giorgio.GENERATION_STATES['finished']
+
         # Return generated entities
         return gen_enemies, gen_powerups, k
 
@@ -234,7 +247,10 @@ class Giorgio:
             enemy.hp = 0
             del self.enemies[enemy.id]
         # Compute attack and raise exception to quit if play is dead
-        self.player.attacked(enemy.damage)
+        try:
+            self.player.attacked(enemy.damage)
+        except PlayerDead as e:
+            self.end_game(str(e))
 
         redis_broadcast(self.user.id, {
             't': 4,
@@ -324,18 +340,24 @@ class Giorgio:
         # TODO: implement the method
         raise GameException('Not implemented yet')
 
-    def end_game(self, reason):
-        self.running = False
+    def end_game(self, reason, save=True):
 
-        # TODO: recevice from Maurizio shooted bullets
-        shooted_main = 0
-        shooted_side = 0
-        GameLog.objects.register_log(self, shooted_main, shooted_side)
+        DEBUG('Giorgio', 'Ending game (running: %s)' % self.running)
 
-        redis_broadcast(self.user.id, {
-            't': 5,
-            'message': reason
-        })
+        if self.running:
+            self.running = False
 
-        # Raise exception to quit as quickly as possible
-        raise GameEndException(reason)
+            # TODO: recevice from Maurizio shooted bullets
+            if save:
+                shooted_main = 0
+                shooted_side = 0
+                GameLog.objects.register_log(self, shooted_main, shooted_side)
+
+            redis_broadcast(self.user.id, {
+                't': 5,
+                'message': reason
+            })
+
+            # Raise exception to quit as quickly as possible
+            if save:
+                raise GameEndException(reason)

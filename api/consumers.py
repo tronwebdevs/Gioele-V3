@@ -36,18 +36,27 @@ RESPONSE_GENERATED_ENTITIES = 3
 RESPONSE_ENEMY_OBJECT = 4
 RESPONSE_GAME_ENDED = 5
 
+WS_CLOSE_DEFAULT = 1001
+WS_CLOSE_ERROR = 1008
+WS_CLOSE_GAME_ENDED = 4001
+
 redis_settings = CHANNEL_LAYERS['default']['CONFIG']['hosts'][0]
 
 def generation_worker(giorgio, channel_name):
-    channel_layer = get_channel_layer()
-    DEBUG('WebSocket', 'Sending request to generate entities')
-    async_to_sync(channel_layer.group_send)(channel_name, {
-        'type': 'run_generation'
-    })
-    # d = (base_delay + 400 * (k - 1)) milliseconds
-    delay = DELAY_BETWEEN_ENEMIES_GENERATIONS + (4 * (giorgio.round - 1)) / 10
-    
     if giorgio.running:
+        channel_layer = get_channel_layer()
+        DEBUG('WebSocket', 'Sending request to generate entities')
+        async_to_sync(channel_layer.group_send)(channel_name, {
+            'type': 'run_generation'
+        })
+        # d = (base_delay + 400 * (k - 1)) milliseconds
+        delay = DELAY_BETWEEN_ENEMIES_GENERATIONS + (4 * (giorgio.round - 1)) / 10
+
+        if giorgio.gen_status == Giorgio.GENERATION_STATES['waiting']:
+            DEBUG('WebSocket', 'Generation postponed')
+            # Set delay to 4s
+            delay = 4
+    
         threading.Timer(
             delay,
             generation_worker,
@@ -90,16 +99,18 @@ class GameConsumer(WebsocketConsumer):
 
             DEBUG('WebSocket', 'Unauthenticated user', ltype='WARNING')
 
-            self.close()
+            self.close(WS_CLOSE_ERROR)
             return
 
         self.delayed_channel_name = 'giorgio_%i' % user.id
-        # if asyncio.run(user_is_playing(self.delayed_channel_name)):
+        self.scope['giorgio'] = None
+        # Check if channel is already active thus the player is already playing
+        if asyncio.run(user_is_playing(self.delayed_channel_name)):
             
-        #     DEBUG('WebSocket', '"%s" is already playing' % user.username)
+            DEBUG('WebSocket', '"%s" is already playing' % user.username)
 
-        #     self.close()
-        #     return
+            self.close(WS_CLOSE_ERROR)
+            return
         # Create giorgio
         self.scope['giorgio'] = Giorgio(
             user=user,
@@ -136,8 +147,10 @@ class GameConsumer(WebsocketConsumer):
 
             # asyncio.run(clear_match(giorgio.game_id))
 
-            if giorgio is not None and giorgio.running == True:
-                giorgio.end_game('connection closed')
+            if giorgio is not None and giorgio.running and close_code == WS_CLOSE_DEFAULT:
+                # Game ended unexpectedly
+                giorgio.end_game('connection closed', save=False)
+
             DEBUG('WebSocket', ('"%s" disconnected' % user.username))
 
     def validate_data(self, text_data):
@@ -270,6 +283,7 @@ class GameConsumer(WebsocketConsumer):
                 'r': RESPONSE_GAME_ENDED,
                 'm': e.message,
             })
+            self.close(WS_CLOSE_GAME_ENDED)
         except Exception as e:
             self.send_error(e)
 
