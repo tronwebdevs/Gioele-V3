@@ -3,6 +3,7 @@ from django.views import generic
 from django.shortcuts import redirect
 from django.contrib.auth import authenticate
 
+from gadmin.utils import valid_string, valid_email, valid_number
 from api.models import BannedUser, GUser, Gun, Skin
 from gioele_v3.settings import DEBUG
 
@@ -17,6 +18,11 @@ def get_messages(request, key):
     if message is not None:
         del request.session[mess_key]
     return { 'error': error, 'message': message }
+
+def raise_if_not_valid(val, validator, message):
+    if not validator(val):
+        raise Exception(message)
+    return val
 
 
 class LoginView(generic.TemplateView):
@@ -99,7 +105,38 @@ class ProfileView(generic.TemplateView):
             'user': request.user,
             'user_skins': request.user.inventory.get_skins(),
             'user_guns': request.user.inventory.get_main_guns(),
+            **get_messages(request, 'profile'),
         })
+
+    def post(self, request):
+        try:
+            user = request.user.user
+            new_username = raise_if_not_valid(request.POST.get('username'), valid_string, 'Username non valido')
+            if len(GUser.objects.filter(user__username=new_username)) > 0:
+                raise Exception('Questo username è già in uso')
+            else:
+                user.username = new_username
+            raw_pass = raise_if_not_valid(request.POST.get('password'), valid_string, 'Password errata')
+
+            if not user.check_password(raw_pass):
+                raise Exception('Password errata')
+
+            post_new_pass = request.POST.get('npassword')
+            if post_new_pass is not None and post_new_pass.strip() != '':
+                new_raw_pass = raise_if_not_valid(request.POST.get('npassword'), valid_string, 'Nuova password errata')
+                new_raw_cpass = raise_if_not_valid(request.POST.get('cnpassword'), valid_string, 'Conferma nuova password errata')
+                if new_raw_pass != new_raw_cpass:
+                    raise Exception('Le password non coincidono')
+                else:
+                    user.set_password(new_raw_pass)
+
+            user.save()
+        except Exception as e:
+            request.session['u_profile_error'] = str(e)
+        else:
+            request.session['u_profile_message'] = 'Profilo aggiornato'
+
+        return redirect('game:profile')
 
 
 class ShopView(generic.TemplateView):

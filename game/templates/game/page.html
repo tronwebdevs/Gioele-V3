@@ -1,28 +1,84 @@
+{% extends 'game/base_page.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html>
-
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" />
-    <meta name="color-scheme" content="dark">
-    <title> Gioele V3 </title>
-    <link rel="icon" href="{% static 'game/images/logo.png' %}" />
-    <!-- TODO: replace remote font with local -->
-    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Ubuntu:regular,bold&subset=Latin">
-    <link type="text/css" rel="stylesheet" href="{% static 'game/style.css' %}">
-    <link type="text/css" rel="stylesheet" href="{% static 'game/flexboxgrid/flexboxgrid.min.css' %}">
-    {% block stylesheets %}{% endblock %}
-</head>
-
-<body>
-    {% block content %}{% endblock %}
-
-    <footer class="footer">
-        <span>TronWeb &copy; 2021, by SmL & Testo</span>
-    </footer>
+{% load gadmin_extras %}
+{% block styles %}{% block stylesheets %}{% endblock stylesheets %}{% endblock styles %}
+{% block body %}
+<div class="main page">
+    <div class="body">
+        <div class="row">
+            <div class="col-lg-9 col-xs-12">
+                {% block content %}{% endblock %}
+            </div>
     
-    {% block scripts %}{% endblock %}
-</body>
+            <div class="col-lg-3 col-xs-12 last-lg first-xs">
+                <div class="header">
+                    <h1 class="title">Gioele V3</h1>
+                    <span class="subtitle">Conquista l'universo</span>
+                </div>
+                {% if debug and request.resolver_match.url_name == "index" %}
+                <div class="card">
+                    <h4 class="title">Debug</h4>
+                    <span>Connection state: <span id="ws-conn">closed</span></span>
+                    <form class="debug-form">
+                        <div>
+                            <input type="checkbox" id="opt_1">
+                            <label for="opt_1">show enemy health</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="opt_2">
+                            <label for="opt_2">show enemy hitbox</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="opt_3">
+                            <label for="opt_3">show guide line</label>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+                <div class="card player-card">
+                    <div class="pinfo">
+                        <span>{{ user.username }}</span>
+                        <span>{{ user.level|rounddown }}</span>
+                    </div>
+                    <div class="level-bar">
+                        <progress value="{{ user.level|levelbar }}" max="100" id="user_level"> </progress>
+                    </div>
+                    <div class="pinfo-footer">
+                        <a href="{% url 'game:profile' %}">Profilo</a>
+                        <small>{{ user.balance|formatgbucks }}</small>
+                    </div>
+                </div>
 
-</html>
+                {% if request.resolver_match.url_name == "index" %}
+                <div class="card controls-help">
+                    <ul>
+                        <li><code>&#60;</code>: spostati a sinistra </li>
+                        <li><code>&#62;</code>: spostati a destra </li>
+                        <li><code>Q</code>: spara con l'arma principale </li>
+                        <li><code>W</code>: spara con l'arma secondaria </li>
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div class="action-buttons">
+                    {% if request.resolver_match.url_name != "shop" %}
+                    <a href="{% url 'game:shop' %}" class="btn-alt">Shop</a>
+                    {% endif %}
+
+                    {% if request.resolver_match.url_name != "leaderboard" %}
+                    <a href="{% url 'game:leaderboard' %}" class="btn-alt">Classifica</a>
+                    {% endif %}
+
+                    <a href="{% url 'game:logout' %}" class="btn-alt">Logout</a>
+
+                    {% if request.resolver_match.url_name != "index" %}
+                    <a href="{% url 'game:index' %}" class="btn-main">Gioca</a>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock body %}
+{% block js_scripts %}{% block scripts %}{% endblock scripts %}{% endblock js_scripts %}

@@ -1,9 +1,9 @@
-{% extends 'game/page.html' %}
+{% extends 'game/base_page.html' %}
 {% load static %}
-{% block stylesheets %}
+{% block styles %}
 <link type="text/css" rel="stylesheet" href="{% static 'game/login.css' %}">
-{% endblock stylesheets %}
-{% block content %}
+{% endblock styles %}
+{% block body %}
 <div class="main">
     <div class="header">
         <h1 class="title">Gioele V3</h1>
@@ -18,7 +18,7 @@
         </p>
         
         {% if error %}
-        <div class="alert-error">
+        <div class="alert alert-error">
             <span>{{ error }}</span>
         </div>
         {% endif %}
@@ -38,4 +38,4 @@
         {% endif %}
     </div>
 </div>
-{% endblock content %}
+{% endblock body %}

@@ -26,31 +26,20 @@ function openTab(e) {
     e.currentTarget.className += ' active';
 }
 
-function openModal(title, description) {
-    document.body.className = 'stop-scrolling';
-    window.scrollTo(0, 0);
-    document.body.scrollTop = 0;
-    document.documentElement.scrollTop = 0;
-    document.getElementById('confirm-buy').className += ' active';
-    document.getElementById('cb-title').innerText = title;
-    document.getElementById('cb-desc').innerText = description;
-}
-
-function closeModal(event) {
-    document.body.className = '';
-    var el = document.getElementById('confirm-buy');
-    el.className = el.className.replace(' active', '');
+function closeItemModal() {
+    closeModal('cbm')
     setModalError(null);
 }
 
 function buy(e, itemId, itemName, itemType) {
     e.preventDefault();
-    document.getElementById('confirm-buy').setAttribute('data-item-type', itemType);
-    document.getElementById('confirm-buy').setAttribute('data-item-id', itemId);
+    var modal = document.getElementById('cbm');
+    modal.setAttribute('data-item-type', itemType);
+    modal.setAttribute('data-item-id', itemId);
     if (itemType === 'gun') {
-        openModal('Conferma', `Voi comprare l'arma "${itemName}"?`);
+        openModal('cbm', 'Conferma', `Voi comprare l'arma "${itemName}"?`);
     } else {
-        openModal('Conferma', `Voi comprare la skin "${itemName}"?`);
+        openModal('cbm', 'Conferma', `Voi comprare la skin "${itemName}"?`);
     }
 }
 
@@ -60,10 +49,11 @@ function setModalError(message) {
     el.childNodes[0].innerText = message;
 }
 
-function confirmBuy(event) {
+function confirmBuy() {
     var token = document.getElementsByName('csrfmiddlewaretoken')[0].value;
-    itemType = document.getElementById('confirm-buy').getAttribute('data-item-type');
-    itemId = document.getElementById('confirm-buy').getAttribute('data-item-id');
+    var modal = document.getElementById('cbm');
+    itemType = modal.getAttribute('data-item-type');
+    itemId = modal.getAttribute('data-item-id');
 
     var respStatus = 0;
     fetch(`/api/shop/${itemType}s/${itemId}`, {
@@ -88,7 +78,7 @@ function confirmBuy(event) {
                     break;
                 }
             }
-            closeModal();
+            closeItemModal();
         }
     }).catch(console.error);
 }
@@ -96,7 +86,7 @@ function confirmBuy(event) {
 (function(){
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
-            closeModal();
+            closeItemModal();
         }
     })
 }())

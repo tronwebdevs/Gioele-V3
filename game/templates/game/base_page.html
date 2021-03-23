@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" />
+    <meta name="color-scheme" content="dark">
+    <title> Gioele V3 </title>
+    <link rel="icon" href="{% static 'game/images/logo.png' %}" />
+    <link type="text/css" rel="stylesheet" href="{% static 'game/style.css' %}">
+    <link type="text/css" rel="stylesheet" href="{% static 'game/flexboxgrid/flexboxgrid.min.css' %}">
+    {% block styles %}{% endblock %}
+</head>
+
+<body>
+    {% block body %}{% endblock %}
+
+    <footer class="footer">
+        <span>
+            <a href="https://www.tronweb.it" target="_blank">TronWeb</a> &copy; 2021, by SmL & Testo
+        </span>
+    </footer>
+    
+    {% block js_scripts %}{% endblock %}
+</body>
+
+</html>

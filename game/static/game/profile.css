@@ -20,12 +20,22 @@ form.profile-form input:disabled {
     background-color: #3F3F3F;
 }
 
+form.profile-form label {
+    margin-top: 10px;
+    display: block;
+}
+
 form.profile-form .btn-save {
     border: none;
-    background-color: green;
+    background-color: #008000;
     color: #F0F0F0;
     padding: 8px 32px;
     border-radius: 4px;
+}
+form.profile-form .row > .info-text {
+    text-align: left;
+    color: #f0f0f08c;
+    margin-top: 8px;
 }
 .form-buttons {
     text-align: right;
@@ -47,14 +57,14 @@ form.profile-form .btn-save {
 .inventory-table td {
     border: 1px solid #4d4d4d;
 }
-.inventory-table td > button {
+.inventory-table td button {
     padding: 2px 8px;
     border: none;
     background-color: #2196F3;
     color: #F0F0F0;
     border-radius: 4px;
 }
-.inventory-table td > img {
+.inventory-table td img {
     width: 100%;
     max-width: 30px;
     max-height: 30px;

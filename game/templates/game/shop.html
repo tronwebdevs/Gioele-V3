@@ -5,149 +5,116 @@
 <link type="text/css" rel="stylesheet" href="{% static 'game/shop.css' %}">
 {% endblock stylesheets %}
 {% block content %}
-<div class="main page">
-    <div class="body">
-        <div class="row">
-            <div class="col-lg-9 col-xs-12">
-                <div>
-                    <h4 style="text-align:center;">Shop</h4>
-                </div>
-                <div class="card shop">
-                    <div class="row">
-                        <div class="col-xs-12 col-sm-3">
-                            <div class="tab">
-                                <button class="tablinks active" target="tab0" onclick="openTab(event)">Armi primarie</button>
-                                <button class="tablinks" target="tab1" onclick="openTab(event)">Armi secondarie</button>
-                                <button class="tablinks" target="tab2" onclick="openTab(event)">Skin</button>
-                            </div>
-                        </div>
-    
-                        <div class="col-xs-12 col-sm-9 tabsc-wrapper">
-                            <form style="display:none;" method="POST">{% csrf_token %}</form>
+<div>
+    <h4 style="text-align:center;">Shop</h4>
+</div>
+<div class="card shop">
+    <div class="row">
+        <div class="col-xs-12 col-sm-3">
+            <div class="tab">
+                <button class="tablinks active" target="tab0" onclick="openTab(event)">Armi primarie</button>
+                <button class="tablinks" target="tab1" onclick="openTab(event)">Armi secondarie</button>
+                <button class="tablinks" target="tab2" onclick="openTab(event)">Skin</button>
+            </div>
+        </div>
 
-                            <div id="tab0" class="tabcontent">
-                                <div class="shop-cards">
-                                    {% for gun in main_guns %}
-                                    <div class="shop-card card-maing">
-                                        <div class="card-content" id="gun-{{ gun.id }}">
-                                            <div class="card-header">
-                                                <span>{{ gun.name }}</span>
-                                            </div>
-                                            <div class="card-body">
-                                                <span>Danno: {{ gun.damage }}</span>
-                                                <span>Cooldown: {{ gun.cooldown }}</span>
-                                                <p>{{ gun.description}}</p>
-                                            </div>
-                                            {% if gun.id in user_guns %}
-                                            <span class="card-footer own-text">Comprata</span>
-                                            {% else %}
-                                            <button onclick="buy(event, '{{ gun.id }}', '{{ gun.name }}', 'gun')" class="card-footer">
-                                                {{ gun.price|formatgbucks:"Gratis" }}
-                                            </button>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
+        <div class="col-xs-12 col-sm-9 tabsc-wrapper">
+            <form style="display:none;" method="POST">{% csrf_token %}</form>
+
+            <div id="tab0" class="tabcontent">
+                <div class="shop-cards">
+                    {% for gun in main_guns %}
+                    <div class="shop-card card-maing">
+                        <div class="card-content" id="gun-{{ gun.id }}">
+                            <div class="card-header">
+                                <span>{{ gun.name }}</span>
                             </div>
-        
-                            <div id="tab1" class="tabcontent">
-                                <div class="shop-cards">
-                                    {% for gun in side_guns %}
-                                    <div class="shop-card card-sideg">
-                                        <div class="card-content" id="gun-{{ gun.id }}">
-                                            <div class="card-header">
-                                                <span>{{ gun.name }}</span>
-                                            </div>
-                                            <div class="card-body">
-                                                <span>Danno: {{ gun.damage }}</span>
-                                                <span>Cooldown: {{ gun.cooldown }}</span>
-                                                <p>{{ gun.description}}</p>
-                                            </div>
-                                            {% if gun.id in user_guns %}
-                                            <span class="card-footer own-text">Comprata</span>
-                                            {% else %}
-                                            <button onclick="buy(event, '{{ gun.id }}', '{{ gun.name }}', 'gun')" class="card-footer">
-                                                {{ gun.price|formatgbucks:"Gratis" }}
-                                            </button>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
+                            <div class="card-body">
+                                <span>Danno: {{ gun.damage }}</span>
+                                <span>Cooldown: {{ gun.cooldown }}</span>
+                                <p>{{ gun.description}}</p>
                             </div>
-        
-                            <div id="tab2" class="tabcontent">
-                                <div class="shop-cards">
-                                    {% for skin in skins %}
-                                    <div class="shop-card card-skin">
-                                        <div class="card-content" id="skin-{{ skin.id }}">
-                                            <div class="card-header">
-                                                <span>{{ skin.name }}</span>
-                                            </div>
-                                            <div class="card-body">
-                                                <p>{{ skin.description}}</p>
-                                                <div style="text-align:center">
-                                                    <img src="/static/game/images/{{ skin.filename }}" />
-                                                </div>
-                                            </div>
-                                            {% if skin.id in user_skins %}
-                                            <span class="card-footer own-text">Comprata</span>
-                                            {% else %}
-                                            <button onclick="buy(event, '{{ skin.id }}', '{{ skin.name }}', 'skin')" class="card-footer">
-                                                {{ skin.price|formatgbucks:"Gratis" }}
-                                            </button>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
+                            {% if gun.id in user_guns %}
+                            <span class="card-footer own-text">Comprata</span>
+                            {% else %}
+                            <button onclick="buy(event, '{{ gun.id }}', '{{ gun.name }}', 'gun')" class="card-footer">
+                                {{ gun.price|formatgbucks:"Gratis" }}
+                            </button>
+                            {% endif %}
                         </div>
                     </div>
+                    {% endfor %}
                 </div>
             </div>
 
-            <div class="col-lg-3 col-xs-12 last-lg first-xs">
-                <div class="header">
-                    <h1 class="title">Gioele V3</h1>
-                    <span class="subtitle">Conquista l'universo</span>
-                </div>
-                <div class="card player-card">
-                    <div class="pinfo">
-                        <span>{{ user.username }}</span>
-                        <span>{{ user.level|rounddown }}</span>
+            <div id="tab1" class="tabcontent">
+                <div class="shop-cards">
+                    {% for gun in side_guns %}
+                    <div class="shop-card card-sideg">
+                        <div class="card-content" id="gun-{{ gun.id }}">
+                            <div class="card-header">
+                                <span>{{ gun.name }}</span>
+                            </div>
+                            <div class="card-body">
+                                <span>Danno: {{ gun.damage }}</span>
+                                <span>Cooldown: {{ gun.cooldown }}</span>
+                                <p>{{ gun.description}}</p>
+                            </div>
+                            {% if gun.id in user_guns %}
+                            <span class="card-footer own-text">Comprata</span>
+                            {% else %}
+                            <button onclick="buy(event, '{{ gun.id }}', '{{ gun.name }}', 'gun')" class="card-footer">
+                                {{ gun.price|formatgbucks:"Gratis" }}
+                            </button>
+                            {% endif %}
+                        </div>
                     </div>
-                    <div class="level-bar">
-                        <progress value="{{ user.level|levelbar }}" max="100"> </progress>
-                    </div>
-                    <div class="pinfo-footer">
-                        <a href="{% url 'game:profile' %}">Profilo</a>
-                        <small>{{ user.balance|formatgbucks }}</small>
-                    </div>
-                </div>
-                <div class="action-buttons">
-                    <a href="{% url 'game:index' %}" class="btn-alt">Gioca</a>
-                    <a href="{% url 'game:leaderboard' %}" class="btn-alt">Classifica</a>
-                    <a href="{% url 'game:logout' %}" class="btn-logout">Logout</a>
+                    {% endfor %}
                 </div>
             </div>
 
+            <div id="tab2" class="tabcontent">
+                <div class="shop-cards">
+                    {% for skin in skins %}
+                    <div class="shop-card card-skin">
+                        <div class="card-content" id="skin-{{ skin.id }}">
+                            <div class="card-header">
+                                <span>{{ skin.name }}</span>
+                            </div>
+                            <div class="card-body">
+                                <p>{{ skin.description}}</p>
+                                <div style="text-align:center">
+                                    <img src="/static/game/images/{{ skin.filename }}" />
+                                </div>
+                            </div>
+                            {% if skin.id in user_skins %}
+                            <span class="card-footer own-text">Comprata</span>
+                            {% else %}
+                            <button onclick="buy(event, '{{ skin.id }}', '{{ skin.name }}', 'skin')" class="card-footer">
+                                {{ skin.price|formatgbucks:"Gratis" }}
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
-<div class="modal" id="confirm-buy" data-item-type="" data-item-id="">
+<div class="modal" id="cbm" data-item-type="" data-item-id="">
     <div class="modal-content">
-        <h4 class="title" id="cb-title">Conferma</h4>
-        <div class="alert-error" id="modal-error" style="display:none;"><span></span></div>
-        <p id="cb-desc">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dolore eaque suscipit exercitationem dignissimos cupiditate accusantium numquam fugiat facilis nostrum quos. Est, dolores corporis eaque aspernatur quos saepe ex consequatur eveniet.</p>
+        <h4 class="title" id="cbm-title">Conferma</h4>
+        <div class="alert alert-error" id="modal-error" style="display:none;"><span></span></div>
+        <p id="cbm-content">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dolore eaque suscipit exercitationem dignissimos cupiditate accusantium numquam fugiat facilis nostrum quos. Est, dolores corporis eaque aspernatur quos saepe ex consequatur eveniet.</p>
         <div class="modal-buttons">
-            <button type="button" class="btn-red btn-sm" onclick="closeModal(event)">Annulla</button>
-            <button type="button" class="btn-green btn-sm" onclick="confirmBuy(event)">Conferma</button>
+            <button type="button" class="btn-red btn-sm" onclick="closeModal('cbm')">Annulla</button>
+            <button type="button" class="btn-green btn-sm" onclick="confirmBuy()">Conferma</button>
         </div>
     </div>
 </div>
 {% endblock content %}
 {% block scripts %}
+<script src="{% static 'game/modal.js' %}"></script>
 <script src="{% static 'game/shop.js' %}"></script>
 {% endblock scripts %}

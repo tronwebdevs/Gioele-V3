@@ -121,46 +121,6 @@ div::-webkit-scrollbar-thumb {
     background: #888;
 }
 
-/* MODAL */
-.modal {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(10, 10, 10, 0.6);
-    display: none;
-}
-.modal.active {
-    display: block;
-}
-.modal-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: #2c2c2c;
-    padding: 1.5rem;
-    border-radius: 4px;
-    min-width: 20rem;
-}
-.modal-content .title {
-    margin: 0;
-    padding: 0;
-    text-align: center;
-}
-.modal-content .modal-buttons {
-    text-align: right;
-}
-.modal-content .modal-buttons > button {
-    padding: 8px 14px;
-    border: none;
-    border-radius: 4px;
-}
-.modal-content p {
-    margin-bottom: 1.5rem;
-}
-
 @media screen and (max-width: 768px) {
 
     .tab button {
