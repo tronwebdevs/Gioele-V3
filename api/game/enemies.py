@@ -84,7 +84,7 @@ class BaseShipEnemy(Enemy):
 
 class KamikazeShipEnemy(Enemy):
     TYPE = 1
-    BASE_HP = 150
+    BASE_HP = 50
 
     def __init__(self, id, rnd, hp=BASE_HP, rarity=None):
         super().__init__(

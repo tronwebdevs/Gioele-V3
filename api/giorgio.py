@@ -272,6 +272,10 @@ class Giorgio:
 
         # Remove enemy from stack
         del self.enemies[enemy.id]
+        # If enemy is kamikaze 
+        if enemy.type == ENEMY_TYPES['kamikaze'][0]:
+            return self.mship_lifes
+
         lifes = self.mship_lifes - 1
         if lifes <= 0:
             # Mother ship is dead, game ends
