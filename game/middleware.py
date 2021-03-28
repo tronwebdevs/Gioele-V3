@@ -1,6 +1,7 @@
 import json
 
-from django.http import HttpResponseRedirect, HttpResponseServerError, HttpResponseForbidden
+from django.http import HttpResponseRedirect, HttpResponseServerError, HttpResponseForbidden, HttpRequest
+from user_agents import parse
 
 from api.models import VisitLog, GUser
 
@@ -10,6 +11,11 @@ class GameMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        ua = parse(request.META.get('HTTP_USER_AGENT'))
+
+        if ua.is_bot:
+            return HttpResponseForbidden()
+        
         if request.path.startswith('/admin/'):
             return self.get_response(request)
 
@@ -17,15 +23,23 @@ class GameMiddleware:
         try:
             visit = VisitLog.objects.get(pk=visit_id)
         except VisitLog.DoesNotExist:
+            device_type = -1
+            if ua.is_pc:
+                device_type = 0
+            elif ua.is_mobile:
+                device_type = 1
+            elif ua.is_tablet:
+                device_type = 2
             # Register new visit on database
             visit = VisitLog.objects.create(
-                ip='127.0.0.1',
-                platform='',
-                lang='',
-                browser='',
-                screen_width=0,
-                screen_height=0,
-                referrer=None,
+                ip=request.META.get('REMOTE_ADDR'),
+                os=ua.os.family,
+                browser=ua.browser.family + '/' + ua.browser.version_string,
+                device=ua.device.model or '',
+                device_brand=ua.device.brand or '',
+                device_type=device_type,
+                has_touchscreen=ua.is_touch_capable,
+                referrer=request.META.get('HTTP_REFERER') or '',
             )
             request.session['visit_id'] = str(visit.id)
             

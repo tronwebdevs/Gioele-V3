@@ -13,7 +13,6 @@ urlpatterns = [
     path('shop/', views.shop_list_items, name='shop'),
     path('shop/guns/<str:pk>', views.ShopItemDetail.as_view(), name='shop_gun'),
     path('shop/skins/<str:pk>', views.ShopItemDetail.as_view(), name='shop_skin'),
-    path('vl/', views.visit, name='visit_log'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

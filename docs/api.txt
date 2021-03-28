@@ -9,6 +9,5 @@ ENDPOINTS:
  - [POST] /api/shop/skins/<skin_id>: buy specified skin
  - [GET] /api/shop/guns/<gun_id>: reutrn info about requested gun
  - [POST] /api/shop/guns/<gun_id>: buy specified gun
- - [POST] /api/vl: register user's visit (browser's info)
 
 No extra headers are required (other than the default generated ones)
